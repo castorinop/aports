@@ -1,39 +1,42 @@
-# Maintainer: William Pitcock <nenolod@dereferenced.org>
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Rasmus Thomsen <oss@cogitri.dev>
 pkgname=gnome-desktop
-pkgver=3.24.2
-pkgrel=1
-pkgdesc="gnome desktop core libraries"
-url="http://www.gnome.org/"
+pkgver=3.34.2
+pkgrel=0
+pkgdesc="GNOME desktop core libraries"
+url="https://gitlab.gnome.org/GNOME/gnome-desktop"
 arch="all"
-license="GPL"
-depends="gsettings-desktop-schemas"
-depends_dev="gvfs-dev libgudev-dev eudev-dev iso-codes-dev gobject-introspection-dev"
-makedepends="$depends_dev xkeyboard-config itstool libxml2-utils gtk+3.0-dev"
-install=""
-subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
-source="http://ftp.gnome.org/pub/GNOME/sources/gnome-desktop/${pkgver%.*}/gnome-desktop-$pkgver.tar.xz"
-builddir="$srcdir/gnome-desktop-$pkgver"
+license="GPL-2.0-or-later AND LGPL-2.1-or-later"
+depends_dev="xkeyboard-config gobject-introspection-dev gsettings-desktop-schemas-dev
+	gtk+3.0-dev"
+makedepends="$depends_dev eudev-dev iso-codes-dev libseccomp-dev libx11-dev
+	itstool libxml2-utils gtk-doc meson glib-dev"
+depends="bubblewrap"
+options="!check" # Can't find its own GSettings schemas
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang $pkgname-dbg"
+source="https://download.gnome.org/sources/gnome-desktop/${pkgver%.*}/gnome-desktop-$pkgver.tar.xz
+	hardcode-musl-locales.patch"
 
 build() {
-	cd "$builddir"
-	./configure \
-		--build=$CBUILD \
-		--host=$CHOST \
+	meson \
 		--prefix=/usr \
 		--sysconfdir=/etc \
 		--mandir=/usr/share/man \
-		--localstatedir=/var
-	make
-}
-
-package() {
-	cd "$builddir"
-	make DESTDIR="$pkgdir" install
+		--localstatedir=/var \
+		--buildtype=release \
+		-Dgnome_distributor="Alpine Linux" \
+		-Dudev=enabled \
+		. output
+	ninja -C output
 }
 
 check() {
-	cd "$builddir"
-	make check
+	ninja -C output test
 }
 
-sha512sums="691817fda97fc1c560c72213668eb4c2a8d03cc2433470a78149b3f785e95d9b4b681bceb733a67e1bfda649a6aed7ca4569b4891ee89f824a28d7a95f2782c2  gnome-desktop-3.24.2.tar.xz"
+package() {
+	DESTDIR="$pkgdir" ninja -C output install
+}
+
+sha512sums="4bfed33e57505a82e391f082064eb70784f72d2c5468cd3abd1461843084f76d9fa232f90eea9d90f726da3c39643bdde6a569374cb180ca3b13f3a2ea1c33b9  gnome-desktop-3.34.2.tar.xz
+0f0d0ca5ec8227dc80107fea754978ea2db5b15b84fa59d35eea702409be91d5148f3bfbeb1c5a31b9e93c5f19d135806799dd1cb3f42336f862a80b35881d31  hardcode-musl-locales.patch"

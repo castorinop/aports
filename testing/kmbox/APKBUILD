@@ -1,0 +1,30 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kmbox
+pkgver=19.12.0
+pkgrel=0
+pkgdesc="Library for accessing mail storages in MBox format"
+arch="all"
+url="https://kontact.kde.org/"
+license="LGPL-2.0-or-later"
+depends_dev="kmime-dev"
+makedepends="$depends_dev extra-cmake-modules"
+source="https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-dev"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+sha512sums="ed492de6ec1570ff707ff2ab2b25f021636b19276c974555889e5e4ccbbe981580bec156c22a35e2f797a152018785b84fae92599c24cc6eb626fa69a43ec03f  kmbox-19.12.0.tar.xz"

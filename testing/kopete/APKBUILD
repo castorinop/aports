@@ -1,0 +1,40 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kopete
+pkgver=19.12.0
+pkgrel=1
+arch="all"
+url="https://userbase.kde.org/Kopete"
+pkgdesc="An instant messenger supporting AIM, ICQ, Jabber, Gadu-Gadu, Novell GroupWise Messenger, and more"
+license="GPL-2.0-or-later AND LGPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="extra-cmake-modules qt5-qtbase-dev kconfig-dev kcoreaddons-dev kcrash-dev kdbusaddons-dev kdoctools-dev kemoticons-dev ki18n-dev kcmutils-dev khtml-dev knotifyconfig-dev kparts-dev ktexteditor-dev kwallet-dev kdelibs4support-dev kcontacts-dev kidentitymanagement-dev kitemmodels-dev libkleo-dev gpgme-dev kdnssd-dev"
+checkdepends="xvfb-run"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kopete-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	cd "$builddir"/build
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="fab1e74fbee8606f5deb3bd75f69ca78c448ed926309d3efff9ed83eae2334aef84dd21d73d0434f0248103ad2ab21274259aaad8b977be361107b6eb38d8c8d  kopete-19.12.0.tar.xz"

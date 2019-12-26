@@ -1,32 +1,24 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=nspr
-pkgver=4.15
+pkgver=4.24
 pkgrel=0
 pkgdesc="Netscape Portable Runtime"
-url="http://www.mozilla.org/projects/nspr/"
+url="https://www.mozilla.org/projects/nspr/"
 arch="all"
-license="MPL-1.1 GPL2 LGPL-2.1"
-depends=
+license="GPL-3.0-only AND LGPL-2.1-only AND LGPL-3.0-only AND MPL-2.0"
+options="!check"  # No test suite.
 # -dev package does not ship any symlinks so dependency cannot be autodetected
-depends_dev="nspr"
-makedepends="autoconf automake"
+depends_dev="nspr linux-headers"
+makedepends="autoconf automake linux-headers"
 subpackages="$pkgname-dev"
-source="http://ftp.mozilla.org/pub/mozilla.org/nspr/releases/v$pkgver/src/nspr-$pkgver.tar.gz
+source="https://ftp.mozilla.org/pub/mozilla.org/nspr/releases/v$pkgver/src/nspr-$pkgver.tar.gz
 	fix-getproto.patch
+	fix-sgidefs-usage.patch
 	"
 
-_builddir="$srcdir"/$pkgname-$pkgver
 prepare() {
-	cd "$_builddir"
 	mkdir build inst
-	for i in $source; do
-		case $i in
-		*.patch)
-			msg "Applying $i"
-			patch -p1 -i "$srcdir"/$i || return 1
-			;;
-		esac
-	done
+	default_prepare
 }
 
 build() {
@@ -34,7 +26,7 @@ build() {
 	if [ "$CARCH" = "x86_64" ];then
 		conf="--enable-64bit"
 	fi
-	cd "$_builddir"/build
+	cd "$builddir"/build
 	# ./nspr/pr/include/md/_linux.h tests only __GLIBC__ version
 	# to detect c-library features, list musl features here for now.
 	CFLAGS="$CFLAGS -D_PR_POLL_AVAILABLE -D_PR_HAVE_OFF64_T -D_PR_INET6 -D_PR_HAVE_INET_NTOP -D_PR_HAVE_GETHOSTBYNAME2 -D_PR_HAVE_GETADDRINFO -D_PR_INET6_PROBE" \
@@ -45,28 +37,28 @@ build() {
 		--disable-debug \
 		--enable-optimize \
 		--enable-ipv6 \
-		$conf \
-		|| return 1
-	make CC="${CC:-gcc}" CXX="${CXX:-g++}" || return 1
+		$conf
+	make CC="${CC:-gcc}" CXX="${CXX:-g++}"
 }
 
 package() {
 	local file=
 
-	cd "$_builddir"/build
-	make DESTDIR="$pkgdir" install || return 1
+	cd "$builddir"/build
+	make DESTDIR="$pkgdir" install
 
 	cd "$pkgdir"/usr/lib
 	rm -f *.a
 
-	cd "$_builddir"/build/config
-	install -Dm755 nspr-config "$pkgdir"/usr/bin/nspr-config || return 1
-	install -Dm644 nspr.pc "$pkgdir"/usr/lib/pkgconfig/nspr.pc || return 1
+	cd "$builddir"/build/config
+	install -Dm755 nspr-config "$pkgdir"/usr/bin/nspr-config
+	install -Dm644 nspr.pc "$pkgdir"/usr/lib/pkgconfig/nspr.pc
 	rm -rf "$pkgdir"/usr/bin/prerr.properties \
 		"$pkgdir"/usr/bin/compile-et.pl \
 		"$pkgdir"/usr/share/aclocal/nspr.m4 \
 		"$pkgdir"/usr/include/nspr/md
 }
 
-sha512sums="1d6e9ba3ef71376ddb4f5ef2a6796bf3f95cf37abfac89d1745f02cc01003877d088a87946208d3827a3b3e28420215e543a647aadceff2ae6f9c1c70d4ac563  nspr-4.15.tar.gz
-ee654f609a90b9a95c1901ad1d56cdef7cce8bca9efc092198607944f142f8fec924b13219ca6663facd0f0d59b671b8b3de58ab3449c4c863d42e2937f02184  fix-getproto.patch"
+sha512sums="b020031ed7a8997099c11e0772779c7b10d15b4f6b14e2b1832732943e8b8224afa952ce04a1914c1553af9d3973a6d9cacf08058ee6fff35102e3b2ec0943c1  nspr-4.24.tar.gz
+7062cc03e38541282226781e67c886c78ca693f7ee96df96509c9429470d294ca6b87ebe05ea809920b9ef78eaa0a0d21ae575a1ac438f148d0c1dc915424613  fix-getproto.patch
+69e804907d1a8867912511818d9827e4d7fd36ff44253cb21f4a5527610076874ddf5aada87717ef6454162c21248c9f7c3395376c585129134950c12f90ac0f  fix-sgidefs-usage.patch"

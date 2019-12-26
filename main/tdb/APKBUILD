@@ -1,21 +1,18 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=tdb
-pkgver=1.3.15
+pkgver=1.4.3
 pkgrel=0
 pkgdesc="The tdb library"
-url="http://tdb.samba.org/"
+url="https://tdb.samba.org/"
 arch="all"
-license="LGPLv3+"
-depends_dev="python2"
-makedepends="$depends_dev python2-dev docbook-xsl"
-subpackages="$pkgname-dev py-$pkgname:_py $pkgname-libs $pkgname-doc"
-source="http://samba.org/ftp/tdb/tdb-$pkgver.tar.gz
-	"
-
-builddir="$srcdir/$pkgname-$pkgver"
+license="LGPL-3.0-or-later"
+depends_dev="python3"
+makedepends="$depends_dev python3-dev docbook-xsl"
+subpackages="$pkgname-dev py3-$pkgname:_py3
+	$pkgname-libs $pkgname-doc"
+source="https://samba.org/ftp/tdb/tdb-$pkgver.tar.gz"
 
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -31,19 +28,18 @@ build() {
 }
 
 check() {
-	cd "$builddir"
 	make check
 }
 
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir" install
 }
 
-_py() {
-	pkgdesc="Python binding for the tdb library"
+_py3() {
+	pkgdesc="Python 3 binding for the tdb library"
+
 	mkdir -p "$subpkgdir"/usr/lib
-	mv "$pkgdir"/usr/lib/python* "$subpkgdir"/usr/lib/
+	mv "$pkgdir"/usr/lib/python3* "$subpkgdir"/usr/lib/
 }
 
 libs() {
@@ -51,4 +47,4 @@ libs() {
 	replaces="tdb"
 }
 
-sha512sums="553246d5e7a7c22ea1b00962ac635d608f6d2344201862e796cad3b1a20610da1f5652ec9dbcb0187867fbd25f36247fcc34e9b4b2c3488c15d7202c9fb13bbb  tdb-1.3.15.tar.gz"
+sha512sums="99488839e7da396f04df60412d21a7d3e09efeab52772d6cb5e9470a3dfd585d73ef2422c51cd0d8ccc123a65d455de400d5d6b24a21a2a50d3da60d9a70e67a  tdb-1.4.3.tar.gz"

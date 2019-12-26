@@ -1,35 +1,34 @@
 # Contributor: <xmingske@gmail.com>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=dnssec-tools
-pkgver=2.1
+pkgver=2.2.3
 pkgrel=5
 pkgdesc="Set of tools that will help ease the deployment of DNSSEC"
-url="https://www.dnssec-tools.org/"
+url="https://dnssec-tools.org/"
 arch="all"
-license="GPL3"
-makedepends="autoconf automake bind-dev libtool libressl-dev perl-graphviz perl-crypt-openssl-random
-	     perl-net-dns perl-net-dns-sec perl-xml-simple perl-dev sed chrpath"
-source="http://distfiles.alpinelinux.org/distfiles/dnssec-tools-$pkgver.tar.gz"
+license="BSD-3-Clause"
+depends="perl-net-dns-sec perl-mailtools"
+makedepends="autoconf automake bind-dev libtool openssl-dev perl-graphviz perl-crypt-openssl-random
+	     perl-net-dns perl-xml-simple perl-dev sed chrpath"
+source="https://github.com/DNSSEC-Tools/DNSSEC-Tools/archive/dnssec-tools-$pkgver.tar.gz"
 subpackages="$pkgname-dev $pkgname-doc"
 
-builddir="${srcdir}/${pkgname}-${pkgver}"
+builddir="${srcdir}/DNSSEC-Tools-${pkgname}-${pkgver}/${pkgname}"
 
 prepare() {
 	local pf
-	cd "$builddir"
 	update_config_guess
 	default_prepare
 	sed -e '/^maninstall:/,+3s:$(MKPATH) $(mandir)/$(man1dir):$(MKPATH) $(DESTDIR)/$(mandir)/$(man1dir):' \
-		-i Makefile.in || die
+		-i Makefile.in
 	sed -e 's:/usr/local/etc:/etc:g' \
 		-e 's:/usr/local:/usr:g' \
 		-i tools/donuts/donuts \
 		-i tools/etc/dnssec-tools/dnssec-tools.conf \
-		-i tools/scripts/genkrf || die
+		-i tools/scripts/genkrf
 }
 
 build() {
-	cd "$builddir"
 	CFLAGS="$CFLAGS -D_LARGEFILE64_SOURCE=1"
 	./configure \
 		--prefix=/usr \
@@ -39,16 +38,13 @@ build() {
 		--disable-bind-checks \
 		--with-validator \
 		--with-perl-build-args=INSTALLDIRS=vendor
-	make || return 1
+	make
 }
 
 package() {
-	cd "$builddir"
 	mkdir -p "$pkgdir"/usr/share/man/man1
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 	chrpath -d "$pkgdir"/usr/bin/dt-*
 }
 
-md5sums="b4c76b325c380780682a548730d3e09a  dnssec-tools-2.1.tar.gz"
-sha256sums="64eebfd1213714b530e501f22b5ff9786db9b982897c432fecba75740ddcda52  dnssec-tools-2.1.tar.gz"
-sha512sums="61119837320bf9a7c2d64a593fc3ed6b84ee7683b7e4ba5de380b0fd1be70e44bf73825ea5395cc1d3ddc729eaef17823a230b44b68fbc5fca988f8fb080f66b  dnssec-tools-2.1.tar.gz"
+sha512sums="fd2467f116f77089bddf9311706f356957f4ae735d827d393534e4001b621c9dfc904ff3d4da698d37e8e97b1be9448ab2fd5455c124656399aac30f1f642baf  dnssec-tools-2.2.3.tar.gz"

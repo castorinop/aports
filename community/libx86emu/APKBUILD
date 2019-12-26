@@ -1,0 +1,28 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=libx86emu
+pkgver=2.4
+pkgrel=0
+pkgdesc="x86 emulation library"
+url="https://github.com/wfeldt/libx86emu"
+arch="all"
+license="MIT"
+subpackages="$pkgname-dev"
+source="$pkgname-$pkgver.tar.gz::https://github.com/wfeldt/$pkgname/archive/$pkgver.tar.gz"
+options="!check"  # FIXME: test fails to build
+
+_flags="VERSION=$pkgver MAJOR_VERSION=${pkgver%%.*} GIT2LOG= LIBDIR=/usr/lib"
+
+build() {
+	make shared $_flags CFLAGS="$CFLAGS -fPIC -Wall"
+}
+
+check() {
+	make test $_flags CFLAGS="$CFLAGS -I../include"
+}
+
+package() {
+	make $_flags DESTDIR="$pkgdir" install
+}
+
+sha512sums="521b24aee13faa1388a81a586334171fbe614da4efd12b68e7fcb608eb810cab7920776024aace43e7adb236fc9a4d35e08cbe53c5064549c1eb9871334ff683  libx86emu-2.4.tar.gz"

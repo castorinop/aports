@@ -2,36 +2,41 @@
 # Contributor: Stuart Cardall <developer@it-offshore.co.uk>
 # Maintainer: Stuart Cardall <developer@it-offshore.co.uk>
 pkgname=wrk
-pkgver=4.0.1
-pkgrel=2
+pkgver=4.1.0
+pkgrel=1
 pkgdesc="wrk is a modern HTTP benchmarking tool"
 url="https://github.com/wg/wrk"
 # requires -march=i586 to build on x86
-arch="x86_64"
-license="ASL 2.0"
+arch="x86_64 aarch64"
+license="Apache-2.0"
 depends=""
 depends_dev=""
-makedepends="libressl-dev"
-install=""
+options="!check" # upstream does not provide tests
+makedepends="openssl-dev perl-dev linux-headers luajit-dev"
 subpackages="$pkgname-doc"
 source="$pkgname-$pkgver.tar.gz::https://github.com/wg/wrk/archive/$pkgver.tar.gz"
+builddir="$srcdir"/$pkgname-$pkgver
 
-_builddir="$srcdir"/$pkgname-$pkgver
 build() {
-	make -C "$_builddir" || return 1
+	cd "$builddir"
+	# see https://github.com/wg/wrk/issues/310
+	touch buildinf.h
+	make -j1 -C "$builddir" \
+		WITH_OPENSSL=/usr \
+		WITH_LUAJIT=/usr CFLAGS+=$(pkg-config --cflags luajit)
 }
 
 package() {
-	cd "$_builddir"
-	mkdir -p $pkgdir/usr/bin
-	mkdir -p $pkgdir/usr/share/doc/$pkgname/scripts
+	cd "$builddir"
+	mkdir -p "$pkgdir"/usr/bin \
+		"$pkgdir"/usr/share/licenses/$pkgname \
+		"$pkgdir"/usr/share/doc/$pkgname/scripts
+
         install -m755 -D $pkgname "$pkgdir"/usr/bin/$pkgname
-	install -m644 -D README "$pkgdir"/usr/share/doc/$pkgname/
-	install -m644 -D LICENSE "$pkgdir"/usr/share/doc/$pkgname/
+	install -m644 -D README.md "$pkgdir"/usr/share/doc/$pkgname/
+	install -m644 -D LICENSE "$pkgdir"/usr/share/licenses/$pkgname/
 	install -m644 -D NOTICE "$pkgdir"/usr/share/doc/$pkgname/
 	install -m755 -D scripts/* "$pkgdir"/usr/share/doc/$pkgname/scripts/
 }
 
-md5sums="2520c55f197b5bb38b96ef2495b9af11  wrk-4.0.1.tar.gz"
-sha256sums="c03bbc283836cb4b706eb6bfd18e724a8ce475e2c16154c13c6323a845b4327d  wrk-4.0.1.tar.gz"
-sha512sums="75e8e0d6f1e7929a43bb80fe65e1f2a36a169d19d839940ebe7dc9765a182e1adee3ba2873e97511ddabbd252b8447a69a92a2cfc584f05d65a2f8b31bbf4141  wrk-4.0.1.tar.gz"
+sha512sums="2c8d05f8e40c3a6234bc1c2862157764532a39046860210fe512c260c2b940e1e3120b831d0721c936c7bca474574600cda1f4c949b53738199d98102e32cb1a  wrk-4.1.0.tar.gz"

@@ -1,0 +1,48 @@
+# Contributor: Timo Teräs <timo.teras@iki.fi>
+# Maintainer: Timo Teräs <timo.teras@iki.fi>
+pkgname=bubblewrap
+pkgver=0.4.0
+pkgrel=0
+pkgdesc="Unprivileged sandboxing tool"
+url="https://github.com/projectatomic/bubblewrap"
+arch="all"
+license="LGPL-2.0-or-later"
+options="!check suid" # Testsuite with suid requires sudo binary and some socket operations fail
+makedepends="autoconf automake libcap-dev docbook-xsl"
+subpackages="$pkgname-doc $pkgname-bash-completion:bashcomp:noarch"
+source="bubblewrap-$pkgver.tar.gz::https://github.com/projectatomic/bubblewrap/archive/v$pkgver.tar.gz
+	realpath-workaround.patch
+	"
+
+prepare() {
+	NOCONFIGURE=1 ./autogen.sh
+	default_prepare
+}
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--mandir=/usr/share/man \
+		--infodir=/usr/share/info \
+		--localstatedir=/var \
+		--with-priv-mode=setuid
+	make
+}
+
+package() {
+	make install DESTDIR="$pkgdir"
+}
+
+bashcomp() {
+	pkgdesc="Bash completions for $pkgname"
+	depends=""
+	install_if="$pkgname=$pkgver-r$pkgrel bash-completion"
+
+	mkdir -p "$subpkgdir"/usr/share/
+	mv "$pkgdir"/usr/share/bash-completion/ "$subpkgdir"/usr/share/
+}
+
+sha512sums="1957126e13900bbb1c9c885802f513006313836826938555899a8ad0e6c3ba47478eae0cc90f4aceff228663379b45203dce4fa57d6bfc489984670571232b97  bubblewrap-0.4.0.tar.gz
+7e8395aa7801263056b0c072194240f0ae1ee1a3b0acd874baf112a7b7b5e53ac5f688ece9099067bfc1e28e52e81f107964a3288a615cc1eedb1af5f82bbd8e  realpath-workaround.patch"

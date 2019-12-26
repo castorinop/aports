@@ -1,0 +1,32 @@
+# Maintainer: Gennady Feldman <gena01@gmail.com>
+# Contributor: Gennady Feldman <gena01@gmail.com>
+pkgname=py3-fastavro
+_pkgname=fastavro
+pkgver=0.22.7
+pkgrel=0
+pkgdesc="Fast Avro for Python"
+# Tests for optional zstd and snappy codecs require
+# unpackaged python modules 'zstandard' and 'python-snappy'
+options="!check"
+url="https://github.com/fastavro/fastavro"
+arch="all !x86" # _tz_ tests fail
+license="MIT"
+depends="py3-six"
+makedepends="py3-setuptools python3-dev cython"
+checkdepends="py3-pytest py3-numpy"
+source="$pkgname-$pkgver.tar.gz::https://github.com/fastavro/fastavro/archive/$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+build() {
+	FASTAVRO_USE_CYTHON=1 python3 setup.py build
+}
+
+check() {
+	PYTHONPATH="$(echo $PWD/build/lib.*)" python3 -m pytest -v tests
+}
+
+package() {
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
+}
+
+sha512sums="a49636ed77330605df1d92931245c2875db5a983de39d3c405d7e5745e434870e3e59e87e098b1caf6d74c1981ff6d40db6a200075af01bc2f33185c84cf8140  py3-fastavro-0.22.7.tar.gz"

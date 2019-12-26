@@ -1,0 +1,30 @@
+# Contributor: Francesco Colista <fcolista@alpinelinux.org>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=py3-cx_freeze
+_pkgname=cx_Freeze
+pkgver=6.0
+pkgrel=0
+pkgdesc="Set of utilities for freezing Python scripts into executables"
+url="http://cx-freeze.sourceforge.net/"
+arch="all"
+license="PSF"
+makedepends="py3-setuptools python3-dev"
+source="https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir"/$_pkgname-$pkgver
+
+replaces="py-cx_freeze" # Backwards compatibility
+provides="py-cx_freeze=$pkgver-r$pkgrel" # Backwards compatibility
+
+check() {
+	python3 setup.py check
+}
+
+build() {
+	python3 setup.py build
+}
+
+package() {
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
+}
+
+sha512sums="ef7bee8e1ee880d186894e526962001c5190872f3a144ea50f850bc80272e15fbcfb0bc3d42c172e6bc5f6dcfa2329ab197b314c6310d09fc4d4bf999cdbdad0  cx_Freeze-6.0.tar.gz"

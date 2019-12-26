@@ -3,39 +3,41 @@
 # Maintainer: Kiyoshi Aman <kiyoshi.aman@gmail.com>
 pkgname=perl-devel-stacktrace
 _pkgreal=Devel-StackTrace
-pkgver=2.00
+pkgver=2.04
 pkgrel=0
 pkgdesc="An object representing a stack trace"
 url="http://search.cpan.org/dist/Devel-StackTrace/"
 arch="noarch"
-license="Artistic-2"
-cpandepends=""
-cpanmakedepends="   "
-depends="$cpandepends"
-makedepends="perl-dev $cpanmakedepends"
+license="Artistic-2.0"
+makedepends="perl-dev"
 subpackages="$pkgname-doc"
 source="http://search.cpan.org/CPAN/authors/id/D/DR/DROLSKY/$_pkgreal-$pkgver.tar.gz"
 
-_builddir="$srcdir/$_pkgreal-$pkgver"
+builddir="$srcdir/$_pkgreal-$pkgver"
 
 prepare() {
-	cd "$_builddir"
-	export CFLAGS=`perl -MConfig -E 'say $Config{ccflags}'`
+	default_prepare
+
+	cd "$builddir"
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
 	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
 }
 
 build() {
-	cd "$_builddir"
-	export CFLAGS=`perl -MConfig -E 'say $Config{ccflags}'`
-	make && make test
+	cd "$builddir"
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
+	make
+}
+
+check() {
+	cd "$builddir"
+	make test
 }
 
 package() {
-	cd "$_builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	cd "$builddir"
+	make DESTDIR="$pkgdir" install
 	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 
-md5sums="826ed2bc7cdd8d852d7d2d8b69aa313c  Devel-StackTrace-2.00.tar.gz"
-sha256sums="1debe7273099a60e1386e0da5edbed7334db3cf3ed8e3b4106b087100b8ec5e4  Devel-StackTrace-2.00.tar.gz"
-sha512sums="3a91249dd6c6da34ceeb66d947c269e360503f193b57acbed76671b030de4d2f7e9bf2c0cc4104777fbfd1dc610c06cf3c1e21b914334bb068b66875cc4e2af7  Devel-StackTrace-2.00.tar.gz"
+sha512sums="2330c1d8619cdcb42b5919090e6eaabbe34ab26b50d5c09c4cfd7ed099829817a50ffe582bd1f2a19a7d5be050819796f22dee32b10e175259e6df177ce6d0a9  Devel-StackTrace-2.04.tar.gz"

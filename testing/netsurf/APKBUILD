@@ -2,48 +2,63 @@
 # Contributor: ScrumpyJack <scrumpyjack@st.ilet.to>
 # Maintainer: ScrumpyJack <scrumpyjack@st.ilet.to>
 pkgname=netsurf
-pkgver=3.6
-pkgrel=2
+pkgver=3.9
+pkgrel=0
 pkgdesc="NetSurf is a free, open source web browser."
 url="http://www.netsurf-browser.org"
-arch="all"
-license="GPL2"
-depends=""
-depends_dev=""
-makedepends="curl-dev libressl-dev doxygen flex bison libwebp-dev lcms2-dev
-	libmng-dev gperf libglade-dev gtk+-dev libcurl libpng-dev libidn-dev
-	check-dev libidn-dev libharu-dev librsvg-dev libjpeg-turbo-dev"
-install=""
+arch="all !s390x"
+license="GPL-2.0"
+makedepends="curl-dev openssl-dev doxygen flex bison libwebp-dev lcms2-dev
+	libmng-dev gperf libglade-dev gtk+3.0-dev libcurl libpng-dev libidn-dev
+	check-dev libharu-dev librsvg-dev libjpeg-turbo-dev vim"
 subpackages="$pkgname-doc"
-source="$pkgname-$pkgver.tar.gz::http://download.netsurf-browser.org/netsurf/releases/source-full/${pkgname}-all-${pkgver}.tar.gz
+source="http://download.netsurf-browser.org/netsurf/releases/source-full/netsurf-all-$pkgver.tar.gz
 	netsurf"
 
-builddir="$srcdir"/${pkgname}-all-${pkgver}
+builddir="$srcdir"/$pkgname-all-$pkgver
+
 prepare() {
-	default_prepare || return 1
-	sed 's:-Werror::' -i "$builddir"/libsvgtiny/Makefile \
-		|| return 1
+	default_prepare
+	sed 's:-Werror::' -i "$builddir"/libsvgtiny/Makefile
 }
 
 build() {
-	cd "$builddir"
-	make PREFIX=/usr TARGET=gtk || return 1
+	make \
+		TARGET=gtk \
+		NETSURF_GTK_MAJOR=3 \
+		LIBDIR=lib \
+		INCLUDEDIR=include \
+		PREFIX=/usr
 }
 
 package() {
-	cd "$builddir"
-	make PREFIX=/usr TARGET=gtk DESTDIR="${pkgdir}" \
-		install || return 1
+	make \
+		TARGET=gtk \
+		NETSURF_GTK_MAJOR=3 \
+		LIBDIR=lib \
+		INCLUDEDIR=include \
+		DESTDIR="$pkgdir" \
+		PREFIX=/usr \
+		install
 
 	install -Dm755 "$srcdir/netsurf" "$pkgdir/usr/bin/$pkgname"
 
-	mkdir -p "$pkgdir"/usr/share/man/man1/
-	install -Dm644 netsurf/Docs/netsurf-gtk.1 "$pkgdir"/usr/share/man/man1/
+	install -Dm644 netsurf/docs/netsurf-gtk.1 -t "$pkgdir"/usr/share/man/man1
+
+	# Icon
+	install -Dm644 netsurf/frontends/gtk/res/netsurf.xpm \
+		"$pkgdir"/usr/share/pixmaps/netsurf.xpm
+
+	# Desktop file
+	install -Dm644 netsurf/frontends/gtk/res/netsurf-gtk.desktop \
+		"$pkgdir"/usr/share/applications/netsurf.desktop
+
+	# Run netsurf, not netsurf-gtk
+	sed \
+		-e 's:netsurf-gtk:netsurf:g' \
+		-e 's:netsurf.png:netsurf:g' \
+		-i "$pkgdir"/usr/share/applications/netsurf.desktop
 }
 
-md5sums="3a3ee17f090ead06ce665313175497f7  netsurf-3.6.tar.gz
-399e93451e79f5471aa16baab48cbb2c  netsurf"
-sha256sums="fdde93ab180222bda8e2135dbb52d7cc1b63c66eaa5da74782f1ce6d894df8b1  netsurf-3.6.tar.gz
-e0be8ff79d28bf8db392ae413bd27d917505bcaa03d4c834324413817eb26c4a  netsurf"
-sha512sums="1b7dcc80efe8e3944e5db7d74da749821adb3ae39700df3efa6ecb347a00e33350e1d56d4139654d50ac41563edf3de52f0eb25bff6490d74144a7970fb6c3b4  netsurf-3.6.tar.gz
-a22f945720d3bd8fc27396aea973be1e0b6f7a03bbe438fb48faf680882be46b05fc252b5fe8d55cde0cc11f3647f4ac331dcc330f47ae12a93b327f30a9ad2a  netsurf"
+sha512sums="3223b0a3bc9721ea1a5a81bbabdda11e1d0f63850074a5dea3ea8999e53c92f07228f58befbf10359c028965131426888a8b9595d6c3cd7a5cde33ca256cf987  netsurf-all-3.9.tar.gz
+4f6868f377abb1fbade92088bee9a319952c4cee82821ca5b3f892484e0d111f33045c8583f3d069e48af6f3f2fcad43c364daa0f5457b3b013542793ac10fcf  netsurf"

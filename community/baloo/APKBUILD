@@ -1,0 +1,35 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=baloo
+pkgver=5.65.0
+pkgrel=0
+pkgdesc="A framework for searching and managing metadata"
+arch="all"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.1-or-later AND (LGPL-2.1-only OR LGPL-3.0-only)"
+depends_dev="qt5-qtdeclarative-dev lmdb-dev kcoreaddons-dev kconfig-dev kdbusaddons-dev ki18n-dev kidletime-dev solid-dev kfilemetadata-dev kcrash-dev kio-dev kservice-dev kbookmarks-dev kcompletion-dev kjobwidgets-dev"
+makedepends="$depends_dev extra-cmake-modules qt5-qtbase-dev"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/baloo-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-lang"
+options="!check" # Tons of broken tests
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+sha512sums="34bdf91fddd0dded512cfb6c23a8648caf7b1bb321352d08550fcb15787fc24408f054ae01f2a2fb8be5918456d354ba87f5d388c72e3e629536457b993d95d2  baloo-5.65.0.tar.xz"

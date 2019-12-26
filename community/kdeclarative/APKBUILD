@@ -1,0 +1,43 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kdeclarative
+pkgver=5.65.0
+pkgrel=0
+pkgdesc="Provides integration of QML and KDE Frameworks"
+arch="all"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.1-or-later"
+depends_dev="qt5-qtdeclarative-dev kconfig-dev ki18n-dev kiconthemes-dev kio-dev kwidgetsaddons-dev kwindowsystem-dev kglobalaccel-dev kguiaddons-dev kpackage-dev libepoxy-dev"
+makedepends="$depends_dev extra-cmake-modules doxygen qt5-qttools-dev"
+checkdepends="xvfb-run"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/kdeclarative-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_QCH=ON
+	make
+}
+
+check() {
+	cd "$builddir"/build
+
+	# quickviewsharedengine requires OpenGL
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest -E "quickviewsharedengine"
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+sha512sums="d8cabccb96c7ef820533b0350cd18125a534e75fcf9e9debbb5bb38225c2ad718093574a1ba790b9671550f5ccdefc2ea8363526df0fab91dd692ee34e5c4b8d  kdeclarative-5.65.0.tar.xz"

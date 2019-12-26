@@ -1,0 +1,52 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=live-media
+pkgver=2019.12.13
+pkgrel=0
+pkgdesc="A set of C++ libraries for multimedia streaming"
+url="http://live555.com/liveMedia"
+arch="all"
+license="LGPL-3.0-or-later"
+makedepends="openssl-dev"
+subpackages="$pkgname-dev $pkgname-utils"
+options="!check"
+source="http://live555.com/liveMedia/public/live.$pkgver.tar.gz"
+builddir="$srcdir"/live
+
+prepare() {
+	sed -e "/^COMPILE_OPTS/s/$/ $CFLAGS -fPIC -DPIC -DXLOCALE_NOT_USED=1 -DRTSPCLIENT_SYNCHRONOUS_INTERFACE/" \
+		-i config.linux-with-shared-libraries
+}
+
+build() {
+	./genMakefiles linux-with-shared-libraries
+	make C_COMPILER="${CC:-gcc}" CPLUSPLUS_COMPILER="${CXX:-g++}"
+}
+
+package() {
+	local testprog f so
+	mkdir -p "$pkgdir"/usr/lib
+	for f in BasicUsageEnvironment UsageEnvironment liveMedia groupsock; do
+		mkdir -p "$pkgdir"/usr/include/$f
+		cp $f/include/*.h* "$pkgdir"/usr/include/$f
+		for so in $f/lib*.so.*; do
+			soname=$(scanelf -B --format "#F%S" $so)
+			cp $so "$pkgdir"/usr/lib/
+			so=${so##*/}
+			ln -s ${so} "$pkgdir"/usr/lib/$soname
+			ln -s ${so} "$pkgdir"/usr/lib/${soname%.so.*}.so
+		done
+	done
+
+	mkdir -p "$pkgdir"/usr/bin
+	for testprog in $(find testProgs -type f -perm 755); do
+		install ${testprog} "$pkgdir"/usr/bin
+	done
+}
+
+utils() {
+	pkgdesc="multimedia RTSP streaming tools"
+	mkdir -p "$subpkgdir"/usr
+	mv "$pkgdir"/usr/bin "$subpkgdir"/usr/
+}
+
+sha512sums="a147e58b93f7f3c87dd4cbb6343dce22173a188a17bc0d1ae1428df8bd95d2dbaa8d49920ec2b57972bf743bea7aaee226af0a1cee230a7446c63a39ca39c008  live.2019.12.13.tar.gz"

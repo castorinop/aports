@@ -2,11 +2,11 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=perl-params-util
 pkgver=1.07
-pkgrel=5
+pkgrel=7
 pkgdesc="Params::Util perl module"
 url="http://search.cpan.org/dist/Params-Util/"
 arch="all"
-license="GPLv2 or Artistic"
+license="GPL-2.0 or Artistic"
 depends="perl"
 makedepends="perl-dev"
 install=""

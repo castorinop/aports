@@ -1,37 +1,31 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=xf86-video-sis
-pkgver=0.10.9
+pkgver=0.12.0
 pkgrel=0
 pkgdesc="X.org SiS video driver"
-url="http://xorg.freedesktop.org/"
+url="https://xorg.freedesktop.org"
 arch="all"
 license="MIT"
 subpackages="$pkgname-doc"
-depends=
-makedepends="xorg-server-dev videoproto renderproto xproto
-	fontsproto xf86dgaproto xineramaproto randrproto xextproto mesa-dev
-	xf86driproto glproto libxi-dev"
-
-source="http://www.x.org/releases/individual/driver/$pkgname-$pkgver.tar.bz2
-	"
-
-builddir="$srcdir"/$pkgname-$pkgver
+makedepends="xorg-server-dev util-macros mesa-dev libxi-dev xorgproto"
+source="https://www.x.org/releases/individual/driver/xf86-video-sis-$pkgver.tar.bz2"
 
 build() {
-	cd "$builddir"
 	export LDFLAGS="$LDFLAGS -Wl,-z,lazy"
 
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
-		--prefix=/usr \
-		|| return 1
-	make || return 1
+		--prefix=/usr
+	make
+}
+
+check() {
+	make check
 }
 
 package() {
-	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 	install -Dm644 COPYING "$pkgdir"/usr/share/licenses/$pkgname/COPYING
 }
-sha512sums="7cb11d2f1f8be8d92159af7e322a9e4fe4e3436c38932d6d665b8854c2009495e99ff075c7a14d9db9c781114afc8397f0e8c1225d9a2f4bbf1b6a4b6cd6745d  xf86-video-sis-0.10.9.tar.bz2"
+sha512sums="5aa101e5217f15667f2c94f7a76f4afcf47717b61f5d206ce65efe35dc3f674ca294f98ca8586971c6467f31decdd94d8255ebfc7dc220fac0179afc61995952  xf86-video-sis-0.12.0.tar.bz2"

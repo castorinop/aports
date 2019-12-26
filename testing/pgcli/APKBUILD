@@ -1,41 +1,38 @@
 # Contributor: Thomas Boerger <thomas@webhippie.de>
 # Maintainer: Thomas Boerger <thomas@webhippie.de>
 pkgname=pgcli
-pkgver=1.7.0
-pkgrel=0
+pkgver=2.1.1
+pkgrel=2
 pkgdesc="Postgres CLI with autocompletion and syntax highlighting"
-url="http://pgcli.com"
+options="!check" # Tests fail
+url="https://www.pgcli.com"
 arch="noarch"
-license="BSD"
+license="BSD-3-Clause"
 depends="python3
 	py3-pgspecial
 	py3-click
 	py3-pygments
-	py3-prompt_toolkit<1.1.0
+	py3-prompt_toolkit>2.0.0
 	py3-psycopg2
-	py3-sqlparse<0.3.0
+	py3-sqlparse<0.4.0
 	py3-configobj
 	py3-humanize
 	py3-wcwidth
-	py3-cli_helpers<1.0.0
-	py3-setproctitle"
+	py3-cli_helpers>1.0.0"
+checkdepends="pytest py3-mock"
 makedepends="python3-dev"
 source="$pkgname-$pkgver.tar.gz::https://files.pythonhosted.org/packages/source/${pkgname:0:1}/$pkgname/$pkgname-$pkgver.tar.gz"
-builddir="$srcdir/$pkgname-$pkgver"
 
 check() {
-	cd "$builddir"
-	python3 setup.py check
+	python3 -m pytest tests
 }
 
 build() {
-	cd "$builddir"
 	python3 setup.py build
 }
 
 package() {
-	cd "$builddir"
 	python3 setup.py install --prefix=/usr --root="$pkgdir"
 }
 
-sha512sums="1918ffc2922067fb9fb150e645cb4c9bcb7505ab5c9733fe794a828a9060f3182918936407eb71cb52fe05b2e72531b04961076fab6a8090429c5d25401a069c  pgcli-1.7.0.tar.gz"
+sha512sums="5fe43d82c9ac840ceb9d458d193dfe37af31ac429c58754cfc24bd5377ebc76e0f72a3a7a04f07a41a329ee9170b86365bf5e7ca387b1433e8ac94299fc574aa  pgcli-2.1.1.tar.gz"

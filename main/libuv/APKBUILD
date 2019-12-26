@@ -1,30 +1,28 @@
 # Contributor: Jose-Luis Rivas <ghostbar@riseup.net>
-# Conttributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=libuv
-pkgver=1.14.0
-pkgrel=1
+pkgver=1.34.0
+pkgrel=0
 pkgdesc="Cross-platform asychronous I/O"
-url="http://libuv.org"
+url="https://libuv.org"
 arch="all"
-license="MIT BSD ISC"
-makedepends="automake autoconf libtool linux-headers"
-subpackages="$pkgname-dev $pkgname-dbg"
-source="http://dist.libuv.org/dist/v$pkgver/$pkgname-v$pkgver.tar.gz
-	disable-setuid-test.patch
-	fix-process-title.patch
+license="MIT AND ISC"
+makedepends_build="automake autoconf libtool"
+makedepends_host="linux-headers"
+subpackages="$pkgname-static $pkgname-dev $pkgname-dbg"
+source="https://dist.libuv.org/dist/v$pkgver/libuv-v$pkgver.tar.gz
+	revert-test-udp-multicast-join-1.31.patch
+	disable-test-failing-on-builders.patch
 	"
 builddir="$srcdir/$pkgname-v$pkgver"
 
 prepare() {
 	default_prepare
-
-	cd "$builddir"
 	sh autogen.sh
 }
 
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -36,17 +34,24 @@ build() {
 }
 
 check() {
-	cd "$builddir"
+	# see https://github.com/libuv/libuv/issues/2307
+	case $CARCH in
+		x86*)
+			if test $DRONE; then
+				sed -i "s/TEST_.*(ipc_closed_handle)//g" test/test-list.h
+			fi
+		;;
+	esac
+
 	make check
 }
 
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir" install
 	install -Dm644 LICENSE \
 		"$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }
 
-sha512sums="a84c62021d50bf5a6024d05580243b21850f09123ff1865fc43fb7f2aabf1f65e5a7d9b33e446ca9a75c1b82d5cdad11b35f18cdc26e7323d0f957ac9af4623f  libuv-v1.14.0.tar.gz
-478d25c8905cd393b9ced0f1b16e70794a7ef20fb9eb212fd74e50beca3f5a33a6a5267616abecf470426ed3d00efec51df468745ff43c0de05c0ad8234f1eb3  disable-setuid-test.patch
-be729683c3868246d9e4ee0a85073777a6f03a4ec8931eae9a15e0f68dddbef54892224fc5d01dc49e1b101bb0acf2e9a47363b42c9b86edaecf78eff16e0375  fix-process-title.patch"
+sha512sums="91f36185b206f818b5536fa9c11001dd8cf3acfd12d6c263ad5678812e144ec441cf80693df291cf8336155e854ecc50d57da80ff1d4cd8eca8c8a9defb0d33e  libuv-v1.34.0.tar.gz
+f341410a6c693d4ef6c11b72d13d28690dcab3978b500c9cdf5ee5dbee0b9703b92d39f117109c5b3069831b5c92d804fc161de107a95f42dfdad0ffcb96868b  revert-test-udp-multicast-join-1.31.patch
+0d155259cfaa78fd229a015fd7181b9a76bf4618e36e6e9d4697323cddcde42f29598f161f6831489ec31adc5cf2614cb670021bf6f5ede7202bcbad7f675fbb  disable-test-failing-on-builders.patch"

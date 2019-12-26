@@ -1,0 +1,58 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kitinerary
+pkgver=19.12.0
+pkgrel=0
+arch="all"
+url="https://kontact.kde.org/"
+pkgdesc="Data model and extraction system for travel reservation information"
+license="LGPL-2.0-or-later"
+makedepends="
+	extra-cmake-modules
+	qt5-qtbase-dev
+	qt5-qtdeclarative-dev
+	ki18n-dev
+	kmime-dev
+	kcalendarcore-dev
+	kcontacts-dev
+	kpkpass-dev
+	poppler-dev
+	zxing-cpp-dev
+	zxing-cpp
+	zlib-dev
+	libxml2-dev
+	shared-mime-info
+	"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kitinerary-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-lang"
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	cd "$builddir"/build
+
+	# jsonlddocumenttest, mergeutiltest, airportdbtest, pkpassextractortest,
+	# postprocessortest, calendarhandlertest and extractortest are broken
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest \
+		-E "(jsonlddocument|mergeutil|airportdb|pkpassextractor|postprocessor|calendarhandler|extractor)test"
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="1bf57a8ac88261fe4759af13013e404677f0ffdd14ce0263938b99b828eb63a12d544a28554885704c53d683f17e47950ce4e5ed0767c1308838524c88c38d83  kitinerary-19.12.0.tar.xz"

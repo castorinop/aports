@@ -1,8 +1,8 @@
-# Contributor: Marian <marian.buschsieweke@ovgu.de>
-# Maintainer: Marian <marian.buschsieweke@ovgu.de>
+# Contributor: Marian Buschsieweke <marian.buschsieweke@ovgu.de>
+# Maintainer: Marian Buschsieweke <marian.buschsieweke@ovgu.de>
 pkgname=prosody-modules
-pkgver=0.9.20170828
-_commit=595d9d68fd11
+pkgver=0.10_hg20181204
+_commit=4fe7eee926ce
 pkgrel=0
 pkgdesc="modules for the prosody XMPP server"
 url="https://modules.prosody.im/"
@@ -10,19 +10,20 @@ arch="noarch"
 license="MIT"
 makedepends=""
 # Create one subpackage for every modules considered stable [1]. In addition
-# the modules mod-auth-ldap, mod-auth-pam, mod-carbons, mod-mam and mod-smacks
-# are included.
+# the modules mod-auth-ldap, mod-auth-pam, mod-conversejs mod-mam, and
+# mod-smacks are included.
 # [1]: https://modules.prosody.im/stage_stable.html
 subpackages="
 	prosody-mod-auth_ldap
 	prosody-mod-auth_pam
 	prosody-mod-auth_sql
 	prosody-mod-broadcast
-	prosody-mod-carbons
 	prosody-mod-c2s_conn_throttle
+	prosody-mod-conversejs
 	prosody-mod-host_guard
 	prosody-mod-ipcheck
 	prosody-mod-log_auth
+	prosody-mod-log_slow_events
 	prosody-mod-mam
 	prosody-mod-pastebin
 	prosody-mod-register_json
@@ -39,7 +40,7 @@ subpackages="
 depends="prosody $subpackages"
 source="${pkgname}-${_commit}.tar.gz::https://hg.prosody.im/prosody-modules/archive/${_commit}.tar.gz"
 options="!check"
-builddir="${srcdir}/prosody-modules-${_commit}"
+builddir="${srcdir}/Community-Modules-${_commit}"
 
 package(){
 	mkdir -p "$pkgdir"
@@ -59,7 +60,7 @@ _package_mod(){
 }
 
 auth_ldap(){
-	depends="prosody<0.10 lua5.1-ldap"
+	depends="prosody lua5.2-ldap"
 	pkgdesc="prosody module providing client authentication using LDAP"
 	url="https://modules.prosody.im/mod_${subpkgname#prosody-mod-}.html"
 	_package_mod
@@ -86,16 +87,16 @@ broadcast(){
 	_package_mod
 }
 
-carbons(){
-	depends="prosody<0.10"
+c2s_conn_throttle(){
+	depends="prosody"
 	pkgdesc="prosody module limiting the frequency of login attempts"
 	url="https://modules.prosody.im/mod_${subpkgname#prosody-mod-}.html"
 	_package_mod
 }
 
-c2s_conn_throttle(){
+conversejs(){
 	depends="prosody"
-	pkgdesc="prosody module limiting the frequency of login attempts"
+	pkgdesc="prosody module to serve an HTML+JavaScript XMPP client via http"
 	url="https://modules.prosody.im/mod_${subpkgname#prosody-mod-}.html"
 	_package_mod
 }
@@ -117,6 +118,13 @@ ipcheck(){
 log_auth(){
 	depends="prosody"
 	pkgdesc="prosody module to log the clients IP address for failed login attempts"
+	url="https://modules.prosody.im/mod_${subpkgname#prosody-mod-}.html"
+	_package_mod
+}
+
+log_slow_events(){
+	depends="prosody"
+	pkgdesc="prosody module to log when event handlers (e.g. of modules) perform poorly"
 	url="https://modules.prosody.im/mod_${subpkgname#prosody-mod-}.html"
 	_package_mod
 }
@@ -216,4 +224,4 @@ webpresence(){
 	_package_mod
 }
 
-sha512sums="fba8311f4b718b613435536bef36c0c01c62c663d8093ac6710eab9b784a08d4f689658c800f58fe4148bd43d9e0c6a5d56be3f2cff4ead6555a623860cb0825  prosody-modules-595d9d68fd11.tar.gz"
+sha512sums="32e973fc0e7ce79ce7ef31707a92e6c27ab32892b76b7b74f141b9b8762a2480169b7c8c99c296207e5d1bc75c20c6910fbd32a56ece1590f9b157d939053616  prosody-modules-4fe7eee926ce.tar.gz"

@@ -1,21 +1,16 @@
 # Contributor: Assaf Gordon <assafgordon@gmail.com>
 # Maintainer: Assaf Gordon <assafgordon@gmail.com>
 pkgname=datamash
-pkgver=1.2
+pkgver=1.5
 pkgrel=0
-
 pkgdesc="command-line text/math procesing"
 url="https://www.gnu.org/software/datamash/"
 arch="all"
-license="GPL"
-source="http://ftpmirror.gnu.org/datamash/$pkgname-$pkgver.tar.gz"
+license="GPL-3.0-or-later"
+source="https://ftpmirror.gnu.org/datamash/datamash-$pkgver.tar.gz"
 subpackages="$pkgname-doc $pkgname-bash-completion:bashcomp:noarch"
 
-builddir="$srcdir/$pkgname-$pkgver"
-
 build() {
-	cd "$builddir"
-
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -25,13 +20,14 @@ build() {
 		--disable-nls \
 		--disable-werror \
 		--with-bash-completion-dir=local
-
 	make
 }
 
-package() {
-	cd "$builddir"
+check() {
+	make check
+}
 
+package() {
 	make -j1 DESTDIR="$pkgdir" install
 	rm -rf "$pkgdir"/usr/share/datamash/examples \
 		"$pkgdir"/usr/lib/charset.alias
@@ -45,7 +41,7 @@ bashcomp() {
 	mkdir -p "$subpkgdir"/usr/share/bash-completion/completions/
 	mv "$pkgdir"/usr/share/datamash/bash-completion.d/datamash \
 		"$subpkgdir"/usr/share/bash-completion/completions/
-	rmdir -p "$pkgdir"/usr/share/datamash/bash-completion.d || true
+	rm -r "$pkgdir"/usr/share/datamash/bash-completion.d || true
 }
 
-sha512sums="afb0960ffa881e1112394f5e0355c7a6efea13d6bdcbccb9830a6cde617e13701ca361d62c8283b7a64a27135b2f54a75970b17a7d73a5f0ba914ab70f05c086  datamash-1.2.tar.gz"
+sha512sums="9f7bff0858a7519ef8efc30ef39c3e99f17e81ed847f1edce6ff28e1191d52fbc173baa5d21d6852effbbf2af800604920d92d412f45519700a9b5809da0e8fa  datamash-1.5.tar.gz"

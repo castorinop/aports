@@ -13,7 +13,7 @@ This means you care about the quality of your contributions.
   * Know how to work with git history (rebasing your commits).
   * Know how to create Pull Requests.
 2. Have access to an Alpine Linux [development environment](https://wiki.alpinelinux.org/wiki/Developer_Documentation#Development).
-3. Please __do not__ submit PR's via Github's web interface. You should have a working [development envirorment](https://wiki.alpinelinux.org/wiki/Developer_Documentation#Development) available and submit your commits from your git client.
+3. Please __do not__ submit PR's via Github's web interface. You should have a working [development environment](https://wiki.alpinelinux.org/wiki/Developer_Documentation#Development) available and submit your commits from your git client.
 
 ### Before you start making changes
 
@@ -55,3 +55,7 @@ Failing to include __new__ dependencies will fail the CI tests.
 
 If by some mistake you end up with multiple commits in your PR and one of our developers asks you to squash your commits please do __NOT__ create a new pull request.
 Instead please follow [this rebase tutorial](https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History#Changing-Multiple-Commit-Messages).
+
+### Pull Request (PR) max age
+
+Pull Requests that have not been updated in the last 180 days will automatically be labeled S-stale. After 7 days of additional inactivity the PR will automatically be closed except if one of the Alpine developers will label it with S-WIP (Work In Progress).

@@ -1,0 +1,40 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kalarmcal
+pkgver=19.12.0
+pkgrel=0
+arch="all"
+url="https://kontact.kde.org/"
+pkgdesc="The KAlarm client library"
+license="LGPL-2.0-or-later"
+makedepends="extra-cmake-modules kconfig-dev ki18n-dev kholidays-dev akonadi-dev kcalendarcore-dev kidentitymanagement-dev kcalutils-dev"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kalarmcal-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-lang"
+options="!check" # Broken
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	cd "$builddir"/build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="eb7832464fe64414e31508f75c8a8cb91b5b196a0927f96c0266cb220842c77dafd098dc6985477ce27c9bf1b142697bd3d2b48108792e5b51b9351b9c36fdc4  kalarmcal-19.12.0.tar.xz"

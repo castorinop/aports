@@ -1,30 +1,29 @@
 # Contributor: Klemens Nanni <kl3@posteo.org>
 # Maintainer: Klemens Nanni <kl3@posteo.org>
 pkgname=plzip
-pkgver=1.5
+pkgver=1.8
 pkgrel=0
-pkgdesc="Plzip is a massively parallel lossless data compressor"
+pkgdesc="Massively parallel lossless data compressor"
 url="http://www.nongnu.org/lzip/plzip.html"
 arch="all"
-license="GPL2+"
-depends=""
-depends_dev=""
-makedepends="lzlib"
-install=""
+license="GPL-2.0-or-later"
+makedepends="lzlib-dev"
 subpackages="${pkgname}-doc"
-source="http://download.savannah.gnu.org/releases/lzip/${pkgname}/${pkgname}-${pkgver}.tar.gz"
+source="https://download.savannah.gnu.org/releases/lzip/$pkgname/$pkgname-$pkgver.tar.gz"
 
-builddir="${srcdir}/${pkgname}-${pkgver}"
 build() {
-	cd "${builddir}"
-	./configure --prefix=/usr
-	make || return 1
+	./configure \
+		--prefix=/usr \
+		--mandir=/usr/share/man
+	make
+}
+
+check() {
+	make check
 }
 
 package() {
-	cd "${builddir}"
-	make DESTDIR="${pkgdir}" install || return 1
+	make DESTDIR="$pkgdir" install
 }
-md5sums="504d46ba468d337ec6c42f3c583632ba  plzip-1.5.tar.gz"
-sha256sums="cd401683c2c57ecf170c99a873e41e9e5fee0e9680341646e31032e31489cc8a  plzip-1.5.tar.gz"
-sha512sums="af3f7b6cb249686286d90683c3040591e0bc362dc4c10c054836de179e52755539650963c06a21f76f3db418ed08606c754af73af1d5baf081f434ddcadd01c5  plzip-1.5.tar.gz"
+
+sha512sums="e8e822f8ae77e06178538b62075fa1c5d9cbc76c78bee7ad595a4637cd4077f53fd9e3fe61ca3fbddaa8b950e739d97527dc8fbecae04de1ac3ef83d0d5f13b4  plzip-1.8.tar.gz"

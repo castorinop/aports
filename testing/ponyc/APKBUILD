@@ -1,0 +1,78 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Rasmus Thomsen <oss@cogitri.dev>
+pkgname=ponyc
+pkgver=0.33.0
+pkgrel=0
+pkgdesc="An open-source, actor-model, capabilities-secure, high performance programming language"
+url="https://www.ponylang.org"
+arch="all !s390x !ppc64le"
+license="BSD-2-Clause"
+_llvmver=6
+depends="binutils-gold"
+checkdepends="openssl-dev pcre2-dev"
+# Ponyc _is_ compatible with LLVM7, but LLVM7 is pretty buggy on musl.
+makedepends="libexecinfo-dev llvm$_llvmver-dev ncurses-dev paxmark
+	zlib-dev linux-headers"
+options="!check"
+subpackages="$pkgname-static $pkgname-dev $pkgname-doc"
+source="ponyc-$pkgver.tar.gz::https://github.com/ponylang/ponyc/archive/$pkgver.tar.gz
+	more-portable-ln.patch
+	makefile-remove-march-mtune.patch"
+
+export LLVM_CONFIG=/usr/lib/llvm$_llvmver/bin/llvm-config
+# Required to not crash gold: https://sourceware.org/bugzilla/show_bug.cgi?id=23856
+export CFLAGS="$CFLAGS -fPIE"
+
+build() {
+	make \
+		config=release \
+		default_pic=true \
+		link=llvm-dynamic \
+		verbose=true
+
+	paxmark m build/release/ponyc \
+		build/release/libponyc.tests
+
+	mkdir docs
+	build/release/ponyc packages/stdlib -rexpr -g -o docs
+}
+
+check() {
+	make test
+}
+
+package() {
+	make \
+		config=release \
+		default_pic=true \
+		link=llvm-dynamic \
+		ponydir="$pkgdir"/usr/lib/pony/$pkgver \
+		prefix="$pkgdir"/usr \
+		install
+
+	# links to $pkgdir
+	ln -sf /usr/lib/pony/$pkgver/lib/native/libponyrt.a "$pkgdir"/usr/lib/libponyrt.a
+	ln -sf /usr/lib/pony/$pkgver/lib/native/libponyrt-pic.a "$pkgdir"/usr/lib/libponyrt-pic.a
+	ln -sf /usr/lib/pony/$pkgver/lib/native/libponyc.a "$pkgdir"/usr/lib/libponyc.a
+	ln -sf /usr/lib/pony/$pkgver/bin/ponyc "$pkgdir"/usr/bin/ponyc
+
+	# We install these manually in dev()
+	rm -r "$pkgdir"/usr/include/
+
+	mkdir -p "$pkgdir"/usr/share/doc/$pkgname
+	cp -r docs/stdlib-docs/docs "$pkgdir"/usr/share/doc/$pkgname/stdlib
+}
+
+# Note: libponyrt*.a and libponyc.a are needed in runtime.
+dev() {
+	pkgdesc="$pkgdesc (development files)"
+	depends="$pkgname=$pkgver-r$pkgrel"
+
+	mkdir -p "$subpkgdir"/usr/
+	mv "$pkgdir"/usr/lib/pony/$pkgver/include "$subpkgdir"/usr
+}
+
+sha512sums="bc867af4334ca4aff5c4eefad9ac5ee3ea6027a4f021c5af4ae144a310f14c99207878ca24017face7c543bb7b4f8ee801c49d9368f5a3e6e7763abc5f867a6a  ponyc-0.33.0.tar.gz
+38aa40f6000dcb823be7b542cdad8d04b6ac4cd0a4fff1a472520a7cb71631fb34e5bee74914fe559674594dd901aede91390809e143dd96c5d68a16f8ac196c  more-portable-ln.patch
+ce98aa2e33d057714703364509afd15e42ba53b5fefd42b66b9996a69036767595b868ddda592695bb109f09a7e1de118a53f262c2b23cbdf0b84063245f8b1b  makefile-remove-march-mtune.patch"

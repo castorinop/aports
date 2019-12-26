@@ -3,8 +3,8 @@
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=perl-unicode-linebreak
 _pkgreal=Unicode-LineBreak
-pkgver=2017.004
-pkgrel=1
+pkgver=2019.001
+pkgrel=2
 pkgdesc="UAX #14 Unicode Line Breaking Algorithm"
 url="http://search.cpan.org/dist/Unicode-LineBreak/"
 arch="all"
@@ -41,4 +41,4 @@ package() {
 	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 
-sha512sums="f372174a761f87663761dc8b0f9bf387ffe289ba267fc0fb58353ac06dfa9418d4b0ac6e4e0d7833d842feacae4f8e90e521cd677ab22db1bf32e75f10f2e727  Unicode-LineBreak-2017.004.tar.gz"
+sha512sums="2d285f928db2ed32aefa741629ce9f9bee82e69c247eaa2c9145fdb4e9bae4441bf822e108cbffc3955369539474c3299f0a8f69026a5f9686aa8458a1d87f27  Unicode-LineBreak-2019.001.tar.gz"

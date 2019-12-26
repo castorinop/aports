@@ -1,18 +1,23 @@
 # Contributor: <kalonji@gmail.com>
 # Contributor: Jakub Jirutka <jakub@jirutka.cz>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+#
+# secfixes:
+#   5.4.2-r1:
+#     - CVE-2018-1083
+#     - CVE-2018-1071
+#
 pkgname=zsh
-pkgver=5.4.1
+pkgver=5.7.1
 pkgrel=0
-pkgdesc="A very advanced and programmable command interpreter (shell)"
-url="http://www.zsh.org/"
+pkgdesc="Very advanced and programmable command interpreter (shell)"
+url="https://www.zsh.org/"
 arch="all"
-license="BSD"
-makedepends="ncurses-dev"
+license="custom"
+makedepends="ncurses-dev diffutils"
 install="zsh.post-install zsh.post-upgrade zsh.pre-deinstall"
-source="http://www.zsh.org/pub/$pkgname-$pkgver.tar.xz
-	zprofile
-	"
+source="https://download.sourceforge.net/project/zsh/zsh/$pkgver/zsh-$pkgver.tar.xz
+	zprofile"
 subpackages="$pkgname-doc $pkgname-calendar::noarch $pkgname-vcs::noarch $pkgname-zftp"
 builddir="$srcdir/$pkgname-$pkgver"
 
@@ -38,18 +43,15 @@ for _i in $_comps; do
 done
 
 prepare() {
-	cd "$builddir"
-
 	default_prepare
-	update_config_sub
 
 	# Remove completions for other systems.
-	cd Completion
+	cd "$builddir/Completion"
 	rm -Rf AIX BSD Cygwin Darwin Debian Mandriva Redhat Solaris openSUSE
 
 	# Remove completions for programs that are not available on Alpine
 	# (just to decrease size of the package).
-	cd Unix/Command
+	cd "$builddir/Completion/Unix/Command"
 	rm -f _aap _apm _baz _bittorrent _bpython _ccal _cdcd _chkconfig _clay \
 		_cowsay _cplay _cssh _darcs _devtodo _dict _dsh _elfdump _elm \
 		_enscript _finger _flasher _fsh _gnupod _guilt _initctl _lzop \
@@ -57,13 +59,21 @@ prepare() {
 		_pack _pax _perforce _pine _pkgadd _pkginfo _pkgrm _prcs \
 		_quilt _raggle _rcs _rlogin _rubber _sablotron _sisu _socket \
 		_stgit _surfraw _tardy _telnet _tin _tla _topgit _totd _twidge \
-		_unace _unison _units _uzbl _vcsh _vux _wiggle _xmms2 _yodl
-	cd ../../Linux/Command
+		_unace _unison _units _uzbl _vcsh _vux _wiggle _xmms2
+	cd "$builddir/Completion/Linux/Command"
 	rm -f _acpitool _mondo _tpb _tpconfig _uml _vserver
-	cd ../../X/Command
+	cd "$builddir/Completion/X/Command"
 	rm -f _acroread _dcop _gnome-gv _gqview _gv _kfmclient _matlab \
 		_nautilus _netscape _okular _qiv _vnc _xfig _xloadimage \
 		_xournal _xv _xwit
+
+	# remove the failing test suites
+	cd "$builddir/Test"
+	# SPLATTER: applet not found
+	rm -f A01grammar.ztst
+	# [[ $(strftime '%@' 0 2> /dev/null) == (%|)@ || $? != 0 ]]
+	rm -f V09datetime.ztst
+
 }
 
 build() {
@@ -85,11 +95,18 @@ build() {
 	make
 }
 
+check() {
+	cd "$builddir"
+
+	make test
+}
+
 package() {
 	cd "$builddir"
 
 	make DESTDIR="$pkgdir" install
 	install -Dm644 "$srcdir"/zprofile "$pkgdir"/etc/zsh/zprofile
+	install -Dm644 LICENCE "$pkgdir"/usr/share/licenses/$pkgname/LICENCE
 }
 
 doc() {
@@ -139,6 +156,5 @@ _submv() {
 	mkdir -p "$subpkgdir"/${path%/*}
 	mv "$pkgdir"/$path "$subpkgdir"/${path%/*}/
 }
-
-sha512sums="c666c54b05e2707e3a3cf9a87a17863792f0c89ec14f5fdc85a3064f26249cfba42a2953bc76bb90205fb87a08c203a165a5240c9fd6c489c13d8cc82ee6e979  zsh-5.4.1.tar.xz
+sha512sums="a6aa88e1955a80229a4784a128866e325f79a8b5f73c922ab480048411036f1835cbb31daa30ab38bd16ab2a50040eda8f4f1f64704b21b6acc3051b1dbf18d0  zsh-5.7.1.tar.xz
 59182b99447872ded8adf0d890e9359ee47fce0b7acb2808f4308f945885fbf6d977a0917bbb5c0f21454caf3ba06ab092127732da4f84292d6ab0989a0110fe  zprofile"

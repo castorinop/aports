@@ -1,35 +1,35 @@
 # Contributor: Alan Lacerda <alacerda@alpinelinux.org>
 # Maintainer: Alan Lacerda <alacerda@alpinelinux.org>
 pkgname=marco
-pkgver=1.18.1
+pkgver=1.22.4
 pkgrel=0
 pkgdesc="MATE window manager"
 url="https://github.com/mate-desktop/marco"
-arch="all"
-license="GPL2"
-depends="mate-common yelp-tools libxml2-utils"
-depends_dev=""
-makedepends="$depends_dev libtool itstool zenity intltool glib-dev gtk+2.0-dev
-	libxcomposite-dev libcanberra-dev"
+arch="all !s390x" # Limited by mate-desktop
+license="GPL-2.0-or-later"
+depends="mate-common yelp-tools libxml2-utils mate-desktop"
+makedepends="libtool itstool zenity intltool glib-dev gtk+3.0-dev
+	libxcomposite-dev libxpresent-dev libcanberra-dev startup-notification-dev"
 subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
-source="http://pub.mate-desktop.org/releases/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
+source="https://pub.mate-desktop.org/releases/${pkgver%.*}/marco-$pkgver.tar.xz"
 
-builddir="$srcdir/$pkgname-$pkgver"
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
-		--with-gtk=2.0 \
 		--sysconfdir=/etc \
 		--localstatedir=/var \
+		--enable-static=no \
 		--prefix=/usr
-	make CFLAGS='-D_GNU_SOURCE'
+	make CFLAGS+=" -D_GNU_SOURCE"
+}
+
+check() {
+	make check
 }
 
 package() {
-	cd "$builddir"
-	make DESTDIR="${pkgdir}" install
+	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="d6851c8c1c5bc25993dc72de7e5090736d236942ad37124ef52d0c23cc66faa1e4288273160bb9c1d1c303c99e3e096dcf031b2ea70bde93858627f31034708c  marco-1.18.1.tar.xz"
+sha512sums="46867396b66453c63624e54c382845b898b10768db0560100f021e57ec80189785093be38eeaf19c50a9e4728de2b6e605267a8f1d5a5596aaa75958c0e3a6b0  marco-1.22.4.tar.xz"

@@ -1,5 +1,7 @@
-/var/log/ulogd.* {
-	missingok
-	copytruncate
-	delaycompress
+/var/log/ulogd* {
+    missingok
+    sharedscripts
+    postrotate
+	killall -HUP ulogd 2> /dev/null || true
+    endscript
 }

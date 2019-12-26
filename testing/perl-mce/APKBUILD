@@ -3,46 +3,38 @@
 # Maintainer: Timo Teräs <timo.teras@iki.fi>
 pkgname=perl-mce
 _pkgreal=MCE
-pkgver=1.829
+pkgver=1.864
 pkgrel=0
 pkgdesc="Many-Core Engine for Perl providing parallel processing capabilities"
-url="http://search.cpan.org/dist/MCE/"
+url="https://metacpan.org/release/MCE"
 arch="noarch"
-license="GPL PerlArtistic"
-cpandepends=""
-cpanmakedepends=""
-cpancheckdepends=""
-depends="$cpandepends"
-makedepends="perl-dev $cpanmakedepends"
-checkdepends="$cpancheckdepends"
+license="GPL-1.0-or-later OR Artistic-1.0-Perl"
+depends="perl"
+makedepends="perl-dev"
 subpackages="$pkgname-doc"
-source="http://search.cpan.org/CPAN/authors/id/M/MA/MARIOROY/$_pkgreal-$pkgver.tar.gz"
+source="https://cpan.metacpan.org/authors/id/M/MA/MARIOROY/MCE-$pkgver.tar.gz"
 builddir="$srcdir/$_pkgreal-$pkgver"
 
 prepare() {
-	default_prepare || return 1
+	default_prepare
 
-	cd "$builddir"
 	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
 	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
 }
 
 build() {
-	cd "$builddir"
 	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
 	make
 }
 
 package() {
-	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 
 check() {
-	cd "$builddir"
 	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
 	make test
 }
 
-sha512sums="fb77945529552e96bbb7f2b455442485cd915394b47b342795c177b33ffe102047de9f0b5f7f5281cefd0af2810bc8523220c881033a873d8b79b8bd9bedddf3  MCE-1.829.tar.gz"
+sha512sums="f4a26ff3d07ac7263335f150a76d00dd2f09ebe5b6b5ce5e311bd2a770d1adaeb9360bba67410b259502a66103417080828d9fd3e22afe952143d58ba86fdb08  MCE-1.864.tar.gz"

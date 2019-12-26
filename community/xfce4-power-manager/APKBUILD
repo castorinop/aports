@@ -1,0 +1,34 @@
+# Contributor: Łukasz Jendrysik <scadu@yandex.com>
+# Contributor: Natanael Copa <ncopa@alpinelinux.org>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=xfce4-power-manager
+pkgver=1.6.5
+pkgrel=0
+pkgdesc="Power management for the Xfce desktop environment"
+url="https://goodies.xfce.org/projects/applications/xfce4-power-manager"
+arch="all"
+license="GPL-2.0-or-later"
+depends="polkit"
+makedepends="xfconf-dev xfce4-panel-dev dbus-glib-dev libnotify-dev
+	libxrandr-dev libxfce4ui-dev upower-dev"
+subpackages="$pkgname-doc $pkgname-lang"
+source="https://archive.xfce.org/src/xfce/xfce4-power-manager/${pkgver%.*}/xfce4-power-manager-$pkgver.tar.bz2"
+
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--infodir=/usr/share/info \
+		--localstatedir=/var
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="ebcf9ba7431518fdafa74f49511200e16093c34f78516e823a2f7ac02a085a08377efe5f9c6fe285f3d1e2de253789404e01b34a48e3f5ff23c2c143b2801207  xfce4-power-manager-1.6.5.tar.bz2"

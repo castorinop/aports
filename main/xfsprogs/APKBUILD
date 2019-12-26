@@ -1,32 +1,22 @@
 # Contributor: Valery Kartel <valery.kartel@gmail.com>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=xfsprogs
-pkgver=4.5.0
+pkgver=5.4.0
 pkgrel=0
 pkgdesc="XFS filesystem utilities"
-url="http://oss.sgi.com/projects/xfs/"
+url="http://xfs.org/index.php/Main_Page"
 arch="all"
-license="LGPL"
-depends=""
-makedepends="linux-headers util-linux-dev bash gzip"
+license="LGPL-2.1-or-later"
+makedepends="linux-headers attr-dev util-linux-dev bash gzip python3"
+options="!check"  # no test suite
 subpackages="$pkgname-dev $pkgname-doc $pkgname-libs $pkgname-extra"
-source="ftp://oss.sgi.com/projects/xfs/cmd_tars/$pkgname-$pkgver.tar.gz
-	musl-fixes.patch
+source="https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-$pkgver.tar.gz
+	fix-mmap.patch
+	musl-MAP_SYNC-fix.patch
 	"
 
-_builddir="$srcdir"/$pkgname-$pkgver
-
-prepare() {
-	cd "$_builddir"
-	for i in $source; do
-		case $i in
-		*.patch) msg $i; patch -p1 -i "$srcdir"/$i || return 1;;
-		esac
-	done
-}
 
 build() {
-	cd "$_builddir"
 	export DEBUG=-DNDEBUG
 	export OPTIMIZER="$CFLAGS"
 	./configure \
@@ -35,33 +25,29 @@ build() {
 		--prefix=/usr \
 		--sbindir=/sbin \
 		--libexecdir=/usr/lib \
-		--enable-gettext=no \
-		|| return 1
-	make SHELL=/bin/bash || return 1
+		--enable-gettext=no
+	make SHELL=/bin/bash
 }
 
 package() {
-	cd "$_builddir"
-	make -j1 DIST_ROOT="$pkgdir" install install-dev || return 1
+	make -j1 DIST_ROOT="$pkgdir" install install-dev
 	find "$pkgdir" -name *.la -delete
 	mv "$pkgdir"/sbin "$pkgdir"/usr
 	mkdir -p "$pkgdir"/sbin
 	for i in mkfs.xfs fsck.xfs xfs_repair; do
 		mv "$pkgdir"/usr/sbin/$i "$pkgdir"/sbin/
 	done
+	chown -R root:root "$pkgdir"/*
 }
 
 extra() {
-	depends="$pkgname"
+	depends="$pkgname python3" # python3 for xfs_scrub_all
 	pkgdesc="XFS filesystem extra utilities"
 	mkdir -p "$subpkgdir"
-	rmdir "$pkgdir"/lib "$pkgdir"/usr/lib || return 1
+	rm -rf "$pkgdir"/lib "$pkgdir"/usr/lib
 	mv "$pkgdir"/usr "$subpkgdir"/
 }
 
-md5sums="fcba94b6c74b726dac956d7a650c0c31  xfsprogs-4.5.0.tar.gz
-10fe8108861988ec1a1026521c21ec75  musl-fixes.patch"
-sha256sums="e49beb314984efbd0d758abb5c6137db3bb60a88e59e1e94c00defb536cf89f8  xfsprogs-4.5.0.tar.gz
-2d5846e695f9c14bf886e45637985155b580e261fb992f209012f6cbaaf6415a  musl-fixes.patch"
-sha512sums="19c95551dc91ec46916f9a7e3d7976907664d32dd5fdc26af0ca62ca74c4b3c10f9e843aac8214ea9d1c0bf140c9f4e321d059808af01a623abedd5067011314  xfsprogs-4.5.0.tar.gz
-52d7ff52e19a5f351f3a97bb20c9f5a063b344ca2e18250a5ee3e15a1693461f95825aa8b7c3c9149d2ce3696c64772d092f679810eccf996321ea93b0770596  musl-fixes.patch"
+sha512sums="4d520881f4556976c3d64c5f72f51ea5531c7f380b22c48a1fb72bfde078ac725c70899c8c58263aa2a7aed2213de604121f2863e88b5cf8fb0dcc54446e133e  xfsprogs-5.4.0.tar.gz
+080161b211e20277e44f714961b36064536bb5cce72a6f93fef4996e296a3953d33c1a066ef371ccd5551622357105f9be9086ef917386f5d43f6a211b0bd7c9  fix-mmap.patch
+bc7971207a296d8112f8993f6a266533135aae59a4438bb511f472931c37b8ce3033c597d67abbd3664f4405317aeb049e747c1811c9495c1a24d98935f799cc  musl-MAP_SYNC-fix.patch"

@@ -1,0 +1,39 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kgamma5
+pkgver=5.17.4
+pkgrel=0
+pkgdesc="Adjust your monitor's gamma settings"
+arch="all"
+url="https://www.kde.org/workspaces/plasmadesktop/"
+license="GPL-2.0-or-later"
+makedepends="qt5-qtbase-dev kconfig-dev kconfigwidgets-dev kdoctools-dev ki18n-dev extra-cmake-modules"
+source="https://download.kde.org/stable/plasma/$pkgver/kgamma5-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	cd "$builddir"/build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="781fa2dd3532f625320f4edbfe6dc0af9cd340bc9098ee9b8a20c1f9e523c752f5d60088445a7bb7404e82a3d5a0bed624a5a585a8fda61fcd609e65ddec01da  kgamma5-5.17.4.tar.xz"

@@ -1,96 +1,93 @@
 # Contributor: <xmingske@gmail.com>
-# Maintainer:
+# Maintainer: Sascha Paunovic <azarus@posteo.net>
 pkgname=minetest
-pkgver=0.4.16
+pkgver=5.1.0
 pkgrel=0
 pkgdesc="An infinite-world block sandbox game and a game engine"
-url="http://minetest.net/"
+url="http://www.minetest.net/"
 # luajit is not available for disabled arches
 arch="all !s390x"
-install="$pkgname-server.pre-install"
-license="LGPL2.1 CCBY-SA3.0"
-depends="$pkgname-common"
+license="LGPL-2.1-or-later AND CC-BY-SA-3.0"
 pkgusers="minetest"
 pkggroups="minetest"
-makedepends="sqlite-dev bzip2-dev libressl-dev irrlicht-dev cmake libvorbis-dev
-	libjpeg-turbo-dev libpng-dev openal-soft-dev libogg-dev mesa-dev
-	sqlite-dev luajit-dev hiredis-dev curl-dev"
-source="$pkgname-$pkgver.tar.gz::https://codeload.github.com/minetest/${pkgname}/tar.gz/${pkgver}
+install="$pkgname-server.pre-install"
+depends="$pkgname-common"
+makedepends="bzip2-dev cmake curl-dev freetype-dev gettext-dev hiredis-dev irrlicht-dev
+	libjpeg-turbo-dev libogg-dev libpng-dev libvorbis-dev luajit-dev
+	mesa-dev openal-soft-dev openssl-dev sqlite-dev
+	"
+subpackages="$pkgname-doc $pkgname-common::noarch $pkgname-server $pkgname-server-openrc:openrc"
+source="minetest-$pkgver.tar.gz::https://codeload.github.com/minetest/minetest/tar.gz/$pkgver
 	minetest-server.confd
 	minetest-server.initd
+	0001-CMake-link-with-Intl-when-necessary.patch
 	"
-subpackages="$pkgname-doc $pkgname-common::noarch $pkgname-server"
-
-_builddir="${srcdir}"/${pkgname}-${pkgver}
-
-prepare() {
-	local pf
-	cd "${_builddir}"
-	for pf in $source; do
-		case $pf in
-		*.patch) msg $pf; patch -p1 -i "$srcdir"/${pf} || return 1;;
-		esac
-	done
-}
 
 build() {
-	mkdir "${_builddir}"/.build_client
-	cd "${_builddir}"/.build_client
+	mkdir "$builddir"/.build_client
+	cd "$builddir"/.build_client
 	cmake -DCUSTOM_BINDIR=/usr/bin \
 		-DCMAKE_INSTALL_PREFIX=/usr \
-		-DCUSTOM_DOCDIR="/usr/share/doc/${pkgname}" \
-		-DCUSTOM_SHAREDIR="/usr/share/${pkgname}" \
-		-DDISABLE_LUAJIT=0 \
+		-DCUSTOM_DOCDIR="/usr/share/doc/$pkgname" \
+		-DCUSTOM_SHAREDIR="/usr/share/$pkgname" \
 		-DBUILD_CLIENT=1 \
 		-DBUILD_SERVER=0 \
 		-DENABLE_REDIS=0 \
 		-DENABLE_CURL=1 \
 		-DRUN_IN_PLACE=0 \
 		..
-	make || return 1
-	mkdir "${_builddir}"/.build_server
-	cd "${_builddir}"/.build_server
+	make
+
+	mkdir "$builddir"/.build_server
+	cd "$builddir"/.build_server
 	cmake -DCUSTOM_BINDIR=/usr/bin \
 		-DCMAKE_INSTALL_PREFIX=/usr \
 		-DCUSTOM_DOCDIR="/usr/share/doc/minetest" \
 		-DCUSTOM_SHAREDIR="/usr/share/minetest" \
-		-DDISABLE_LUAJIT=1 \
 		-DBUILD_CLIENT=0 \
 		-DBUILD_SERVER=1 \
 		-DENABLE_REDIS=1 \
 		-DENABLE_CURL=1 \
 		-DRUN_IN_PLACE=0 \
 		..
-	make || return 1
+	make
 }
 
 common() {
-	install -o minetest -g minetest -d "$subpkgdir"/var/lib/minetest \
-		|| return 1
-	mkdir -p "${subpkgdir}/usr/share/minetest"
-	mv "${pkgdir}/usr/share/minetest/builtin" \
-		"${subpkgdir}/usr/share/minetest" || return 1
-	mv "${pkgdir}/usr/share/minetest/games" \
-		"${subpkgdir}/usr/share/minetest" || return 1
+	depends=
+	install -o minetest -g minetest -d "$subpkgdir"/var/lib/minetest
+	mkdir -p "$subpkgdir/usr/share/minetest"
+	mv "$pkgdir/usr/share/minetest/builtin" \
+		"$subpkgdir/usr/share/minetest"
+	mv "$pkgdir/usr/share/minetest/games" \
+		"$subpkgdir/usr/share/minetest"
 }
 
 package() {
-	cd "${_builddir}"/.build_client
-	make DESTDIR="${pkgdir}" install || return 1
+	cd "$builddir"/.build_client
+	make DESTDIR="$pkgdir" install
 }
 
-server(){
-	mkdir -p "${subpkgdir}/usr/bin"
-	cd "${_builddir}"
+server() {
+	pkgdesc="Minetest server"
+	depends="$pkgname-common"
+	mkdir -p "$subpkgdir/usr/bin"
+	cd "$builddir"
 	install -m644 -D $pkgname.conf.example \
-		"$subpkgdir"/etc/$pkgname/$pkgname.conf || return 1
-	install -D -m755 "$srcdir"/minetest-server.initd \
-		"$subpkgdir"/etc/init.d/minetest-server || return 1
-	install -D -m644 "$srcdir"/minetest-server.confd \
-		"$subpkgdir"/etc/conf.d/minetest-server || return 1
-	cp bin/minetestserver ${subpkgdir}/usr/bin
+		"$subpkgdir"/etc/$pkgname/$pkgname.conf
+	cp bin/minetestserver $subpkgdir/usr/bin
 }
 
-sha512sums="a7bc8efabebceccee54c1e7733076d0551a9ce442a2e2b976a19bb5f8c1bdca1dd536b1aac60baa7ef3af5595232a10d6d6bcac30662bc4a2f62b7eed42e81bf  minetest-0.4.16.tar.gz
+openrc() {
+	pkgdesc="Minetest server (OpenRC init scripts)"
+	install_if="$pkgname-server openrc"
+	install -D -m755 "$srcdir"/minetest-server.initd \
+		"$subpkgdir"/etc/init.d/minetest-server
+	install -D -m644 "$srcdir"/minetest-server.confd \
+		"$subpkgdir"/etc/conf.d/minetest-server
+}
+
+sha512sums="f2cad4720c1003536cc3c619c18234a95cae1dee8fb54b46a2ef5fd24108a4c945efcb0a461926ef3ede7b8bec41ed6620806212fe11f4142bbf31fe4f0f659e  minetest-5.1.0.tar.gz
 7bca17dc0bd59db9c07c160677498aa09297026104e922bf93b7629c274d0aebd226af60c5e82f49ffe3cc5c1e4448e3798b6c2a44144fc6eca4d3aaed3384bb  minetest-server.confd
-c27aea87468538b48b5e0a66fa5cdde4fc67f3c00a0e57f359a2f044a31c5617d1b5f3dec72e015537ee3bf126bd1073878c0f4447de67db9be2c4cf21416dd7  minetest-server.initd"
+c27aea87468538b48b5e0a66fa5cdde4fc67f3c00a0e57f359a2f044a31c5617d1b5f3dec72e015537ee3bf126bd1073878c0f4447de67db9be2c4cf21416dd7  minetest-server.initd
+6e35a39f079f0c1b280dbc3deb46eb789a7620d64b226b5f867c5d954ae8881659b6f15e3e2204a24ccd4ed7b9de50f2fbacc4c80534290fc4c049df24ddc5ff  0001-CMake-link-with-Intl-when-necessary.patch"

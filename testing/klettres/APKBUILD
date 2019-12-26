@@ -1,0 +1,31 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=klettres
+pkgver=19.12.0
+pkgrel=0
+arch="all"
+url="http://edu.kde.org/klettres"
+pkgdesc="Learn the Alphabet"
+license="GPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="extra-cmake-modules qt5-qtbase-dev qt5-qtsvg-dev kcompletion-dev kcrash-dev kdoctools-dev ki18n-dev knewstuff-dev kwidgetsaddons-dev kconfigwidgets-dev kcoreaddons-dev"
+source="https://download.kde.org/stable/release-service/$pkgver/src/klettres-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+options="!check" # No tests
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="dd881008e5daf8c40e74e427491bece0763671671a80c60a90e31d5eb0a808ca56e9d2c1ee14ffb60f9dc3721763162da977bc7cc4a1cb68b9df021b8783611c  klettres-19.12.0.tar.xz"

@@ -1,0 +1,42 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=plasma-thunderbolt
+pkgver=5.17.4
+pkgrel=0
+arch="all !armhf !armv7" # Limited by bolt -> polkit
+url="https://www.kde.org/workspaces/plasmadesktop/"
+pkgdesc="Plasma integration for controlling Thunderbolt devices"
+license="GPL-2.0-only OR GPL-3.0-only"
+depends="bolt"
+makedepends="extra-cmake-modules qt5-qtbase-dev qt5-qtdeclarative-dev kcoreaddons-dev kcmutils-dev kdeclarative-dev ki18n-dev kdbusaddons-dev knotifications-dev"
+checkdepends="xvfb-run"
+source="https://download.kde.org/stable/plasma/$pkgver/plasma-thunderbolt-$pkgver.tar.xz"
+subpackages="$pkgname-lang"
+options="!check" # Requires running dbus server
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	cd "$builddir"/build
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="1746ad45181f089bef35574a1e604443ff0a9abb025d5fddda16a109fc4041c522cc3c972272549304a3cbcea0f3fb2d75f81468f61f86826e18f03fcbef62a6  plasma-thunderbolt-5.17.4.tar.xz"

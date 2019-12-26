@@ -2,14 +2,14 @@
 # Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
 pkgname=py3-async-timeout
 _pkgname=async-timeout
-pkgver=1.3.0
-pkgrel=0
+pkgver=3.0.1
+pkgrel=2
 pkgdesc="Timeout context manager for asyncio programs"
 url="https://pypi.python.org/pypi/async_timeout"
 arch="noarch"
-license="ASL 2.0"
+license="Apache-2.0"
 depends="python3"
-makedepends="python3-dev"
+makedepends="python3-dev py3-setuptools"
 source="$pkgname-$pkgver.tar.gz::https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
 builddir="$srcdir/$_pkgname-$pkgver"
 
@@ -18,9 +18,14 @@ build() {
 	python3 setup.py build
 }
 
+check() {
+	cd "$builddir"
+	python3 setup.py check
+}
+
 package() {
 	cd "$builddir"
 	python3 setup.py install --root="$pkgdir"
 }
 
-sha512sums="2fb800cce4426185f068c6745aabee694163930b320b388323d0549b2228f07e2136b0050ff49b4bf81993b5ffb143d528341365583e215406b20e76ca9a523a  py3-async-timeout-1.3.0.tar.gz"
+sha512sums="fd30842671a79edfd52c7350e7fb2120533a6d97b44975f7b071ce2cbde43443bd5bbe1f2ad0ad3ab2156e1987b9e58e0c149b0ecfea8674eb0cb78eee79c986  py3-async-timeout-3.0.1.tar.gz"

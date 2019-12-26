@@ -2,33 +2,65 @@
 # Maintainer:  Francesco Colista <fcolista@alpinelinux.org>
 pkgname=py3-sip
 _pkgname=sip
-pkgver=4.19.2
+pkgver=4.19.20
 pkgrel=0
-pkgdesc="A tool that makes it easy to create Python bindings for C and C++ libraries. Python 3 package."
+pkgdesc="A tool that makes it easy to create Python bindings for C and C++ libraries"
+options="!check" # No testsuite
 url="http://www.riverbankcomputing.com/software/sip/"
 arch="all"
 license="custom:sip"
 makedepends="python3-dev"
-options="!check"
-replaces="py-sip"
-subpackages="$pkgname-dev"
-source="http://sourceforge.net/projects/pyqt/files/$_pkgname/$_pkgname-$pkgver/$_pkgname-$pkgver.tar.gz"
+subpackages="
+	$pkgname-pyqt5
+	$pkgname-dev::noarch
+	$pkgname-doc"
+source="https://www.riverbankcomputing.com/static/Downloads/$_pkgname/$pkgver/$_pkgname-$pkgver.tar.gz"
 builddir="$srcdir"/$_pkgname-$pkgver
 
+replaces="py-sip" # Backwards comptibility
+provides="py-sip=$pkgver-r$pkgrel" # Backwards comptibility
+
+prepare() {
+	default_prepare
+	mkdir -p "$srcdir"/python3-sip
+	mkdir -p "$srcdir"/python3-PyQt5.sip
+}
+
 build() {
-	cd "$builddir"
-	local sip_api_major_nr=$(sed -nre 's:^#define SIP_API_MAJOR_NR\s+([0-9]+):\1:p' siplib/sip.h.in)
-	python3 configure.py
-	make CC="${CC:-gcc}" \
-		CXX="${CXX:-g++}" \
-		CFLAGS="$CFLAGS -fPIC" \
-		CXXFLAGS="$CXXFLAGS"
+	cd "$srcdir"/python3-sip
+	python3 "$builddir"/configure.py CFLAGS="$CFLAGS" LFLAGS="$LDFLAGS"
+
+	cd "$srcdir"/python3-PyQt5.sip
+	python3 "$builddir"/configure.py CFLAGS="$CFLAGS" LFLAGS="$LDFLAGS" --sip-module PyQt5.sip --no-tools
 }
 
 package() {
-	cd "$builddir"
+	cd "$srcdir"/python3-sip
 	make DESTDIR="$pkgdir" install
-	install -Dm644 LICENSE ${pkgdir}/usr/share/licenses/custom/${pkgname}/LICENSE
+
+	# Move sip.h to /usr/include
+	mv "$pkgdir"/usr/include/python3*/sip.h "$pkgdir"/usr/include/sip.h
+	rm -rf "$pkgdir"/usr/include/python3*
+
+	install -Dm644 "$builddir"/LICENSE "$pkgdir"/usr/share/licenses/custom/$pkgname/LICENSE
 }
 
-sha512sums="6f14f387a899130cf15820d2b58d937d134a2eefd53c65a82af060e88a6ca039442b21f822880c4a3742d6f26328853a552239873c55d7b22de62a6cc5037b3e  sip-4.19.2.tar.gz"
+pyqt5() {
+	pkgdesc="Python3 SIP bindings for C and C++ libraries"
+
+	replaces="" # Reset
+	provides="" # Reset
+
+	cd "$srcdir"/python3-PyQt5.sip
+	make DESTDIR="$subpkgdir" install
+}
+
+dev() {
+	replaces="py-sip-dev" # Backwards compatibility
+	provides="py-sip-dev=$pkgver-r$pkgrel" # Backwards compatibility
+
+	depends_dev="py3-sip" # Depend on the package that provides the sip binary
+	default_dev
+}
+
+sha512sums="d5cd49f6fcae08306ac5f993710c40b82804d6b268cf3fa14077e73f34b02d551aa3caf57a985fe39b5acd61c465b00372d2ada722ced76e670dec14b5f8de44  sip-4.19.20.tar.gz"

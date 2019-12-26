@@ -1,46 +1,33 @@
 # Contributor: Alan Lacerda <alacerda@alpinelinux.org>
 # Maintainer: Alan Lacerda <alacerda@alpinelinux.org>
 pkgname=libmateweather
-pkgver=1.18.1
+pkgver=1.22.1
 pkgrel=0
 pkgdesc="A library to access weather information from online services for numerous locations"
 url="https://github.com/mate-desktop/libmateweather"
 arch="all"
-license="GPL2"
+license="GPL-2.0"
 depends="mate-common"
-depends_dev=""
-makedepends="$depends_dev libsoup-dev libtool intltool gtk+3.0-dev
-	libxml2-utils"
-install=""
+makedepends="libsoup-dev libtool intltool gtk+3.0-dev libxml2-utils tzdata"
 subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
-source="http://pub.mate-desktop.org/releases/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
-
-_builddir="$srcdir/$pkgname-$pkgver"
-prepare() {
-	local i
-	cd "$_builddir"
-	for i in $source; do
-		case $i in
-		*.patch) msg $i; patch -p1 -i "$srcdir"/$i || return 1;;
-		esac
-	done
-}
+source="https://pub.mate-desktop.org/releases/${pkgver%.*}/libmateweather-$pkgver.tar.xz"
 
 build() {
-	cd "$_builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
 		--prefix=/usr \
 		--sysconfdir=/etc \
-		--with-zoneinfo-dir \
-		|| return 1
-	make || return 1
+		--with-zoneinfo-dir
+	make
+}
+
+check() {
+	make check
 }
 
 package() {
-	cd "$_builddir"
-	make DESTDIR="${pkgdir}" install || return 1
+	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="0a48647bd7f0484ddb9956626eeeeafe9cdd6bdb107c8365cba67824a06a42976c1a48188fa11a81d9f8fa366cf809bb646f61f805efacfe328b468c0a5c35b7  libmateweather-1.18.1.tar.xz"
+sha512sums="c7f5214c14fa3bf6bbb55442ea450c0f3c0a2849e29f72821c22db88baf3763c72dd6d2a27795c23d8ecc69d190a55313f6cfd18dc2a41c233a7e1e5653a0868  libmateweather-1.22.1.tar.xz"

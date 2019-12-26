@@ -3,39 +3,44 @@
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=perl-datetime-format-strptime
 _pkgreal=DateTime-Format-Strptime
-pkgver=1.73
+pkgver=1.76
 pkgrel=0
 pkgdesc="Parse and format strp and strf time patterns"
 url="http://search.cpan.org/dist/DateTime-Format-Strptime/"
 arch="noarch"
-license="Artistic-2"
+license="Artistic-2.0"
 cpandepends="perl-params-validate perl-datetime perl-try-tiny
 		perl-package-deprecationmanager perl-datetime-timezone
 		perl-datetime-locale"
-cpanmakedepends="  perl-test-warnings perl-test-fatal "
+cpanmakedepends="perl-test-warnings perl-test-fatal "
 depends="$cpandepends"
 makedepends="perl-dev $cpanmakedepends"
 subpackages="$pkgname-doc"
 source="http://search.cpan.org/CPAN/authors/id/D/DR/DROLSKY/$_pkgreal-$pkgver.tar.gz"
 
-_builddir="$srcdir/$_pkgreal-$pkgver"
+builddir="$srcdir/$_pkgreal-$pkgver"
 
 prepare() {
-	cd "$_builddir"
+	cd "$builddir"
 	export CFLAGS=`perl -MConfig -E 'say $Config{ccflags}'`
 	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
 }
 
 build() {
-	cd "$_builddir"
+	cd "$builddir"
 	export CFLAGS=`perl -MConfig -E 'say $Config{ccflags}'`
-	make && make test
+	make
+}
+
+check() {
+	cd "$builddir"
+	make test
 }
 
 package() {
-	cd "$_builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	cd "$builddir"
+	make DESTDIR="$pkgdir" install
 	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 
-sha512sums="c259473e1120a9e40020cba2c7d008227521dbca0d2906878ee75e1ebc58e82760386bb32ebb1e987e68dfa4ce7f1e532dc4bfdf70467383425705e3f1c18d15  DateTime-Format-Strptime-1.73.tar.gz"
+sha512sums="896c6f1bdb77cf21f1170aae97466a96d7a4469d478f31ea66c16ed9ba5c86edd184fa578ea113bcc90a25fbd6b4ae5264053f1ef6092764b15f7fd461b491c9  DateTime-Format-Strptime-1.76.tar.gz"

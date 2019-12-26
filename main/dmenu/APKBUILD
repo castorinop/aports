@@ -1,10 +1,10 @@
-# Contributor: Eivind Uggedal <eivind@uggedal.com>
+# Contributor: Eivind Uggedal <eu@eju.no>
 # Maintainer: Sören Tempel <soeren+alpine@soeren-tempel.net>
 pkgname=dmenu
-pkgver=4.7
+pkgver=4.9
 pkgrel=0
 pkgdesc="Dynamic menu for X"
-url="http://tools.suckless.org/dmenu/"
+url="https://tools.suckless.org/dmenu/"
 arch="all"
 license="MIT"
 depends=""
@@ -13,13 +13,13 @@ makedepends="libx11-dev libxinerama-dev libxft-dev"
 install=""
 options="!check"
 subpackages="$pkgname-doc"
-source="http://dl.suckless.org/tools/$pkgname-$pkgver.tar.gz"
+source="https://dl.suckless.org/tools/$pkgname-$pkgver.tar.gz"
 builddir="$srcdir"/$pkgname-$pkgver
 
 prepare() {
 	default_prepare
 	sed -i -e '/CFLAGS/{s/-Os//;s/=/+=/}' \
-		-e '/LDFLAGS/{s/-s//;s/=/+=/}' \
+		-e '/LDFLAGS/{s/=/+=/}' \
 		"$builddir"/config.mk
 }
 
@@ -35,4 +35,4 @@ package() {
 		-C "$builddir" install
 }
 
-sha512sums="67a184f3ddb018e7b372e049052662955403e3367639b9c2284939d6f105ae74c995fe38f126d8ff75886831c8add8b50e338a1bfb0d8620b7fb1457cf88a00c  dmenu-4.7.tar.gz"
+sha512sums="c2779209fe012de8ca1cdd72923da6d594f4a8368c85c3c0e0afd4ae489a95fe0e6f05a947d115b6b389aa7170ab14c2c645a2031353b0a08f38327ab461fe65  dmenu-4.9.tar.gz"

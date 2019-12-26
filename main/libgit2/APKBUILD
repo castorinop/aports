@@ -3,52 +3,84 @@
 # Contributor: Pierre-Gilas MILLON <pgmillon@gmail.com>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=libgit2
-pkgver=0.25.1
-pkgrel=2
+pkgver=0.28.4
+pkgrel=0
 pkgdesc="A linkable library for Git"
-url="https://libgit2.github.com/"
+url="https://libgit2.org/"
 arch="all"
-license="GPLv2"
-depends=""
-depends_dev="curl-dev libssh2-dev"
-makedepends="$depends_dev python2 cmake zlib-dev libressl-dev"
-subpackages="$pkgname-dev"
-provides="$pkgname-libs"  # for backward compatibility with v3.4
-replaces="$pkgname-libs"  # for backward compatibility with v3.4
-source="$pkgname-$pkgver.tar.gz::https://github.com/$pkgname/$pkgname/archive/v$pkgver.tar.gz
-	libressl.patch
-	pkgconfig-do-not-quote-Libs.patch
-	build-both-static-dynamic.patch
+license="GPL-2.0-only WITH GCC-exception-2.0"
+depends_dev="curl-dev libssh2-dev http-parser-dev"
+makedepends="$depends_dev python3 cmake zlib-dev openssl-dev"
+subpackages="$pkgname-static $pkgname-dev $pkgname-tests::noarch"
+source="$pkgname-$pkgver.tar.gz::https://github.com/libgit2/libgit2/archive/v$pkgver.tar.gz
 	"
-builddir="$srcdir/$pkgname-$pkgver"
 
 # secfixes:
+#   0.28.4-r0:
+#     - CVE-2019-1348
+#     - CVE-2019-1349
+#     - CVE-2019-1350
+#     - CVE-2019-1351
+#     - CVE-2019-1352
+#     - CVE-2019-1353
+#     - CVE-2019-1354
+#     - CVE-2019-1387
+#   0.27.4-r0:
+#     - CVE-2018-15501
+#   0.27.3-r0:
+#     - CVE-2018-10887
+#     - CVE-2018-10888
 #   0.25.1-r0:
-#   - CVE-2016-10128
-#   - CVE-2016-10129
-#   - CVE-2016-10130
+#     - CVE-2016-10128
+#     - CVE-2016-10129
+#     - CVE-2016-10130
 #   0.24.3-r0:
-#   - CVE-2016-8568
-#   - CVE-2016-8569
+#     - CVE-2016-8568
+#     - CVE-2016-8569
+
+prepare() {
+	default_prepare
+	mkdir -p "$builddir"/build
+	sed -i 's|/usr/bin/env python|/usr/bin/env python3|' tests/generate.py
+}
 
 build() {
-	cd "$builddir"
-	cmake \
+	cd "$builddir"/build
+
+	cmake .. \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_INSTALL_PREFIX=/usr \
-		-DCMAKE_INSTALL_LIBDIR=lib \
-		-DCMAKE_CXX_FLAGS="$CXXFLAGS" \
+		-DCMAKE_C_FLAGS="$CFLAGS"
+	make
+
+	# Build static library
+	mkdir -p "$builddir"/build-static
+	cd "$builddir"/build-static
+
+	cmake .. \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr \
 		-DCMAKE_C_FLAGS="$CFLAGS" \
-		|| return 1
-	make || return 1
+		-DBUILD_SHARED_LIBS=OFF
+	make
+}
+
+check() {
+	cd "$builddir"/build
+	# Test 'offline' fails on s390x, aarch64 and ppc64le
+	ctest -E offline
 }
 
 package() {
-	make DESTDIR="$pkgdir" \
-		-C "$builddir" install || return 1
+	make -C build DESTDIR="$pkgdir" install
+	make -C build-static DESTDIR="$pkgdir" install
 }
 
-sha512sums="bbd0d27c95406b548185ce02e2a9288a9dcb8c3b28476ba20f4f4917f6bd67f1ddee80de3054d30b79cdb9d973c3061a15ea7847c79bfa4e0c62e41d5195cb99  libgit2-0.25.1.tar.gz
-3674957d09207b11d268ba9fcb442a081b8efe318d0e8501b7afa0ae2397efc9aff8572b1ffd9f2286c46a06a647fbe943c2cc7e8f97d1a0288e74010846d439  libressl.patch
-635fb1f64c4b676044e7800cc8796646f90d7e6447ab77f97b3491f746351e826ffa9c03b6bef7ffabad9c50a5c5e983ea9e53b4972211813f54d81b703b4aed  pkgconfig-do-not-quote-Libs.patch
-39534d10f38f394446f93df810233464807fca3b0e903ee40067971ecbe1d78102bbe04283435032f757f970e6846ecf279eb727ab137c01e84427bd16913ee6  build-both-static-dynamic.patch"
+tests() {
+	pkgdesc="$pkgdesc (tests)"
+
+	mkdir -p "$subpkgdir"/usr/src/$pkgname/
+	cp -a "$builddir"/tests "$subpkgdir"/usr/src/$pkgname/
+}
+
+sha512sums="b81160608003b25d9b922d259ebbbbf941b6bd5100fa1875497c8cd29de320e292fff568c757a7a85b2b3044ddc1cb92c74dbcb13d630d62ecf9a8559b619d15  libgit2-0.28.4.tar.gz"

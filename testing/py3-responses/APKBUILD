@@ -1,0 +1,32 @@
+# Maintainer:
+pkgname=py3-responses
+_pkgname=responses
+pkgver=0.10.9
+pkgrel=0
+pkgdesc="Utility library for mocking out the requests Python library"
+url="https://pypi.python.org/pypi/responses/"
+arch="noarch"
+license="Apache-2.0"
+depends="py3-requests py3-six"
+makedepends="py3-setuptools"
+checkdepends="py3-flake8 py3-pytest py3-pytest-cov py3-pytest-localserver
+	py3-werkzeug"
+source="https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+replaces=py-responses # Backwards compatibility
+provides=py-responses=$pkgver-r$pkgrel # Backwards compatibility
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	py.test-3
+}
+
+package() {
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
+}
+
+sha512sums="3499d69d97061cc35041319aa1b9ecf48c296815f2db3f64cecc1ca66b5db61a4c85f93c9e26dc24451ccb53ce165a9d7b7013ca009005058013001c46cd8e9e  responses-0.10.9.tar.gz"

@@ -1,0 +1,40 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kjobwidgets
+pkgver=5.65.0
+pkgrel=0
+pkgdesc="Widgets for tracking KJob instances"
+arch="all"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.1-only AND (LGPL-2.1-only OR LGPL-3.0-only)"
+depends_dev="qt5-qtx11extras-dev kcoreaddons-dev kwidgetsaddons-dev"
+makedepends="$depends_dev extra-cmake-modules qt5-qttools-dev doxygen"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/kjobwidgets-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_QCH=ON
+	make
+}
+
+check() {
+	cd "$builddir"/build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+sha512sums="27d4275dde16a270fb77410efcbd519ce564de668a8eb741fc5de6acfd5791df6f92d9216d265c610e5f899237074bf777e8544de4d8658de8a343e77ec1ade4  kjobwidgets-5.65.0.tar.xz"

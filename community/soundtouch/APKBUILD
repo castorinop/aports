@@ -1,18 +1,24 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=soundtouch
-pkgver=1.9.2
-pkgrel=1
+pkgver=2.1.2
+pkgrel=0
 pkgdesc="Audio Processing library for changing Tempo, Pitch and Playback Rates"
 url="http://www.surina.net/soundtouch/"
 arch="all"
-license="LGPLv2+"
+license="LGPL-2.0-or-later"
 depends=""
 depends_dev=""
 makedepends="$depends_dev autoconf automake libtool"
 install=""
 subpackages="$pkgname-dev $pkgname-doc"
-source="http://www.surina.net/$pkgname/$pkgname-$pkgver.tar.gz"
-builddir="$srcdir"/soundtouch
+source="https://gitlab.com/soundtouch/soundtouch/-/archive/$pkgver/soundtouch-$pkgver.tar.bz2"
+builddir="$srcdir"/soundtouch-$pkgver
+
+# secfixes:
+#   2.1.2-r0:
+#   - CVE-2018-17096
+#   - CVE-2018-17097
+#   - CVE-2018-17098
 
 prepare() {
 	default_prepare
@@ -41,4 +47,4 @@ package() {
 	rm -rf "$pkgdir"/usr/doc
 }
 
-sha512sums="d8f3f8970198a46ef3dc252719749bc19cbd2f8de5e00eeb2874565bfc421b60d94d400bacf702591293e595edf6c1c35917b6153fd395cad8d6b03115da7068  soundtouch-1.9.2.tar.gz"
+sha512sums="d45cb0f94e3df32e9c76722a148f201277b2ddc3e390394c1f4ae1263f13557c6b664e90301b5f62d7561d743ab4903a44a34ab7248880b343d581cebd5f0cd9  soundtouch-2.1.2.tar.bz2"

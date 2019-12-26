@@ -1,0 +1,42 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kpackage
+pkgver=5.65.0
+pkgrel=0
+pkgdesc="Framework that lets applications manage user installable packages of non-binary assets"
+arch="all"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.1-or-later"
+depends_dev="qt5-qtbase-dev karchive-dev ki18n-dev kcoreaddons-dev"
+makedepends="$depends_dev extra-cmake-modules qt5-qttools-dev kdoctools-dev doxygen"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/kpackage-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+options="!check" # Fails due to requiring installed Plasma, which causes a circular dependency
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_QCH=ON
+	make
+}
+
+check() {
+	cd "$builddir"/build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="789fa54ddc4a117fb1d233f7810fdf5c85a6aa5e41c46766ae8d93f60322c441611927a5e163cc8fa6f36780ad06cdbb82d82db80ab6eca4720a45536164101f  kpackage-5.65.0.tar.xz"

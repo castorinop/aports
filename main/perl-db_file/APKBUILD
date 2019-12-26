@@ -1,8 +1,8 @@
 # Contributor: Leonardo Arena <rnalrd@alpinelinux.org>
 # Maintainer:  Leonardo Arena <rnalrd@alpinelinux.org>
 pkgname=perl-db_file
-_realname=DB_File
-pkgver=1.840
+_pkgname=DB_File
+pkgver=1.852
 pkgrel=1
 pkgdesc="Perl5 access to Berkeley DB"
 url="http://search.cpan.org/~pmqs/DB_File-1.820/"
@@ -12,22 +12,32 @@ depends="perl"
 makedepends="perl-dev db-dev"
 install=
 subpackages="$pkgname-doc"
-source="http://search.cpan.org/CPAN/authors/id/P/PM/PMQS/$_realname-$pkgver.tar.gz"
+source="http://search.cpan.org/CPAN/authors/id/P/PM/PMQS/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+prepare() {
+	default_prepare
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
+	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
+
+}
 
 build() {
-	cd "$srcdir/$_realname-$pkgver"
+	cd "$builddir"
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
+	make
+}
 
-	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor || return 1
-	make || return 1
+check() {
+	cd "$builddir"
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
+	make test
 }
 
 package() {
-	cd "$srcdir/$_realname-$pkgver"
+	cd "$builddir"
 	make DESTDIR="$pkgdir" install
-	# creates file collision among perl modules
-	find "$pkgdir" -name perllocal.pod -delete
+	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 
-md5sums="8a2e98d457a216840ac893913c24141e  DB_File-1.840.tar.gz"
-sha256sums="b7864707fad0f2d1488c748c4fa08f1fb8bcfd3da247c36909fd42f20bfab2c4  DB_File-1.840.tar.gz"
-sha512sums="c9af4382a6759fcf2ad4982d922d5be3bf026927bd103204c9c38666e6a26afc06ee5456a567c396806d0ca3762af146b60c10998b17343a3bfd47bda4ec3fe2  DB_File-1.840.tar.gz"
+sha512sums="2a08e43ef007e31e551b79e5b5f73dc6a742241c4fdf11f7228741b237df78b10aef182ac40a6cb6588366a5bd8bc326a5f8bbd2542fb694e2ed803e87d8f09f  DB_File-1.852.tar.gz"

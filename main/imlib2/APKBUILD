@@ -1,21 +1,18 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=imlib2
-pkgver=1.4.10
+pkgver=1.6.1
 pkgrel=0
-pkgdesc="Library that does image file loading and saving as well as rendering, manipulation, arbitrary polygon support"
-url="http://sourceforge.net/projects/enlightenment/"
+pkgdesc="Image manipulation library"
+url="https://sourceforge.net/projects/enlightenment"
 arch="all"
-license="BSD"
-subpackages="$pkgname-dev $pkgname-doc"
-depends=""
+license="Imlib2"
+subpackages="$pkgname-dev"
 depends_dev="freetype-dev libxext-dev libsm-dev"
-makedepends="$depends_dev tiff-dev giflib-dev bzip2-dev
-	libpng-dev libid3tag-dev libjpeg-turbo-dev zlib-dev util-linux-dev"
-source="http://downloads.sourceforge.net/enlightenment/$pkgname-$pkgver.tar.bz2"
+makedepends="$depends_dev tiff-dev giflib-dev bzip2-dev libpng-dev
+	libid3tag-dev libjpeg-turbo-dev zlib-dev util-linux-dev"
+source="https://downloads.sourceforge.net/enlightenment/imlib2-$pkgver.tar.gz"
 
-builddir="$srcdir"/$pkgname-$pkgver
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -23,14 +20,25 @@ build() {
 		--sysconfdir=/etc/imlib2 \
 		--x-libraries=/usr/lib \
 		--disable-mmx \
-		--disable-amd64
+		--disable-amd64 \
+		--enable-visibility-hiding \
+		--with-x \
+		--with-bzip2 \
+		--with-gif \
+		--with-id3 \
+		--with-jpeg \
+		--with-png \
+		--with-tiff \
+		--with-zlib
 	make
 }
 
-package() {
-	cd "$builddir"
-	make DESTDIR=$pkgdir install
-	install -Dm644 COPYING $pkgdir/usr/share/licenses/$pkgname/COPYING
+check() {
+	make check
 }
 
-sha512sums="5bad7d2100b1706a3f7eed5fedd12afdb643c647823472b515dac3753ff5293d0fae08be7f06ad16e63968e548c9e82ab5e6d7a938e5359903f57be24cd2a07b  imlib2-1.4.10.tar.bz2"
+package() {
+	make DESTDIR=$pkgdir install
+}
+
+sha512sums="0c6d874973c46c7e96e49fc391d463ec8c7c5ce9de682600cb4e28ca81ff0366a02055cbec2a2b743204051243d20b2316ab602b98df9d03dcf319297f7e6a13  imlib2-1.6.1.tar.gz"

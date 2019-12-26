@@ -1,45 +1,50 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=ldb
-pkgver=1.1.31
-pkgrel=2
+pkgver=2.0.8
+pkgrel=0
 pkgdesc="A schema-less, ldap like, API and database"
-url="http://ldb.samba.org/"
+url="https://ldb.samba.org/"
 arch="all"
-license="LGPLv3+"
-makedepends="$depends_dev tevent-dev py-tevent tdb-dev py-tdb talloc-dev
-	python2-dev popt-dev cmocka-dev"
-subpackages="$pkgname-dev py-$pkgname:_py $pkgname-tools"
-source="http://samba.org/ftp/ldb/ldb-$pkgver.tar.gz"
+license="LGPL-3.0-or-later"
+makedepends="libtirpc-dev tevent-dev py3-tevent tdb-dev py3-tdb talloc-dev
+	python3-dev popt-dev cmocka-dev docbook-xsl lmdb-dev"
+subpackages="$pkgname-dev py3-$pkgname:_py3 $pkgname-tools $pkgname-doc"
+source="https://www.samba.org/ftp/pub/ldb/ldb-$pkgver.tar.gz
+	disable-compile-error-test.patch
+	disable-failing-test-ppc64le.patch
+	"
 
-builddir="$srcdir"/ldb-$pkgver
+# secfixes:
+#   1.3.5-r0:
+#     - CVE-2018-1140
+
+_waf=buildtools/bin/waf
 
 build() {
-	cd "$builddir"
-	./configure \
-		--build=$CBUILD \
-		--host=$CHOST \
+	"$_waf" configure \
 		--prefix=/usr \
-		--sysconfdir=/etc \
-		--mandir=/usr/share/man \
-		--infodir=/usr/share/info \
-		--localstatedir=/var \
 		--disable-rpath \
-		--bundled-libraries=NONE \
+		--disable-rpath-install \
 		--builtin-libraries=replace \
+		--bundled-libraries=NONE \
 		--with-modulesdir=/usr/lib/ldb/modules
-	make
+	"$_waf" build
+}
+
+check() {
+	"$_waf" test
 }
 
 package() {
-	cd "$builddir"
-	make DESTDIR="$pkgdir" install
+	DESTDIR="$pkgdir" "$_waf" install
 }
 
-_py() {
-	pkgdesc="Python binding for the ldb library"
+_py3() {
+	pkgdesc="Python 3 binding for the ldb library"
+
 	mkdir -p "$subpkgdir"/usr/lib
-	mv "$pkgdir"/usr/lib/python* "$subpkgdir"/usr/lib/
-	mv "$pkgdir"/usr/lib/libpyldb*.so.* "$subpkgdir"/usr/lib/
+	mv "$pkgdir"/usr/lib/python3* "$subpkgdir"/usr/lib/
+	mv "$pkgdir"/usr/lib/libpyldb-util.cpython* "$subpkgdir"/usr/lib/
 }
 
 tools() {
@@ -49,4 +54,6 @@ tools() {
 	mv "$pkgdir"/usr/lib/ldb/libldb-cmdline.* "$subpkgdir"/usr/lib/ldb/
 }
 
-sha512sums="49ccd57000cbcc6d828160f4457236b28853d766d641841471f61226156b6103fe563c43c950577b038ea3c0a54506bca94c640d3d5f912a3b8af95eb9ef2824  ldb-1.1.31.tar.gz"
+sha512sums="23a44968c9b4b57deb3f7b7b2466f140b4d8534a07a5e866545dd108c3d305ee4b0ea9bceec3177fcd09a4efcb4876a8283ca58b5c496fcf323b810666e1e79a  ldb-2.0.8.tar.gz
+ed55d5151bbcaf5c0a1b70a1f44b461a501ad94ce02ee97e3ea10c560ce3656a190510697bbd3c5b6f70a74519bf7c0a91210bcb415ffd97d9440045e10a02e8  disable-compile-error-test.patch
+ac50c60082bd761b462f32f949cd6b3bacfd354b3f5dae8bd8655aaa3589e09d6146c42e2edc7c76ca9badd5beec69b5c87cee7cc10e50655cd5c4befd3e4208  disable-failing-test-ppc64le.patch"

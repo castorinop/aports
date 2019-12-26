@@ -1,28 +1,25 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 # Contributor: Valery Kartel <valery.kartel@gmail.com>
 pkgname=aspell
-pkgver=0.60.6.1
-pkgrel=11
+pkgver=0.60.8
+pkgrel=0
 pkgdesc="A spell checker designed to eventually replace Ispell"
 url="http://aspell.net/"
 arch="all"
-license="LGPL2+"
+license="LGPL-2.0-or-later"
 subpackages="$pkgname-compat::noarch $pkgname-utils $pkgname-dev $pkgname-doc
-	$pkgname-libs"
-depends=
+	$pkgname-lang $pkgname-libs"
 depends_dev="$pkgname-utils"
-makedepends="ncurses-dev perl"
-install=
-source="ftp://ftp.gnu.org/gnu/$pkgname/$pkgname-$pkgver.tar.gz"
-builddir="$srcdir"/$pkgname-$pkgver
+makedepends="ncurses-dev perl gettext-dev"
+source="https://ftp.gnu.org/gnu/aspell/aspell-$pkgver.tar.gz"
 
-prepare() {
-	default_prepare || return 1
-	update_config_sub || return 1
-}
+# secfixes:
+#   0.60.8-r0:
+#     - CVE-2019-17544
 
 build() {
 	cd "$builddir"
+	LDFLAGS="-lintl" \
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -30,14 +27,18 @@ build() {
 		--sysconfdir=/etc \
 		--enable-dict-dir=/usr/share/$pkgname \
 		--enable-pkgdatadir=/usr/share/$pkgname \
-		--enable-compile-in-filters \
-		|| return 1
-	make || return 1
+		--enable-compile-in-filters
+	make
+}
+
+check() {
+	cd "$builddir"
+	make check
 }
 
 package() {
 	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 }
 
 compat() {
@@ -62,6 +63,4 @@ libs() {
 	rm -fr "$pkgdir"/usr/lib
 }
 
-md5sums="e66a9c9af6a60dc46134fdacf6ce97d7  aspell-0.60.6.1.tar.gz"
-sha256sums="f52583a83a63633701c5f71db3dc40aab87b7f76b29723aeb27941eff42df6e1  aspell-0.60.6.1.tar.gz"
-sha512sums="f310c7590be98406589b5c26ca36a2ecfe4733f0b40fd6c176b96b7955ef2b5cd0ec9a3d770cf132146ae7a896042b4b698945112995ee1ae66adcfa5542247f  aspell-0.60.6.1.tar.gz"
+sha512sums="8ef4952c553b6234dfe777240d2d97beb13ef9201e18d56bee3b5068d13525db3625b7130d9f5122f7c529da0ccb0c70eb852a81472a7d15fb7c4ee5ba21cd29  aspell-0.60.8.tar.gz"

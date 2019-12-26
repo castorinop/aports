@@ -1,58 +1,46 @@
-# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Contributor: Natanael Copa <ncopa@alpinelinux.org>
+# Maintainer: Rasmus Thomsen <oss@cogitri.dev>
 pkgname=gobject-introspection
-pkgver=1.52.1
-pkgrel=0
+pkgver=1.62.0
+pkgrel=1
 pkgdesc="Introspection system for GObject-based libraries"
-url="http://live.gnome.org/GObjectIntrospection"
+url="https://wiki.gnome.org/action/show/Projects/GObjectIntrospection"
 arch="all"
-license="LGPL GPL"
-depends_dev="python2 glib-dev libffi-dev cairo-dev libtool"
-makedepends="$depends_dev flex bison python2-dev"
-depends=
-replaces="libgirepository"
-source="http://ftp.gnome.org/pub/gnome/sources/$pkgname/${pkgver%.*}/$pkgname-$pkgver.tar.xz
-	"
-
-# since this is a dev package by definition  we dont bother separate -dev
+license="LGPL-2.0-or-later AND GPL-2.0-or-later AND MIT"
+depends_dev="python3 cairo-dev libtool"
+makedepends="$depends_dev glib-dev libffi-dev flex bison python3-dev meson"
 subpackages="$pkgname-doc $pkgname-dev"
-
-_builddir="$srcdir"/$pkgname-$pkgver
-prepare() {
-	cd "$_builddir"
-	for i in $source; do
-		case $i in
-		*.patch)
-			msg "Applying $i"
-			patch -p1 -i "$srcdir"/$i || return 1
-			;;
-		esac
-	done
-}
+replaces="libgirepository"
+checkdepends="sed"
+source="https://download.gnome.org/sources/gobject-introspection/${pkgver%.*}/gobject-introspection-$pkgver.tar.xz"
 
 build() {
-	cd "$_builddir"
-	./configure \
-		--build=$CBUILD \
-		--host=$CHOST \
+	meson \
 		--prefix=/usr \
-		--disable-static \
-		|| return 1
-	make V=1 || return 1
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--buildtype=release \
+		. output
+	ninja -C output
+}
+
+check() {
+	ninja -C output test
 }
 
 package() {
-	cd "$_builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	DESTDIR="$pkgdir" ninja -C output install
 }
 
 dev() {
 	mkdir -p "$subpkgdir"/usr/lib
-	mv "$pkgdir"/usr/share "$subpkgdir"/usr/ || return 1
-	mv "$pkgdir"/usr/lib/gobject-introspection "$subpkgdir"/usr/lib/ \
-		|| return 1
-	mv "$pkgdir"/usr/bin "$subpkgdir"/usr/ || return 1
+	mv "$pkgdir"/usr/share "$subpkgdir"/usr/
+	mv "$pkgdir"/usr/lib/gobject-introspection "$subpkgdir"/usr/lib/
+	mv "$pkgdir"/usr/bin "$subpkgdir"/usr/
 	default_dev
 	replaces="gobject-introspection"
 }
 
-sha512sums="878653ffa80c064c73453ea2878a977e52f0d6a0b2123bee8c3429379366f9da3e9fd991fad0dda170d74e4241314ea6c5120f5988e68fad4bfe9c333d11389f  gobject-introspection-1.52.1.tar.xz"
+sha512sums="b460a95fd7a323e9b0c9a45e680ebe98bbae7632abfa53b3e0b0ec050775cab17dde693314d6d4f8e93614c32b5587f8ce0b4a4c9ee9ba46c029ce029014e638  gobject-introspection-1.62.0.tar.xz"

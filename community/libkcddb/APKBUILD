@@ -1,0 +1,41 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=libkcddb
+pkgver=19.12.0
+pkgrel=0
+arch="all"
+url="https://www.kde.org/applications/multimedia/"
+pkgdesc="KDE CDDB library"
+license="LGPL-2.0-or-later AND GPL-2.0-or-later"
+makedepends="extra-cmake-modules qt5-qtbase-dev kconfig-dev kdoctools-dev kcodecs-dev ki18n-dev kio-dev kwidgetsaddons-dev libmusicbrainz-dev"
+source="https://download.kde.org/stable/release-service/$pkgver/src/libkcddb-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_TESTING=ON
+	make
+}
+
+check() {
+	cd "$builddir"/build
+	# musicbrainztest-severaldiscs is broken
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest -E "musicbrainztest-severaldiscs"
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="a46d50d35d1f5e000f0c9b43031e5827a46d68a8f8783fc760afbb251200f7491973b571ed809a0975df3d6894213dd0177cf6bf23d95051121dad1e72521059  libkcddb-19.12.0.tar.xz"

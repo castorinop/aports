@@ -1,1 +1,0 @@
-RNGD_OPTS="--no-drng=1 --no-tpm=1"

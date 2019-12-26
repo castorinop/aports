@@ -6,12 +6,12 @@ pkgrel=2
 pkgdesc="SCSI Media Changer and Backup Device Control"
 url="http://mtx.opensource-sw.net/"
 arch="all"
-license="GPL2"
+license="GPL-2.0"
 depends=""
 makedepends=""
 install=""
 subpackages=""
-source="http://downloads.sourceforge.net/mtx/$pkgname-$pkgver.tar.gz"
+source="https://downloads.sourceforge.net/mtx/$pkgname-$pkgver.tar.gz"
 
 _builddir="$srcdir/$pkgname-$pkgver"
 

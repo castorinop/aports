@@ -1,25 +1,23 @@
 # Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
 # Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
 pkgname=asciinema
-pkgver=1.4.0
-pkgrel=0
-pkgdesc="A Command line recorder for asciinema.org service"
-url="https://github.com/asciinema/asciinema/"
-arch="all !aarch64 !s390x"
-license="GPLv3"
-depends="ncurses"
-makedepends="python3-dev"
-source="$pkgname-$pkgver.tar.gz::https://github.com/$pkgname/$pkgname/archive/v$pkgver.tar.gz"
-builddir="$srcdir/$pkgname-$pkgver"
+pkgver=2.0.2
+pkgrel=3
+pkgdesc="Command line recorder for the asciinema.org service"
+url="https://github.com/asciinema/asciinema"
+arch="all"
+license="GPL-3.0-or-later"
+depends="ncurses py3-setuptools"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/asciinema/asciinema/archive/v$pkgver.tar.gz"
 
 build() {
-	cd "$builddir"
 	python3 setup.py build
 }
 
 package() {
-	cd "$builddir"
 	python3 setup.py install --prefix=/usr --root="$pkgdir"
+	install -Dm644 man/asciinema.1 "$pkgdir/usr/share/man/man1/asciinema.1"
 }
 
-sha512sums="23c67a462acdbbbed495e6cc3e0e22ed028effcc945af30b5925854e216c6f74bb1b416d9b0001726732ae8be510796e996bbca69b225c20422143e5ed1aca5c  asciinema-1.4.0.tar.gz"
+sha512sums="27ae831494c2532270940c3e0fedc87ebbdc1e9d8d24c37d1b63d3f74d9722d38e867fa1b46656249e5b0a84ed7ed32bb21da65f06e9c6a8b787aebdce2068f3  asciinema-2.0.2.tar.gz"

@@ -1,25 +1,21 @@
 # Contributor: Carlo Landmeter <clandmeter@gmail.com>
 # Maintainer: Carlo Landmeter <clandmeter@gmail.com>
 pkgname=unixodbc
-pkgver=2.3.4
-pkgrel=1
+pkgver=2.3.7
+pkgrel=2
 pkgdesc="ODBC is an open specification to access Data Sources"
 url="http://www.unixodbc.org/"
 arch="all"
-license="LGPL2+"
-depends=""
+license="LGPL-2.0-or-later"
+options="!check"  # No test suite.
 makedepends="readline-dev"
-subpackages="$pkgname-dev $pkgname-doc"
-source="ftp://ftp.unixodbc.org/pub/unixODBC/unixODBC-${pkgver}.tar.gz"
+subpackages="$pkgname-static $pkgname-dev $pkgname-doc"
+source="http://www.unixodbc.org/unixODBC-${pkgver}.tar.gz"
 
-_builddir="$srcdir/unixODBC-$pkgver"
-prepare() {
-	cd "$_builddir"
-	update_config_sub || return 1
-}
+builddir="$srcdir/unixODBC-$pkgver"
 
 build() {
-	cd "$_builddir"
+	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -29,15 +25,13 @@ build() {
 		--infodir=/usr/share/info \
 		--disable-nls \
 		--enable-gui=no \
-		|| return 1
-	make || return 1
+		--enable-static
+	make
 }
 
 package() {
-	cd "$_builddir"
-	make -j1 DESTDIR="$pkgdir" install || return 1
+	cd "$builddir"
+	make -j1 DESTDIR="$pkgdir" install
 }
 
-md5sums="bd25d261ca1808c947cb687e2034be81  unixODBC-2.3.4.tar.gz"
-sha256sums="2e1509a96bb18d248bf08ead0d74804957304ff7c6f8b2e5965309c632421e39  unixODBC-2.3.4.tar.gz"
-sha512sums="34799777c95539905d4bbe60ad2b83631a31a68483b6be96dba25f80fa2fff4624ba170078097c942f2206873776d179d7d02a340598c4627f8723eb6f083a26  unixODBC-2.3.4.tar.gz"
+sha512sums="a87afeaaa0476f4ae6345c7021b3af52718944e599abb595c864d9126744a21341889802512a1de3ebaf86ac89e7f8b1bbd7f8f5285e8f4bccf928bd1585ff70  unixODBC-2.3.7.tar.gz"

@@ -1,21 +1,20 @@
 # Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
 # Maintainer: Carlo Landmeter <clandmeter@gmail.com>
 pkgname=nbd
-pkgver=3.16.1
+pkgver=3.20
 pkgrel=0
 pkgdesc="Tools for network block devices"
 url="http://nbd.sourceforge.net"
 arch="all"
-license="GPL2"
-makedepends="glib-dev linux-headers zlib-dev"
-subpackages="$pkgname-doc $pkgname-client"
-source="http://downloads.sourceforge.net/$pkgname/$pkgname-$pkgver.tar.xz"
-
-builddir="$srcdir"/$pkgname-$pkgver
+license="GPL-2.0-or-later"
+makedepends="glib-dev linux-headers zlib-dev gnutls-dev libnl3-dev bash"
+subpackages="$pkgname-doc $pkgname-client $pkgname-openrc"
+source="https://downloads.sourceforge.net/nbd/nbd-$pkgver.tar.xz
+	nbd-server.initd
+	"
 
 build() {
-	cd "$builddir"
-	touch "systemd/nbd@.service.tmpl"
+	CONFIG_SHELL=/bin/bash \
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -29,9 +28,15 @@ build() {
 	make
 }
 
+check() {
+	make check
+}
+
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir" install
+	install -Dm755 "$srcdir"/nbd-server.initd \
+		"$pkgdir"/etc/init.d/nbd-server
+	mkdir -p "$pkgdir"/etc/nbd-server
 }
 
 client() {
@@ -41,4 +46,5 @@ client() {
 		"$subpkgdir"/usr/sbin/
 }
 
-sha512sums="0e8444333e0a41a725c08867b79634bca1b8e9c0e88011dcf8e2f37b6e8de5582208c5029eea16bee517530c8725f232c1c963848bd09da5c4dda6a15ee283de  nbd-3.16.1.tar.xz"
+sha512sums="d115939d8f086a1d99637d71453cbcc000a9145a85912a7edf701fad1b90d79e7bba1bc065fc54baa20c8a7665f47ad886cf8493bbabb15854eeede45cf176bc  nbd-3.20.tar.xz
+7012adb1d822454b29d1c75cdeaab9dfa2bf0e41c058509428227953b1e555b76c1802a78e66d8fa3fc2ada932cfe265e80c90fa9dbddd544c81b1411c8ab4b4  nbd-server.initd"

@@ -2,38 +2,29 @@
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=perl-io-gzip
 pkgver=0.20
-pkgrel=0
+pkgrel=4
 pkgdesc="Perl extension to provide a PerlIO layer to gzip/gunzip"
-url="http://search.cpan.org/dist/PerlIO-gzip/"
+url="https://metacpan.org/pod/IO::Compress::Gzip"
 arch="all"
-license="GPL"
-depends=""
-depends_dev="perl-dev zlib-dev"
-makedepends="$depends_dev"
-install=""
+license="GPL-1.0-or-later OR Artistic-1.0-Perl"
+depends="perl"
+makedepends="perl-dev zlib-dev"
 subpackages="$pkgname-doc"
-source="http://search.cpan.org/CPAN/authors/id/N/NW/NWCLARK/PerlIO-gzip-$pkgver.tar.gz"
+source="https://cpan.metacpan.org/authors/id/N/NW/NWCLARK/PerlIO-gzip-$pkgver.tar.gz"
 
-_builddir="$srcdir"/PerlIO-gzip-$pkgver
-prepare() {
-	local i
-	cd "$_builddir"
-	for i in $source; do
-		case $i in
-		*.patch) msg $i; patch -p1 -i "$srcdir"/$i || return 1;;
-		esac
-	done
-}
+builddir="$srcdir/PerlIO-gzip-$pkgver"
 
 build() {
-	cd "$_builddir"
-	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor || return 1
-	make || return 1
+	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
+	make
+}
+
+check() {
+	make test
 }
 
 package() {
-	cd "$_builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 

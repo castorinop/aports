@@ -1,48 +1,44 @@
 # Contributor: Carlo Landmeter <clandmeter@gmail.com>
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=certbot
-pkgver=0.18.1
+pkgver=1.0.0
 pkgrel=0
 pkgdesc="An ACME client that can update Apache/Nginx configurations"
 url="https://github.com/certbot/certbot"
 arch="noarch"
 license="Apache"
-depends="py-setuptools py-mock py-acme py-configargparse py-configobj
-	py-cryptography py-parsedatetime py-dialog py-openssl
-	py-rfc3339 py-tz py-requests py-six py-zope-component py-zope-interface
-	py-zope-event py-cffi py-enum34 py-ipaddress py-idna py-argparse py-packaging
-	py-certifi py-chardet py-future py-urllib3"
-# define acme deps here and add them to makedepends
-# so they get pulled in when bootstrapping.
-_depends_acme="py-setuptools py-cryptography py-ndg_httpsclient py-asn1 py-openssl
-	py-tz py-rfc3339 py-requests py-six py-werkzeug"
+depends="
+	py3-acme
+	py3-configargparse
+	py3-configobj
+	py3-cryptography
+	py3-distro
+	py3-distutils-extra
+	py3-josepy
+	py3-mock
+	py3-parsedatetime
+	py3-pyrfc3339
+	py3-tz
+	py3-setuptools
+	py3-zope-component
+	py3-zope-interface
+"
+checkdepends="py3-augeas"
 replaces="letsencrypt"
-makedepends="$depends_dev $_depends_acme"
-subpackages="py-acme:acme"
-source="certbot-$pkgver.tar.gz::https://github.com/certbot/certbot/archive/v$pkgver.tar.gz"
-builddir="$srcdir"/$pkgname-$pkgver
-
-check() {
-	cd "$builddir"
-	python2 setup.py check
-}
+source="https://pypi.io/packages/source/c/certbot/certbot-${pkgver}.tar.gz
+	cerbot_py3_looseversion.patch"
 
 build() {
-	cd "$builddir"
-	python2 setup.py build
+	python3 setup.py build
+}
+
+check() {
+	python3 setup.py check
 }
 
 package() {
-	cd "$builddir"
-	python2 setup.py install --prefix=/usr --root="$pkgdir"
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
 }
 
-acme() {
-	pkgdesc="ACME protocol implementation for Python"
-	depends="$_depends_acme"
-	cd "$builddir"/acme
-	python2 setup.py build
-	python2 setup.py install --prefix=/usr --root="$subpkgdir"
-}
-
-sha512sums="62f9a247075d007f4b905646fbd63228303bfa7dd8c13c09b5f5205c9a0adce80b2956a796d10c8963058f6cf8f3e41acbae695a61187ef691af4dbbd0e693bf  certbot-0.18.1.tar.gz"
+sha512sums="ab432f3986b28d88857a550016b21240f5af85f145e12c291c9b99060c22d1d313b1ea0000db132ae0297f238096b7754ce37d409e5c83d8d67564058c657307  certbot-1.0.0.tar.gz
+e03356f528551a3b885c2eb45f18358bd1fd628b0b1a780f12cb49e6f9f3b9b81e2449d9bea4f48ba368d5c0c7f183e9d32d9a094a6d828339382f4b4938b30a  cerbot_py3_looseversion.patch"

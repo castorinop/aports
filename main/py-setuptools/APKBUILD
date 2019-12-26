@@ -2,33 +2,52 @@
 # Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
 pkgname=py-setuptools
 _pkgname=${pkgname#py-}
-pkgver=33.1.1
-pkgrel=1
+pkgver=42.0.2
+pkgrel=0
 pkgdesc="A collection of enhancements to the Python distutils"
-url="http://pypi.python.org/pypi/setuptools"
+url="https://pypi.python.org/pypi/setuptools"
 arch="noarch"
-license="PSF"
-provides="py2-setuptools=$pkgver-r$pkgrel"
+license="MIT"
 depends="python2"
-makedepends="python2-dev"
+makedepends="python3"
+provides="py2-setuptools=$pkgver-r$pkgrel"
+options="!check" #no testsuite
+subpackages="py3-$_pkgname:_py3"
 source="$_pkgname-$pkgver.tar.gz::https://github.com/pypa/$_pkgname/archive/v$pkgver.tar.gz"
-builddir="$srcdir/$_pkgname-$pkgver"
+builddir="$srcdir"/$_pkgname-$pkgver
+
+prepare() {
+	python2 bootstrap.py
+	python3 bootstrap.py
+}
 
 build() {
-	cd "$builddir"
-	python2 bootstrap.py
 	python2 setup.py build
+	python3 setup.py build
 }
 
 package() {
-	cd "$builddir"
-
 	python2 setup.py install --prefix=/usr --root="$pkgdir"
-
 	# we don't provide a non-suffixed easy_install
 	rm -f "$pkgdir"/usr/bin/easy_install
 }
 
-md5sums="6f325e870730cd90f3ac9608cdf6a82f  setuptools-33.1.1.tar.gz"
-sha256sums="a1ceebce3a0e2c6676ab03d6222a3f3cb403a392acb9e3919da5d1e1bbc447a4  setuptools-33.1.1.tar.gz"
-sha512sums="4cc73881162be28b70cd9abe01bafc676b491608e5d22dd6b688043291eb42f7b1c6cb17d1e0c65a1f88e3896688991d446048e330426bcf3247baecc2eb1d06  setuptools-33.1.1.tar.gz"
+_py() {
+	local python="$1"
+	pkgdesc="$pkgdesc (for $python)"
+	depends="$python"
+	install_if="$pkgname=$pkgver-r$pkgrel $python"
+
+	cd "$builddir"
+	$python setup.py install --prefix=/usr --root="$subpkgdir"
+	# we don't provide a non-suffixed easy_install
+	rm -f "$subpkgdir"/usr/bin/easy_install
+}
+
+_py3() {
+	replaces="python3"
+	_py python3
+}
+
+
+sha512sums="3ef85e38e02e7d4178f4ca1e84577392a5682e569bdba40fc4b87440d8a4a7769fa4eca5b3f457febf1cf16de0cdc7ddb8d1ddedc92fd4af0bae3b15abe2b7bc  setuptools-42.0.2.tar.gz"

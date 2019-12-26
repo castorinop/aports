@@ -1,0 +1,48 @@
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Maintainer: Sören Tempel <soeren+alpine@soeren-tempel.net>
+pkgname=mblaze
+pkgver=0.5.1
+pkgrel=0
+pkgdesc="Unix utilities to deal with Maildir"
+url="https://github.com/chneukirchen/mblaze"
+arch="all"
+license="CC0-1.0"
+depends=""
+depends_dev=""
+makedepends=""
+checkdepends="perl-utils"
+install=""
+subpackages="$pkgname-doc $pkgname-crypto::noarch"
+options="!check" # currently fail on the builder
+source="$pkgname-$pkgver.tar.gz::https://github.com/chneukirchen/$pkgname/archive/v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-$pkgver"
+
+build() {
+	make CFLAGS="$CFLAGS" -C "$builddir"
+}
+
+check() {
+	make -C "$builddir" check
+}
+
+package() {
+	cd "$builddir"
+	make PREFIX="/usr" DESTDIR="$pkgdir" install
+
+	mkdir -p "$pkgdir"/usr/share/doc/$pkgname/examples/
+	install -m644 *.example "$pkgdir"/usr/share/doc/$pkgname/examples/
+	install -m644 NEWS.md VIOLATIONS.md README \
+		"$pkgdir"/usr/share/doc/$pkgname/
+}
+
+crypto() {
+	depends="openssl gnupg"
+	pkgdesc="Scripts for using S/MIME and PGP"
+
+	cd "$builddir/contrib"
+	mkdir -p "$subpkgdir"/usr/bin
+	install -m755 mverify msign mencrypt mgpg \
+		"$subpkgdir"/usr/bin
+}
+
+sha512sums="ae810e30092d24ee89f33e28769268513217813bf1aacc9a970bc84e0c1a9ee7c986572ab5ecac314330de20a45879fcec9738119c08a9945932be55f8f649f7  mblaze-0.5.1.tar.gz"

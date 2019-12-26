@@ -3,11 +3,11 @@
 # Maintainer: Mathew Meins <mathewm@sdf.lonestar.org>
 pkgname=uucp
 pkgver=1.07
-pkgrel=2
+pkgrel=3
 pkgdesc="Taylor UUCP is a free implementation of UUCP"
-url="http://airs.com/ian/uucp.html"
+url="https://airs.com/ian/uucp.html"
 arch="all"
-license="GPL2"
+license="GPL-2.0"
 depends=""
 depends_dev=""
 makedepends="$depends_dev"
@@ -16,7 +16,7 @@ subpackages="$pkgname-doc"
 options="suid"
 pkgusers="uucp"
 pkggroups="uucp"
-source="ftp://ftp.gnu.org/pub/gnu/$pkgname/$pkgname-$pkgver.tar.gz"
+source="https://ftp.gnu.org/gnu/$pkgname/$pkgname-$pkgver.tar.gz"
 
 builddir="$srcdir"/$pkgname-$pkgver
 build() {

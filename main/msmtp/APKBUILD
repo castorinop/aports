@@ -1,36 +1,35 @@
 # Contributor: Natanael Copa <ncopa@alpinelinux.org>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=msmtp
-pkgver=1.6.6
-pkgrel=1
+pkgver=1.8.7
+pkgrel=0
 pkgdesc="SMTP client with a sendmail compatible interface"
-url="http://msmtp.sourceforge.net/"
+url="https://marlam.de/msmtp/"
 arch="all"
-license="GPL3+"
-depends=""
-makedepends="libressl-dev"
-install=""
-subpackages="$pkgname-doc $pkgname-vim:vim:noarch"
-source="http://downloads.sourceforge.net/project/$pkgname/$pkgname/$pkgver/$pkgname-$pkgver.tar.xz"
-builddir="$srcdir/$pkgname-$pkgver"
+license="GPL-3.0-or-later"
+options="!check" # no test suite
+makedepends="gettext-dev gnutls-dev"
+subpackages="$pkgname-doc $pkgname-lang $pkgname-openrc $pkgname-vim:vim:noarch"
+source="https://marlam.de/msmtp/releases/msmtp-$pkgver.tar.xz
+	msmtp.confd
+	msmtp.initd"
 
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
 		--prefix=/usr \
 		--sysconfdir=/etc \
 		--mandir=/usr/share/man \
-		--localstatedir=/var \
-		--with-ssl=openssl \
-		|| return 1
-	make || return 1
+		--localstatedir=/var
+	make
 }
 
 package() {
-	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
+
+	install -Dm755 "$srcdir/$pkgname.initd" "$pkgdir/etc/init.d/$pkgname"
+	install -Dm644 "$srcdir/$pkgname.confd" "$pkgdir/etc/conf.d/$pkgname"
 }
 
 vim() {
@@ -41,6 +40,6 @@ vim() {
 		"$subpkgdir"/usr/share/vim/vimfiles/syntax/$pkgname.vim
 }
 
-md5sums="82b0520b57db4b2cf05333d11fb5974d  msmtp-1.6.6.tar.xz"
-sha256sums="da15db1f62bd0201fce5310adb89c86188be91cd745b7cb3b62b81a501e7fb5e  msmtp-1.6.6.tar.xz"
-sha512sums="30f33648b66a6b230cd38d0eee4c916a631a51bddcc1a15c9f7b324305506cb83b9c95f95def9150d0b783d38000db409981331b3c6a756232f0ce49e9b343ab  msmtp-1.6.6.tar.xz"
+sha512sums="5a079cb90b48853ad812125e8b341f5bcd5f5ba4725d62c37210050896527b63f993aa6393f1d4107636153bf0ed84b0288e88a7e78a119c66b2d58f1e69a67d  msmtp-1.8.7.tar.xz
+3839d7e8400cf897830c674f59563e225096d9755121d1ac14f3b493ab4cc0672228a9b14b9d9620d566593e2ae27d322a78c46791c6b5166ab82275d25dc0d3  msmtp.confd
+6845e1c5b1d31ade044dc5719a4d9602ea775e73ebd9084536a96165732f5a331f92384773131cda502befc673842ed2a418e38f33dceedaae18dbe452ef2353  msmtp.initd"

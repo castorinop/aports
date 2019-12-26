@@ -1,0 +1,62 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=okular
+pkgver=19.12.0
+pkgrel=0
+arch="all"
+url="https://kde.org/applications/office/org.kde.okular"
+pkgdesc="A universal document viewer"
+license="GPL-2.0-or-later AND LGPL-2.0-or-later"
+makedepends="extra-cmake-modules qt5-qtbase-dev qt5-qtspeech-dev karchive-dev
+	kbookmarks-dev kcompletion-dev kconfig-dev kconfigwidgets-dev
+	kcoreaddons-dev kcrash-dev kiconthemes-dev kio-dev kparts-dev
+	threadweaver-dev kwindowsystem-dev kdoctools-dev kjs-dev kwallet-dev
+	kactivities-dev phonon-dev purpose-dev zlib-dev poppler-qt5-dev
+	kirigami2-dev qca-dev kpty-dev"
+checkdepends="xvfb-run"
+source="https://download.kde.org/stable/release-service/$pkgver/src/okular-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang $pkgname-mobile"
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_OKULARKIRIGAMI=ON \
+		-DCMAKE_CXX_FLAGS="$CXXFLAGS" \
+		-DCMAKE_C_FLAGS="$CFLAGS -D_GNU_SOURCE"
+	make
+}
+
+check() {
+	cd "$builddir"/build
+
+	# All other tests are broken, require OpenGL, etc
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest -R "^shelltest"
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+
+mobile() {
+	depends="kirigami2"
+	mkdir -p "$subpkgdir"/usr/bin
+	mkdir -p "$subpkgdir"/usr/lib/qt5
+	mkdir -p "$subpkgdir"/usr/share/applications
+
+	mv "$pkgdir"/usr/bin/okularkirigami "$subpkgdir"/usr/bin/
+	mv "$pkgdir"/usr/lib/qt5/qml "$subpkgdir"/usr/lib/qt5/
+	mv "$pkgdir"/usr/share/applications/org.kde.okular.kirigami.desktop "$subpkgdir"/usr/share/applications/
+	mv "$pkgdir"/usr/share/applications/org.kde.mobile.okular_plucker.desktop "$subpkgdir"/usr/share/applications/
+}
+
+sha512sums="93fb134f18b00ce84e9b2ce84974562a5d22f956b459e540750d0c67a980f66383ec13fa8f3bb52f196ce7fabe468de4fe63b0fa6678df840d2defb0e22fc30b  okular-19.12.0.tar.xz"

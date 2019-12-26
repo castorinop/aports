@@ -1,0 +1,23 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=breeze-grub
+pkgver=5.17.4
+pkgrel=0
+pkgdesc="Breeze theme for GRUB"
+arch="noarch !s390x" # Limited by s390x
+url="https://www.kde.org/workspaces/plasmadesktop/"
+license="GPL-3.0-or-later"
+depends="grub"
+makedepends="extra-cmake-modules unifont"
+source="$pkgname-$pkgver.tar.xz::https://download.kde.org/stable/plasma/$pkgver/breeze-grub-$pkgver.tar.xz"
+options="!check" # No test suite available
+
+build() {
+	./mkfont.sh
+}
+
+package() {
+	install -d "$pkgdir"/usr/share/grub/themes
+	cp -r breeze "$pkgdir"/usr/share/grub/themes
+}
+sha512sums="d5ee26d5ad14eef0877da3ea18cc644734cade4866d983ea0db140d7ef7d549b5655218c11cf059c1e3e1e858fb6ad763d216420dc4ca403c2dc57be12ed082b  breeze-grub-5.17.4.tar.xz"

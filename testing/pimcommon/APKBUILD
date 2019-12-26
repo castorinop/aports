@@ -1,0 +1,32 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=pimcommon
+pkgver=19.12.0
+pkgrel=0
+pkgdesc="Common lib for KDEPim"
+arch="all"
+url='https://community.kde.org/KDE_PIM'
+license="GPL-2.0-or-later"
+depends_dev="qt5-qtbase-dev karchive-dev kcodecs-dev kcompletion-dev kconfig-dev kconfigwidgets-dev kcoreaddons-dev kdbusaddons-dev ki18n-dev kiconthemes-dev kitemmodels-dev kjobwidgets-dev kio-dev knewstuff-dev kservice-dev kwidgetsaddons-dev kxmlgui-dev akonadi-dev akonadi-contacts-dev kcontacts-dev kimap-dev libkdepim-dev kpimtextedit-dev purpose-dev kmime-dev"
+makedepends="$depends_dev extra-cmake-modules qt5-qttools-dev"
+checkdepends="xvfb-run"
+source="https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-lang"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_DESIGNERPLUGIN=ON
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+sha512sums="e3f23d63777c33986385f3def720d145029ef61ef1df5e3b6ee733a2610b1f4b6f034307622e88a5b6be602431e001cc17f8613ae7da7ce940009b7e66849f0c  pimcommon-19.12.0.tar.xz"

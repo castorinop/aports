@@ -1,0 +1,29 @@
+# Contributor: TBK <alpine@jjtc.eu>
+# Maintainer: TBK <alpine@jjtc.eu>
+pkgname=libimagequant
+pkgver=2.12.5
+pkgrel=0
+pkgdesc="Small, portable C library for high-quality conversion of RGBA images to 8-bit indexed-color (palette) images."
+url="https://pngquant.org/lib/"
+arch="all"
+license="GPL-3.0-or-later"
+options="!check" # No test suite
+makedepends="bash"
+subpackages="$pkgname-dev"
+source="$pkgname-$pkgver.tar.gz::https://github.com/ImageOptim/libimagequant/archive/$pkgver.tar.gz"
+
+build() {
+	./configure --prefix=/usr
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	rm -f "$pkgdir"/usr/lib/*.a
+}
+
+sha512sums="5b120cdada79d48f469ea729f3585d7f40f9c1366b302e9fc2c2b3c959b7f49dab06f0038cbc93a522e66d99de5b5939e89ad43b0fd42d0c4888fb69d361de62  libimagequant-2.12.5.tar.gz"

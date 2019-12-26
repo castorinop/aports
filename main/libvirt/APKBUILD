@@ -1,50 +1,66 @@
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=libvirt
-pkgver=3.7.0
+pkgver=5.10.0
 _ver="${pkgver/_rc/-rc}"
 pkgrel=0
 pkgdesc="A virtualization API for several hypervisor and container systems"
-url="http://libvirt.org/"
+url="https://libvirt.org/"
 arch="all"
-license="LGPL"
-_daemon_deps="bridge-utils dmidecode dnsmasq ebtables ip6tables iptables"
+options="!check"
+license="LGPL-2.1-or-later"
+_daemon_deps="bridge-utils dmidecode dnsmasq ip6tables iptables"
 _client_deps="pm-utils gnutls-utils netcat-openbsd"
 depends="lvm2"
 depends_dev="libtirpc-dev"
-makedepends="augeas-dev bridge-utils cyrus-sasl-dev device-mapper
+makedepends="augeas-dev cyrus-sasl-dev device-mapper
 	e2fsprogs-dev gnutls-dev libcap-ng-dev libgpg-error-dev
 	netcf-dev libnl3-dev libxml2-dev libxslt-dev libtasn1-dev
-	lvm2-dev lxc-dev gnutls-dev libgcrypt-dev parted-dev perl pkgconfig
+	lvm2-dev lxc-dev libgcrypt-dev parted-dev perl pkgconfig
 	eudev-dev zlib-dev yajl-dev libpcap-dev curl-dev libpciaccess-dev
-	polkit-dev readline-dev dnsmasq linux-headers $depends_dev
-	fuse-dev util-linux libxml2-utils $_daemon_deps $_client_deps
+	polkit-dev readline-dev linux-headers jansson-dev
+	$depends_dev perl-xml-xpath
+	fuse-dev util-linux libxml2-utils bash-completion $_daemon_deps $_client_deps
+	automake autoconf libtool rpcsvc-proto
 	"
 install="$pkgname.post-install"
-subpackages="$pkgname-dev $pkgname-doc $pkgname-client $pkgname-daemon
-	$pkgname-lang $pkgname-lxc $pkgname-qemu $pkgname-uml $pkgname-vbox"
-source="http://libvirt.org/sources/$pkgname-$pkgver.tar.xz
+subpackages="$pkgname-static $pkgname-libs $pkgname-dev $pkgname-doc $pkgname-client $pkgname-daemon
+	$pkgname-lang $pkgname-lxc $pkgname-qemu $pkgname-uml::noarch $pkgname-vbox
+	$pkgname-bash-completion:bashcomp:noarch"
+source="https://libvirt.org/sources/libvirt-$pkgver.tar.xz
 	libvirt.confd
 	libvirt.initd
 	virtlogd.initd
 	virtlockd.initd
 	musl-fix-includes.patch
-	fix-fortify-virnetlink.patch
+	stderr-fix.patch
 	"
-
 if [ "$CARCH" = "x86_64" ]; then
 	subpackages="$subpackages $pkgname-xen"
-	makedepends="$makedepends xen-dev"
+	makedepends="$makedepends xen-dev zfs"
 fi
 subpackages="$subpackages $pkgname-common-drivers:_common_drivers"
 
-builddir="$srcdir"/$pkgname-$pkgver
+# secfixes:
+#   5.5.0-r0:
+#     - CVE-2019-10168
+#     - CVE-2019-10167
+#     - CVE-2019-10166
+#     - CVE-2019-10161
+
+prepare() {
+	default_prepare
+	mkdir -p build
+	cd build
+	autoreconf -fi ../
+}
 
 build() {
-	cd "$builddir"
+	cd build
 	# qemu sets libexec dir to /usr/lib/qemu
 	export ac_cv_path_QEMU_BRIDGE_HELPER="/usr/lib/qemu/qemu-bridge-helper"
 	[ "$CARCH" = x86_64 ] && local _xen_opt="--with-libxl"
-	./configure \
+	[ "$CARCH" = x86_64 ] && local _zfs_opt="--with-storage-zfs"
+	../configure \
 		--build=$CBUILD \
 		--host=$CHOST \
 		--prefix=/usr \
@@ -53,16 +69,18 @@ build() {
 		--infodir=/usr/share/info \
 		--libexec=/usr/lib/"$pkgname" \
 		$_xen_opt \
+		$_zfs_opt \
 		--with-polkit \
 		--with-storage-fs \
 		--with-storage-lvm \
-		|| return 1
-	make || return 1
+		--enable-static \
+		--with-qemu
+	make
 }
 
 package() {
-	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	cd build
+	make DESTDIR="$pkgdir" install
 	install -D -m755 $srcdir/$pkgname.initd $pkgdir/etc/init.d/libvirtd
 	install -D -m755 $srcdir/$pkgname.confd $pkgdir/etc/conf.d/libvirtd
 	install -D -m755 $srcdir/virtlogd.initd $pkgdir/etc/init.d/virtlogd
@@ -107,7 +125,25 @@ client() {
 		"$subpkgdir"/usr/lib
 	mv "$pkgdir"/etc/$pkgname/$pkgname.conf "$subpkgdir"/etc/libvirt/
 	mv "$pkgdir"/usr/bin/* "$subpkgdir"/usr/bin/
-	mv "$pkgdir"/usr/lib/lib*.so.* "$subpkgdir"/usr/lib/ || return 1
+}
+
+static() {
+	pkgdesc="$pkgname static libraries"
+	mkdir -p "$subpkgdir"/usr/lib
+	cd "$pkgdir"
+	for _lib in  $(find . -name '*.a'); do
+		mkdir -p "$subpkgdir"/${_lib%/*}
+		mv "$_lib" "$subpkgdir"/${_lib%/*}/
+	done
+}
+
+bashcomp() {
+	depends=""
+	pkgdesc="Bash completions for $pkgname"
+	install_if="$pkgname=$pkgver-r$pkgrel bash-completion"
+	mkdir -p "$subpkgdir"/usr/share/
+	mv "$pkgdir"/usr/share/bash-completion \
+		"$subpkgdir"/usr/share/
 }
 
 _mv_driver() {
@@ -130,7 +166,7 @@ _mv_driver() {
 	for _d in $_drivers; do
 		find * -name "*$_d[.-]*" -o -name "*$_d" | while read _f; do
 			mkdir -p "$subpkgdir"/${_f%/*}
-			mv "$pkgdir"/$_f "$subpkgdir"/$_f || return 1
+			mv "$pkgdir"/$_f "$subpkgdir"/$_f
 		done
 	done
 }
@@ -152,10 +188,10 @@ _common_drivers() {
 		"$subpkgdir"/etc/libvirt/
 }
 
-sha512sums="b3f7021ef4c6954430f8fa503f0c49e3df4f662b228cb631ba2c2139ecec2307dde6cec05037cc28663e82ab1001296c20c5c68acd183cd364dd484a7746f498  libvirt-3.7.0.tar.xz
+sha512sums="bb518a6aa6731a7de4b24fc7b8ffdcd2cdd84dfe49047374e0f02265c274eb06dbe1732c9cc4954412853d36d9dd5c1124fb8a5e37f4c01654d85013773ffa23  libvirt-5.10.0.tar.xz
 9aba6ab73219a635c64a340ee8887356e644445c9128734cbce73f5d54778378da2f10a190365ad88a7db8bc95b1fb17f0c6ca41fc41bb786c09e1afe84d65dc  libvirt.confd
 734afb83b7a4703dd238f1d89dbc853a8c73bcf1994af648c41ab01ae4088e5c7a423f0cb91e5e31f2ae5e60c66d08a6e1583a1e3b88bb5554e0f9fd15ecc15c  libvirt.initd
 36b85f473d292be8df415256d01a562131d8ae61450ba3893658090a12d589ca32215382f56f286a830b4e59ffd98fbe1d92004f2ce14ca0834451b943cd8f2f  virtlogd.initd
 a4c4d26e4111931acbe7594451bf963a36c8db33c64b1bc447ab4758bb92803510bebee0511d6bc16ba80c289ab6f87e74377d47bf560412f9adb9c161a206d9  virtlockd.initd
-b6142256bf2700b9e5335c60fe5628e4095a24689c31d54afcab46f46a06b9c0ae676f87f77a487377eafbec11fb7afa9b994aef48a10a39e82f47c45df008ba  musl-fix-includes.patch
-0ef74be8c8f0e6c6ae6e3dcf6e83dc76c1371e1eaab123589f634c22f221cc26a8f0b0de6a9f5d36510b270d4a06fae42b51b749311f3e57953e65fbfc241911  fix-fortify-virnetlink.patch"
+dfe042c596028125bf8548115de2922683829c4716f6b0efb8efc38518670e3e848481661b9714bb0664c1022b87e8f3c0773611fe10187b0bc588e2336ada0c  musl-fix-includes.patch
+d32551d56eae2c33bab7571964f76421336967918c293cd1d18fc66626a7ead3551b5672a9e3fc3d8b7bca82cc0abb17e428ee8271d04d73bc06fd16309918b3  stderr-fix.patch"

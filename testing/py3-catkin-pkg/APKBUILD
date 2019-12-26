@@ -1,0 +1,27 @@
+# Contributor: Russ Webber <russ@rw.id.au>
+# Maintainer: Russ Webber <russ@rw.id.au>
+pkgname=py3-catkin-pkg
+_pkgname=catkin_pkg
+pkgver=0.4.15
+pkgrel=0
+pkgdesc="Standalone Python library for the catkin build system."
+url="http://wiki.ros.org/catkin_pkg"
+arch="noarch"
+license="BSD-3-Clause"
+options="!check" # python deps not packaged: # flake8-class-newline flake8-comprehensions flake8-deprecated flake8-docstrings
+depends="python3 py3-docutils py3-dateutil py3-parsing"
+makedepends="py3-setuptools"
+source="https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+replaces="py3-catkin-pkg-modules" # module was renamed in pypi
+provides="py3-catkin-pkg-modules=$pkgver-r$pkgrel"
+
+build() {
+	python3 setup.py build
+}
+
+package() {
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
+}
+sha512sums="d81c04f83cc8bbd38db5ea96ffa95fd167e1767223ba99f5a6c0835f5b7744b4cb0a64e2f7e2eb4f0c3cd95a8645164dfb18a11aab18e77ebab70686adfd975a  catkin_pkg-0.4.15.tar.gz"

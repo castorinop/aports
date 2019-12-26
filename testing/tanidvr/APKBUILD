@@ -6,13 +6,13 @@ pkgrel=0
 pkgdesc="a CLI tool for accessing DVRs and IP cameras based on the proprietary DVR-IP protocol (port 37777/TCP)"
 url="http://tanidvr.sourceforge.net"
 arch="all"
-license="GPL3"
+license="GPL-3.0"
 depends=
 depends_dev=
 makedepends=
 install=
 subpackages="$pkgname-dhav2mkv"
-source="http://downloads.sourceforge.net/project/$pkgname/TaniDVR/$pkgname-$pkgver/$pkgname-$pkgver.tar.bz2"
+source="https://downloads.sourceforge.net/project/$pkgname/TaniDVR/$pkgname-$pkgver/$pkgname-$pkgver.tar.bz2"
 builddir="$srcdir"/$pkgname-$pkgver
 
 build() {

@@ -1,18 +1,17 @@
 # Contributor: A. Wilcox <awilfox@adelielinux.org>
-# Maintainer: A. Wilcox <awilfox@adelielinux.org>
+# Maintainer: Leo <thinkabit.ukim@gmail.com>
 pkgname=libpipeline
-pkgver=1.4.1
+pkgver=1.5.1
 pkgrel=0
 pkgdesc="C pipeline manipulation library"
 url="http://libpipeline.nongnu.org/"
 arch="all"
-license="GPL-3+"
+license="GPL-3.0-or-later"
 checkdepends="check-dev"
 subpackages="$pkgname-dev $pkgname-doc"
-source="http://download.savannah.nongnu.org/releases/libpipeline/libpipeline-$pkgver.tar.gz"
+source="https://download.savannah.nongnu.org/releases/$pkgname/$pkgname-$pkgver.tar.gz"
 
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -24,13 +23,11 @@ build() {
 }
 
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir" install
 }
 
 check() {
-	cd "$builddir"
 	make check
 }
 
-sha512sums="835d65aa3f9436398b5421544ca7857fe9caed52cd2e70320ea04d6315825e648df930e1c225d4aaf0f2edda2a438f6c00f15c556fb9fd30311560fb8d966797  libpipeline-1.4.1.tar.gz"
+sha512sums="9252c114bc59925eaf73ec9e8bb76b5649ccf985766edd2dc665630ec6de04c341298c74f8dc31c56e9ce20ad83da59df33eb3cc367e18a8012fd693cb823de6  libpipeline-1.5.1.tar.gz"

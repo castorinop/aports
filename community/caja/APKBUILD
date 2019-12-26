@@ -1,34 +1,38 @@
 # Contributor: Alan Lacerda <alacerda@alpinelinux.org>
 # Maintainer: Alan Lacerda <alacerda@alpinelinux.org>
 pkgname=caja
-pkgver=1.18.3
+pkgver=1.22.3
 pkgrel=0
 pkgdesc="The file manager for the MATE desktop"
 url="https://github.com/mate-desktop/caja"
-arch="all"
-license="GPL2"
+arch="all !s390x" # mate-desktop is not available on s390x
+license="GPL-2.0-or-later LGPL-2.0-or-later"
 depends="mate-common mate-desktop"
 makedepends="$depends_dev intltool libtool dconf-dev gtk+3.0-dev libunique3-dev
-	libsm-dev libnotify-dev mate-desktop-dev libxml2-dev"
+	libsm-dev libnotify-dev mate-desktop-dev libxml2-dev gobject-introspection-dev
+	gtk-doc"
+checkdepends="xvfb-run"
 subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
-source="http://pub.mate-desktop.org/releases/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
-
-builddir="$srcdir/$pkgname-$pkgver"
+source="https://pub.mate-desktop.org/releases/${pkgver%.*}/caja-$pkgver.tar.xz"
+options="!check" # (caja:744): GLib-GIO-ERROR **: 12:12:20.291: Settings schema 'org.mate.caja.preferences' is not installed
 
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
 		--prefix=/usr \
+		--disable-static \
 		--sysconfdir=/etc \
-		--disable-update-mimedb \
+		--disable-update-mimedb
 	make
 }
 
+#check() {
+#	xvfb-run make check
+#}
+
 package() {
-	cd "$builddir"
-	make DESTDIR="${pkgdir}" install
+	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="845f7532fbf701fecc5b0e29036ee4b4d6c65f520d6d7fdbddd05d7e7bcd0f7bbd52c54cb45dbb0bd7a5bbf2ece11e584e5074e4c86954b2730baa469168a566  caja-1.18.3.tar.xz"
+sha512sums="9063bd0a9b6fd815f76cfefd9e87eed88588821376d0c46df9cd3ea1cada828bcee4f5f2ddb42be0178ab09a4519b34bded62cebf201dbde5dda1cf3bad95c22  caja-1.22.3.tar.xz"

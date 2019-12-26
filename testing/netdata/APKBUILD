@@ -1,65 +1,100 @@
 # Contributor: Carlo Landmeter <clandmeter@gmail.com>
-# Maintainer:
+# Maintainer: Kevin Daudt <kdaudt@alpinelinux.org>
 pkgname=netdata
-pkgver=1.6.0
+pkgver=1.19.0
 pkgrel=0
 pkgdesc="Real-time performance monitoring"
-url="https://github.com/firehol/netdata"
-license="GPL3+"
+url="https://www.netdata.cloud/"
+license="GPL-3.0-or-later"
 arch="all"
 depends="bash"
-makedepends="zlib-dev e2fsprogs-dev"
+makedepends="zlib-dev e2fsprogs-dev linux-headers libcap-dev automake autoconf
+	openssl-dev"
 pkgusers="netdata"
 pkggroups="netdata"
-subpackages="$pkgname-nodejs $pkgname-python"
+subpackages="$pkgname-openrc $pkgname-nodejs::noarch $pkgname-python::noarch"
 install="$pkgname.pre-install"
-source="https://github.com/firehol/netdata/releases/download/v$pkgver/netdata-$pkgver.tar.xz
+source="$pkgname-$pkgver.tar.gz::https://github.com/netdata/netdata/archive/v$pkgver.tar.gz
 	$pkgname.initd"
-builddir="$srcdir"/$pkgname-$pkgver
 
 prepare() {
 	default_prepare
-	update_config_guess
+	autoreconf -i
 }
 
 build() {
-	cd "$builddir"
 	./configure \
 		--prefix=/usr \
 		--sysconfdir=/etc \
 		--localstatedir=/var \
 		--with-zlib \
 		--with-math \
+		--enable-https \
 		--with-webdir=/usr/share/webapss/netdata \
-		--with-user=netdata || return 1
-	make || return 1
+		--with-user=netdata
+	make
+}
+
+check() {
+	msg "check"
+	make check
 }
 
 package() {
-	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
-	chgrp -R $pkggroups "$pkgdir"/usr/share/webapss/netdata || return 1
+	make DESTDIR="$pkgdir" install
+	chgrp -R $pkggroups "$pkgdir"/usr/share/webapss/netdata
 	chown -R $pkgusers:$pkggroups $pkgdir/var/lib/netdata \
-		$pkgdir/var/cache/netdata || return 1
+		$pkgdir/var/cache/netdata
 	install -Dm755 $srcdir/$pkgname.initd \
-		$pkgdir/etc/init.d/$pkgname || return 1
+		$pkgdir/etc/init.d/$pkgname
+	install -Dm644 ./system/netdata.conf $pkgdir/etc/netdata/netdata.conf
+
+	# cap needed for disk I/O utilization reporting
+	setcap cap_dac_read_search,cap_sys_ptrace+ep \
+		"$pkgdir"/usr/libexec/netdata/plugins.d/apps.plugin
+
+	install -d -Dm0750 -o netdata -g netdata "$pkgdir"/var/lib/netdata
+	install -d -Dm0750 -o netdata -g netdata "$pkgdir"/var/log/netdata
+	install -d -Dm0750 -o netdata -g netdata "$pkgdir"/var/cache/netdata
 }
 
 nodejs() {
 	pkgdesc="$pkgdesc (nodejs support)"
 	depends="$pkgname nodejs"
-	mkdir -p "$subpkgdir"/usr/libexec/netdata
+
+	mkdir -p "$subpkgdir"/etc/netdata
+	mkdir -p "$subpkgdir"/usr/libexec/netdata/plugins.d
+	mkdir -p "$subpkgdir"/usr/lib/netdata/conf.d
+
 	mv $pkgdir/usr/libexec/netdata/node.d \
-		$subpkgdir/usr/libexec/netdata || return 1
+		$subpkgdir/usr/libexec/netdata
+	mv $pkgdir/usr/libexec/netdata/plugins.d/node.d.plugin \
+		$subpkgdir/usr/libexec/netdata/plugins.d
+	mv $pkgdir/etc/netdata/node.d \
+		$subpkgdir/etc/netdata/
+	mv $pkgdir/usr/lib/netdata/conf.d/node.d.conf \
+		$subpkgdir/usr/lib/netdata/conf.d
 }
 
 python() {
-	pkgdesc="$pkgdesc (python support)"
-	depends="$pkgname python2"
-	mkdir -p "$subpkgdir"/usr/libexec/netdata
+	pkgdesc="$pkgdesc (python3 support)"
+	depends="$pkgname python3"
+
+	mkdir -p "$subpkgdir"/etc/netdata
+	mkdir -p "$subpkgdir"/usr/libexec/netdata/plugins.d
+	mkdir -p "$subpkgdir"/usr/lib/netdata/conf.d
+
 	mv $pkgdir/usr/libexec/netdata/python.d \
-		"$subpkgdir"/usr/libexec/netdata || return 1
+		"$subpkgdir"/usr/libexec/netdata
+	mv $pkgdir/usr/libexec/netdata/plugins.d/python.d.plugin \
+		"$subpkgdir"/usr/libexec/netdata/plugins.d
+	mv $pkgdir/etc/netdata/python.d \
+		$subpkgdir/etc/netdata/
+	mv $pkgdir/usr/lib/netdata/conf.d/python.d \
+		$subpkgdir/usr/lib/netdata/conf.d
+	mv $pkgdir/usr/lib/netdata/conf.d/python.d.conf \
+		$subpkgdir/usr/lib/netdata/conf.d
 }
 
-sha512sums="e091c2b3a619f62c209d2de8389bc33f98159071730344b17b66a766a3dcf2f598c95f10dbaf1421e32a468f18c975373291e3909002e9bf21dea9939559e1fc  netdata-1.6.0.tar.xz
-2aaaee7010c24b3f52be8b01295f73ac6c38ac4d1b627e8b9227d03fe3b248b7157b1d5217edebd88ba461adc1ce89503520acd877b300e4503e75125f40da96  netdata.initd"
+sha512sums="026ae159d8ed52a30e406c110c2732e54e50f070865ba3e430df73e4df40387105053e750ca6029cfbc7f40a2c05b7fb6ba4e3e4a7070822c7eec4c1a4712aea  netdata-1.19.0.tar.gz
+98dd8f188dfffe1221d05a4dd369e8f4f8dc2bf7a722ac8769afd351324b53b37c5675e705a4d42d20ce93ea9497fda9eb2457edaa500d4e72c9f1350b1d4652  netdata.initd"

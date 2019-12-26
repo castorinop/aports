@@ -1,18 +1,14 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=adobe-flashplayer
-pkgver=26.0.0.137
+pkgver=32.0.0.293
 pkgrel=0
 pkgdesc="Adobe Flash player"
 url="https://get.adobe.com/flashplayer/otherversions"
 arch="x86_64"
 license="non-free"
 depends="libc6-compat mesa-gl"
-depends_dev=""
-makedepends="$depends_dev"
-install=""
-subpackages=""
+options="!tracedeps !check"
 source="$pkgname-$pkgver.tar.gz::https://fpdownload.adobe.com/get/flashplayer/pdc/$pkgver/flash_player_npapi_linux.x86_64.tar.gz"
-
 builddir="$srcdir"
 
 build() {
@@ -20,9 +16,8 @@ build() {
 }
 
 package() {
-	cd "$builddir"
-	mkdir -p "$pkgdir"/usr/lib/mozilla/plugins
-	install "$srcdir"/libflashplayer.so "$pkgdir"/usr/lib/mozilla/plugins/
+	install -D "$srcdir"/libflashplayer.so \
+		"$pkgdir"/usr/lib/mozilla/plugins/libflashplayer.so
 }
 
-sha512sums="c3db9bbf1e4d448f44ac484ee8492d9a041cc9b3a9f883084ec40f95eafe1a9815622316e28d85a2d37d05dcd067fea899014e7f62e8e1fc76f7d24f456d193f  adobe-flashplayer-26.0.0.137.tar.gz"
+sha512sums="3c35d667aa4e0801b3596048ae9ebf0dd3d2572764ab92bf2c78b04ce5db588445d96c490d7cd59fa399a7c71d7d6eb7cc143164ffd96a4587908884cfd30322  adobe-flashplayer-32.0.0.293.tar.gz"

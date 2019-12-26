@@ -1,0 +1,40 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=libkdcraw
+pkgver=19.12.0
+pkgrel=0
+arch="all"
+url="https://kde.org"
+pkgdesc="RAW image file format support for KDE"
+license="GPL-2.0-or-later and LGPL-2.0-or-later"
+depends_dev="qt5-qtbase-dev libraw-dev"
+makedepends="$depends_dev extra-cmake-modules"
+source="https://download.kde.org/stable/release-service/$pkgver/src/libkdcraw-$pkgver.tar.xz"
+subpackages="$pkgname-dev"
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	cd "$builddir"/build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="cd8f941568e096ce12a90eedb8b6a7860fbbbdc9ca0d7e6d9374278055a6ef3aca9b6cf7de5289c2fce45764f7714eae856dc35f0f89c0beeb560a39bac884b2  libkdcraw-19.12.0.tar.xz"

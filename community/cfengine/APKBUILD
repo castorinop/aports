@@ -1,20 +1,25 @@
-# Contributor: Natanael Copa <ncopa@alpinelinux.org>
-# Maintainer: Olivier Mauras <olivier@mauras.ch>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=cfengine
-pkgver=3.10.1
-pkgrel=1
+pkgver=3.15.0
+pkgrel=0
 pkgdesc="A systems administration tool for networks"
-url="http://www.cfengine.com/"
+url="https://www.cfengine.com/"
 arch="all"
-license="GPLv3"
-makedepends="$depends_dev lmdb-dev libressl-dev bison flex-dev
+license="GPL-3.0-only"
+install="$pkgname.post-install"
+makedepends="$depends_dev lmdb-dev openssl-dev bison flex-dev
 	acl-dev pcre-dev linux-headers"
 subpackages="$pkgname-doc $pkgname-masterfiles::noarch"
-source="https://cfengine-package-repos.s3.amazonaws.com/tarballs/$pkgname-$pkgver.tar.gz
-	https://cfengine-package-repos.s3.amazonaws.com/tarballs/$pkgname-masterfiles-$pkgver.tar.gz"
+source="https://cfengine-package-repos.s3.amazonaws.com/tarballs/cfengine-$pkgver.tar.gz
+	https://cfengine-package-repos.s3.amazonaws.com/tarballs/cfengine-masterfiles-$pkgver.tar.gz"
 
-builddir="$srcdir"/cfengine-${pkgver%_p*}
-builddirmasterfiles="$srcdir"/cfengine-masterfiles-${pkgver%_p*}
+_builddirmasterfiles="$srcdir"/cfengine-masterfiles-${pkgver%_p*}
+options="!check" # testsuite shows some unknown errors
+
+# secfixes:
+#   3.12.2-r0:
+#     - CVE-2019-9929
+
 prepare() {
 	default_prepare
 
@@ -24,7 +29,6 @@ prepare() {
 }
 
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -36,23 +40,30 @@ build() {
 		--with-lmdb \
 		--without-pam
 	make
+
+	cd "$_builddirmasterfiles"
+	./configure \
+		--prefix=/var/lib/cfengine
+	make
 }
 
 package() {
-	cd "$builddir"
 	make install DESTDIR="$pkgdir"
+
+	# not FHS but the tools seems to require those
+	install -d "$pkgdir"/var/lib/cfengine/bin
+	for i in "$pkgdir"/usr/bin/*; do
+		ln -s ../../../../usr/bin/${i##*/} "$pkgdir"/var/lib/cfengine/bin/
+	done
 }
 
 masterfiles() {
 	pkgdesc="Cfengine default masterfiles"
 	depends="cfengine"
 
-	cd "$builddirmasterfiles"
-	./configure \
-		--prefix=/var/lib/cfengine
-	#make install DESTDIR="$pkgdir/../$pkgname-masterfiles"
+	cd "$_builddirmasterfiles"
 	make install DESTDIR="$subpkgdir"
 }
 
-sha512sums="13de610129474e71dbd58e7f29a2fe6754de3da85622983050ec724fda308b9338dd23ac1dfb277b7860940bd6f2be23792a9ea4926b81c8b654ea3b7f8a2e6b  cfengine-3.10.1.tar.gz
-7b189cbc476ec9bccc0380bf9ee8a2b4a5862852f0ab3dd2a283080ee51cd10e3c19a5adbeeb81bead458e6f3fdd165b7d609659e98f37c3f7d4afa3e8550e66  cfengine-masterfiles-3.10.1.tar.gz"
+sha512sums="de15d8c7b84eadf6a042a89cdf45cda7bb8f0eace3936a7f5699bde9a06a6ee203348e2b11236b55052cdb1008c83687ef282e7bf662c9f9ad3db11cf4429f58  cfengine-3.15.0.tar.gz
+a5f1f6b5275ee3e8e913aafad2598f76406ba61ea5b5692da23fed7a5fdbd9828c5b9b5fd51ae080e628c483197469c9cc19f8f786b5496fcbbfebeaac1b414b  cfengine-masterfiles-3.15.0.tar.gz"

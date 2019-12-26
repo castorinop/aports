@@ -1,49 +1,82 @@
-# Maintainer: Daniel Sabogal <dsabogalcc@gmail.com>
+# Contributor: Henrik Riomar <henrik.riomar@gmail.com>
+# Maintainer: Drew DeVault <sir@cmpwn.com>
 pkgname=sway
-pkgver=0.13.0
-pkgrel=0
+pkgver=1.2
+pkgrel=1
 pkgdesc="i3 compatible window manager for Wayland"
 url="http://swaywm.org"
 arch="all"
 license="MIT"
 options="suid !check"
-depends=""
-makedepends="asciidoc cmake gdk-pixbuf-dev json-c-dev libcap-dev libinput-dev
-	linux-pam-dev pango-dev wayland-dev wlc-dev"
-subpackages="$pkgname-doc"
-source="$pkgname-$pkgver.tar.gz::https://github.com/SirCmpwn/$pkgname/archive/$pkgver.tar.gz
-	stdint.patch"
+depends="swaybg"
+makedepends="cairo-dev
+	gdk-pixbuf-dev
+	json-c-dev
+	libevdev-dev
+	libinput-dev
+	libxkbcommon-dev
+	linux-pam-dev
+	meson
+	ninja
+	pango-dev
+	pcre2-dev
+	scdoc
+	wayland-dev
+	wayland-protocols
+	wlroots-dev
+	"
+subpackages="
+	$pkgname-doc
+	$pkgname-bash-completion:bashcomp:noarch
+	$pkgname-fish-completion:fishcomp:noarch
+	$pkgname-zsh-completion:zshcomp:noarch
+	"
+source="$pkgname-$pkgver.tar.gz::https://github.com/swaywm/$pkgname/archive/$pkgver.tar.gz
+	"
 builddir="$srcdir/$pkgname-$pkgver"
-
-prepare() {
-	default_prepare || return 1
-
-	cd "$builddir"
-	sed -i 's/login/base-auth/g' swaylock/pam/swaylock
-}
 
 build() {
 	cd "$builddir"
-	cmake . \
-		-DCMAKE_BUILD_TYPE=Release \
-		-DCMAKE_INSTALL_SYSCONFDIR=/etc \
-		-DCMAKE_INSTALL_PREFIX=/usr \
-		-DVERSION="$pkgver" \
-		|| return 1
-	make
+	meson \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--buildtype=release \
+		. output
+	ninja -C output
+}
+
+bashcomp() {
+	depends=""
+	pkgdesc="Bash completions for $pkgname"
+	install_if="$pkgname=$pkgver-r$pkgrel bash-completion"
+
+	mkdir -p "$subpkgdir"/usr/share/
+	mv "$pkgdir"/usr/share/bash-completion "$subpkgdir"/usr/share/
+}
+
+fishcomp() {
+	depends=""
+	pkgdesc="Fish completions for $pkgname"
+	install_if="$pkgname=$pkgver-r$pkgrel fish"
+
+	mkdir -p "$subpkgdir"/usr/share/fish
+	mv "$pkgdir"/usr/share/fish/completions "$subpkgdir"/usr/share/fish
+}
+
+zshcomp() {
+	depends=""
+	pkgdesc="Zsh completions for $pkgname"
+	install_if="$pkgname=$pkgver-r$pkgrel zsh"
+
+	mkdir -p "$subpkgdir"/usr/share/zsh
+	mv "$pkgdir"/usr/share/zsh/site-functions "$subpkgdir"/usr/share/zsh
 }
 
 package() {
 	cd "$builddir"
-	make DESTDIR="$pkgdir/" install || return 1
-
-	chmod u+s "$pkgdir"/usr/bin/sway || return 1
-
-	local i; for i in 1 5 7; do
-		install -Dm644 bin/*.$i \
-			"$pkgdir"/usr/share/man/man$i/ || return 1
-	done
+	DESTDIR="$pkgdir" ninja -C output install
+	chmod u+s "$pkgdir"/usr/bin/sway
 }
 
-sha512sums="7f137e103bb278777ee3e36b40446156ee02bfbba3ce099b23b093751832a67155cd9519f7583364608d584d2d7c9206a8945f2114ae58220b47bd0f1ff362e8  sway-0.13.0.tar.gz
-4967a6b1552a47be1ee978e2d9c590fc3748670fb321afb8c7a6134bc0cb237b5b98ce00f777e02ac6029265c690910a1688a0f56ff2f3125bd663f9444b737c  stdint.patch"
+sha512sums="b43f625d35145a3377e64ea942f8b005946bb0925f08deace2da73ab504038b29331df9943296c97141e2283cd9b55e6cb3bca18c5c3999ecbd461325e36165b  sway-1.2.tar.gz"

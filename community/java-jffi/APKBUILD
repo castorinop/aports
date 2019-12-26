@@ -2,13 +2,13 @@
 # Maintainer: Jakub Jirutka <jakub@jirutka.cz>
 pkgname=java-jffi
 _pkgname=${pkgname#java-}
-pkgver=1.2.16
+pkgver=1.2.19
 _libver=${pkgver%.*}
 pkgrel=0
 pkgdesc="Java Foreign Function Interface"
 url="https://github.com/jnr/jffi"
 arch="all"
-license="ASL-2.0"
+license="Apache-2.0"
 depends="openjdk8-jre-base"
 makedepends="apache-ant file openjdk8"
 subpackages="$pkgname-native"
@@ -39,4 +39,4 @@ native() {
 		"$subpkgdir"/usr/lib/libjffi-$_libver.so
 }
 
-sha512sums="f454b719c42fbfe1f43007c4a2c509424b7689f4a926432b6706e505b3b90e6cdae58695413a62655ad2e9513c206d0965e72a865a63c9806687238def230bf2  jffi-1.2.16.tar.gz"
+sha512sums="21eb754aecb06a1825f1e3c187fb2b8122ed4f5ebda5e288c785067f4a8d649b21266389ba1cf6398efd2202012cbb4d8186ca64eaf9b1bac83d373ba03a57bc  jffi-1.2.19.tar.gz"

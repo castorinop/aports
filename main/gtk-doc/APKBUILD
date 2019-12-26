@@ -1,36 +1,43 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=gtk-doc
-pkgver=1.25
+pkgver=1.32
 pkgrel=0
 pkgdesc="Documentation tool for public library API"
-url="http://www.gtk.org/gtk-doc/"
+url="https://www.gtk.org/gtk-doc/"
 arch="noarch"
-license="GPL FDL"
-depends="docbook-xsl gnome-doc-utils perl pkgconfig python2"
-makedepends="rarian-dev py-libxml2 gettext itstool"
-source="http://ftp.gnome.org/pub/gnome/sources/$pkgname/$pkgver/$pkgname-$pkgver.tar.xz"
+license="GPL-2.0-or-later AND GFDL-1.1-or-later"
+depends="docbook-xsl python3 py3-six pkgconf glib-dev py3-pygments"
+makedepends="rarian-dev gettext autoconf automake libtool"
+checkdepends="bc"
+source="https://download.gnome.org/sources/gtk-doc/$pkgver/gtk-doc-$pkgver.tar.xz"
 
-_builddir="$srcdir/$pkgname-$pkgver"
+# it does not seem to be possible to disable tests of pdf which requires dblatex or fop
+# disable checks for now
+options="!check"
 
 prepare() {
-	cd "$_builddir"
+	cd "$builddir"
+	autoreconf -vif
 }
 
 build() {
-	cd "$_builddir"
+	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
 		--prefix=/usr \
-		|| return 1
-	make || return 1
+		--with-highlight=highlight
+	make
+}
+
+check() {
+	cd "$builddir"
+	make check
 }
 
 package() {
-	cd "$srcdir"/$pkgname-$pkgver
-	make DESTDIR="$pkgdir" install || return 1
+	cd "$builddir"
+	make DESTDIR="$pkgdir" install
 }
 
-md5sums="0dc6570953112a464a409fb99258ccbc  gtk-doc-1.25.tar.xz"
-sha256sums="1ea46ed400e6501f975acaafea31479cea8f32f911dca4dff036f59e6464fd42  gtk-doc-1.25.tar.xz"
-sha512sums="7ac8c73ab9f9ecb6a142bd2232450a6431c3e4fe2372ff40460145b5d0bcffa1953c8cf49436539db86c3a32461cbd4180c714cb19cdd68bfd557816b789339c  gtk-doc-1.25.tar.xz"
+sha512sums="6d28395968c2951f1685570e5778b5add76d1b9cff8fcb8632b200b3ba251602a1ea59b1def84fc28560988b87fc0dbbc6947af88d268db6ff23e9c28aea3b28  gtk-doc-1.32.tar.xz"

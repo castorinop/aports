@@ -1,47 +1,40 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=xkeyboard-config
-pkgver=2.21
+pkgver=2.28
 pkgrel=0
 pkgdesc="X keyboard configuration files"
 url="http://www.freedesktop.org/wiki/Software/XKeyboardConfig"
 arch="noarch"
-license="custom"
-depends=
-subpackages=
-makedepends="xkbcomp intltool libx11-dev"
-source="http://www.x.org/archive/individual/data/xkeyboard-config/xkeyboard-config-$pkgver.tar.bz2
+license="MIT"
+subpackages="$pkgname-doc"
+makedepends="xkbcomp intltool libx11-dev libxslt"
+source="https://www.x.org/archive/individual/data/xkeyboard-config/xkeyboard-config-$pkgver.tar.bz2
 	"
 
-_builddir="$srcdir/$pkgname-$pkgver"
-
-prepare() {
-	cd "$_builddir"
-	for i in $source; do
-		case $i in
-		*.patch) msg $i; patch -p1 -i "$srcdir"/$i || return 1;;
-		esac
-	done
-}
-
 build() {
-	cd "$_builddir"
-
+	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
 		--prefix=/usr \
+		--with-xsltproc \
 		--with-xkb-base=/usr/share/X11/xkb \
 		--with-xkb-rules-symlink=xorg \
-		--enable-compat-rules=yes \
-		|| return 1
-	make || return 1
+		--enable-compat-rules=yes
+	make
+}
+
+check() {
+	cd "$builddir"
+	make check
 }
 
 package() {
-	cd "$_builddir"
-	make DESTDIR="$pkgdir" install || return 1
-	rm -f "$pkgdir"/usr/share/X11/xkb/compiled || return 1
+	cd "$builddir"
+	make DESTDIR="$pkgdir" install
+	rm -f "$pkgdir"/usr/share/X11/xkb/compiled
 	install -m755 -d "$pkgdir"/var/lib/xkb
-	install -Dm644 COPYING "$pkgdir"/usr/share/licenses/$pkgname/COPYING
+	mkdir -p "$pkgdir"/usr/lib
+	mv "$pkgdir"/usr/share/pkgconfig "$pkgdir"/usr/lib
 }
-sha512sums="c8c3da9d78365878b051bcfecc7c51e89c5aa15e6e3ba5e8c84612eaca4ca7741702c023f9571ac04c865f2951a7ca33f4fbbedb3baf6c76441ebf59c4e41068  xkeyboard-config-2.21.tar.bz2"
+sha512sums="be38e61a7d3a1c03f9dc92fed5aada65fdb8b42272e874e01156a39de07f2a7c81846e9ba449aeb95661587f8d05217d549a1315ee0dd92facbb6158362e68ae  xkeyboard-config-2.28.tar.bz2"

@@ -1,32 +1,30 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
 # Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
-# Contributor: William Pitcock <nenolod@dereferenced.org>
-# Maintainer: William Pitcock <nenolod@dereferenced.org>
+# Maintainer: Rasmus Thomsen <oss@cogitri.dev>
 pkgname=evince
-pkgver=3.25.4
+pkgver=3.34.2
 pkgrel=0
 pkgdesc="simple document viewer for GTK+"
-url="http://projects.gnome.org/evince/"
-arch="all"
-license="GPL"
+url="https://wiki.gnome.org/Apps/Evince"
+arch="all !s390x" # Limited by adwaita-icon-theme needing librsvg
+license="GPL-2.0-or-later"
 depends="adwaita-icon-theme"
 depends_dev="gtk+3.0-dev poppler-dev libsm-dev libevent-dev libxrandr-dev
 	libx11-dev libxcursor-dev libxcomposite-dev libxi-dev util-linux-dev
-	tiff-dev gobject-introspection-dev libxml2-dev"
-makedepends="$depends_dev intltool itstool gnome-doc-utils
+	tiff-dev gobject-introspection-dev libxml2-dev libspectre-dev"
+makedepends="$depends_dev intltool itstool
 	adwaita-icon-theme-dev gnome-common automake autoconf
-	gtk-doc yelp-tools"
+	gtk-doc yelp-tools appstream-glib-dev"
 subpackages="$pkgname-dev $pkgname-doc $pkgname-lang $pkgname-libs"
-source="http://ftp.gnome.org/pub/GNOME/sources/${pkgname}/${pkgver%.*}/${pkgname}-${pkgver}.tar.xz
-	evince-lzmasdk-s390x.patch
-	"
-builddir="${srcdir}/${pkgname}-${pkgver}"
+source="https://download.gnome.org/sources/evince/${pkgver%.*}/evince-$pkgver.tar.xz"
 
 # secfixes:
+#   3.32.0-r1:
+#   - CVE-2019-11459
 #   3.24.0-r2:
-#     - CVE-2017-1000083
+#   - CVE-2017-1000083
 
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -34,6 +32,7 @@ build() {
 		--sysconfdir=/etc \
 		--disable-nautilus \
 		--without-keyring \
+		--without-gspell \
 		--enable-introspection \
 		--disable-static \
 		--enable-comics
@@ -41,8 +40,11 @@ build() {
 }
 
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir" install
+}
+
+check() {
+	make check
 }
 
 libs() {
@@ -57,5 +59,4 @@ doc() {
 	fi
 }
 
-sha512sums="d0d72eeeb935c36ce9185c2ecff763c20926ce12b10565108ff927bd973758754a48ceda99ee1d4e6f27d5abd42e7224a3cce3721263c35e2fc135ea4b026fc9  evince-3.25.4.tar.xz
-6bb93159e27c609a353b98855c6602b1b92b7445dbb242863f8120c5ca84a05a019e0e5f1b8d4122066ef33e3433fa2a5278403b420f312d66934631d910faa6  evince-lzmasdk-s390x.patch"
+sha512sums="51bfa4671e17a98c536790185ece6f4f77b956062901f840cd298cdc3e42eb7e8cabe9bfa84387f185cdf7462a322ef54bbc463b988a677af68561e55acd9f12  evince-3.34.2.tar.xz"

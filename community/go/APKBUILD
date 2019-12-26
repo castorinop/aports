@@ -1,36 +1,54 @@
 # Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
-# Maintainer: Eivind Uggedal <eivind@uggedal.com>
+# Contributor: Eivind Uggedal <eu@eju.no>
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=go
-pkgver=1.9
-# This should be the latest commit on the corresponding release branch
-_toolsver="5d2fd3ccab986d52112bf301d47a819783339d0e"
-pkgrel=0
+# go binaries are statically linked, security updates require rebuilds
+pkgver=1.13.4
+pkgrel=1
 pkgdesc="Go programming language compiler"
-url="http://www.golang.org/"
+url="https://golang.org/"
 arch="all"
-license="BSD"
-depends="binutils gcc"
-depends_dev=""
-makedepends="bash go-bootstrap"
-options="!strip"
-provides="go-bootstrap=$pkgver-r$pkgrel"
-install=""
+license="BSD-3-Clause"
+depends="binutils gcc musl-dev"
+makedepends="bash"
+checkdepends="binutils-gold"
 subpackages="$pkgname-doc"
-source="http://golang.org/dl/go${pkgver/_/}.src.tar.gz
-	go-tools-${pkgver/_/}.tar.gz::https://github.com/golang/tools/archive/${_toolsver}.tar.gz
+source="https://golang.org/dl/go${pkgver/_/}.src.tar.gz
 	default-buildmode-pie.patch
 	set-external-linker.patch
+	disable-flaky-sync-test.patch
 	"
+
+case "$CARCH" in
+	arm*|aarch64) depends="binutils-gold";;
+	x86) options="!check" ;; # FIXME
+esac
+
+# secfixes:
+#   1.13.2-r0:
+#   - CVE-2019-17596
+#   1.13.1-r0:
+#   - CVE-2019-16276
+#   1.12.8-r0:
+#   - CVE-2019-9512
+#   - CVE-2019-9514
+#   - CVE-2019-14809
+#   1.11.5-r0:
+#   - CVE-2019-6486
+#   1.9.4-r0:
+#   - CVE-2018-6574
 
 # NOTE: building go for x86 with grsec kernel requires:
 #           sysctl -w kernel.modify_ldt=1
 
+# The following tests fail currently, most of them fail due to linking
+# errors likely related to 'default-buildmode-pie.patch' or musl libc.
+_brokentests="runtime debug/gosym cmd/.* cgo.* go_test:os/exec ^test.*"
+
 if [ "$CBUILD" = "$CTARGET" ]; then
 	makedepends="go-bootstrap $makedepends"
 	provides="go-bootstrap=$pkgver-r$pkgrel"
-	subpackages="$subpackages $pkgname-tools"
-	_gotools="godoc stringer"
-	_gocross="darwin freebsd openbsd windows"
+	subpackages="$subpackages"
 else
 	pkgname="go-bootstrap"
 	makedepends="go $makedepends"
@@ -41,20 +59,20 @@ else
 	export LD="${HOSTLD:-ld}"
 fi
 
-_tooldir="$srcdir"/tools-${_toolsver}
-for os in $_gocross; do
-	subpackages="$subpackages $pkgname-cross-${os}:_crosspkg"
-done
-
 case "$CTARGET_ARCH" in
 aarch64)export GOARCH="arm64" ;;
+armel)  export GOARCH="arm" GOARM=5 ;;
 armhf)  export GOARCH="arm" GOARM=6 ;;
 armv7)  export GOARCH="arm" GOARM=7 ;;
 s390x)  export GOARCH="s390x" ;;
 x86)    export GOARCH="386" GO386=387 ;;
 x86_64) export GOARCH="amd64" ;;
 ppc64le) export GOARCH="ppc64le" ;;
-*)      die "Unsupported arch" ;;
+mips)   export GOARCH="mips" GOMIPS=softfloat ;;
+mips64) export GOARCH="mips64" GOMIPS64=softfloat ;;
+mips64el) export GOARCH="mips64le" GOMIPS64=softfloat ;;
+mipsel) export GOARCH="mipsle" GOMIPS=softfloat ;;
+*)      export GOARCH="unsupported";;
 esac
 
 builddir="$srcdir"/go
@@ -74,12 +92,6 @@ build() {
 	done
 
 	./make.bash
-	for os in $_gocross; do
-                local hostarch="$GOARCH"
-		for arch in "386" "amd64"; do
-			GOHOSTARCH=$hostarch GOARCH=$arch GOOS=$os ./make.bash
-		done
-	done
 
 	# copied from bootstrap.bash to fixup cross-built bootstrap go
 	if [ "$CBUILD" != "$CTARGET" ]; then
@@ -87,23 +99,18 @@ build() {
 		local gohostarch="$(../bin/go env GOHOSTARCH)"
 		mv ../bin/*_*/* ../bin
 		rmdir ../bin/*_*
-		rm -rf "../pkg/${gohostos}_${gohostarch}"* "../pkg/tool/${gohostos}_${gohostarch}"*
+		rm -rf "../pkg/${gohostos}_$gohostarch"* "../pkg/tool/${gohostos}_$gohostarch"*
 		rm -rf ../pkg/bootstrap ../pkg/obj
 	fi
+}
 
-	# FIXME some tests fail:
-	# PATH="$GOROOT/bin:$PATH" ./run.bash -no-rebuild
-
-	mkdir -p "$GOPATH"/src/golang.org/x/tools
-	cp -r "$_tooldir"/* "$GOPATH"/src/golang.org/x/tools
-
-	for tool in $_gotools; do
-		"$GOROOT"/bin/go install golang.org/x/tools/cmd/$tool
-	done
+check() {
+	cd "$builddir/src"
+	PATH="$builddir/bin:$PATH" ./run.bash -no-rebuild \
+		-run "!($(echo "$_brokentests" | tr " " "|"))$"
 }
 
 package() {
-	cd "$builddir"
 	mkdir -p "$pkgdir"/usr/bin "$pkgdir"/usr/lib/go/bin "$pkgdir"/usr/share/doc/go
 
 	for binary in go gofmt; do
@@ -113,13 +120,10 @@ package() {
 
 	cp -a pkg lib "$pkgdir"/usr/lib/go
 	cp -r doc misc "$pkgdir"/usr/share/doc/go
+	rm -rf "$pkgdir"/usr/lib/go/pkg/obj
 	rm -rf "$pkgdir"/usr/lib/go/pkg/bootstrap
 	rm -f  "$pkgdir"/usr/lib/go/pkg/tool/*/api
 
-	# The source needs to be installed due to an upstream
-	# bug (https://github.com/golang/go/issues/2775).
-	# When this is resolved we can split out the source to a
-	# go-src sub package.
 	mkdir -p "$pkgdir"/usr/lib/go/
 	cp -a "$builddir"/src "$pkgdir"/usr/lib/go
 
@@ -133,38 +137,7 @@ package() {
 		-exec rm -rf \{\} \+
 }
 
-tools() {
-	pkgdesc="Go programming language tools"
-	depends="$pkgname"
-
-	mkdir -p "$subpkgdir"/usr/bin "$subpkgdir"/usr/lib/go/bin \
-		"$subpkgdir"/usr/lib/go/pkg/tool/linux_$GOARCH
-
-	for tool in $_gotools; do
-		if [ -f "$pkgdir"/usr/lib/go/pkg/tool/linux_$GOARCH/$tool ]; then
-			mv "$pkgdir"/usr/lib/go/pkg/tool/linux_$GOARCH/$tool \
-				"$subpkgdir"/usr/lib/go/pkg/tool/linux_$GOARCH/$tool
-		fi
-		if [ -f "$builddir/bin/$tool" ]; then
-			install -Dm755 "$builddir/bin/$tool" "$subpkgdir"/usr/lib/go/bin/"$tool"
-			ln -s /usr/lib/go/bin/"$tool" "$subpkgdir"/usr/bin/
-		fi
-	done
-}
-
-_crosspkg() {
-	local name="$(echo "${subpkgname}" | cut -d '-' -f3)"
-	pkgdesc="Go cross compiler for $name"
-	depends="$pkgname"
-
-	mkdir -p "$subpkgdir"/usr/lib/go/pkg/tool/
-	mv "$pkgdir"/usr/lib/go/pkg/tool/${name}_* \
-		"$subpkgdir"/usr/lib/go/pkg/tool/
-	mv "$pkgdir"/usr/lib/go/pkg/${name}_* \
-		"$subpkgdir"/usr/lib/go/pkg/
-}
-
-sha512sums="70c4b892b6883fb21fc1a547a2b8d174df8c7aca282a3906e3816b4442b16c5da578b69c19443122a4a45e66fc95d170528d826b70932af09f4afd2a46615d74  go1.9.src.tar.gz
-d679873082dbac6a47b7c43ac74c47cb19616fb053a4faa3e6ee78004ece86aa5c432fba3d24c030d47396089d7ec7c6357af5648bd767341056396066ff9a04  go-tools-1.9.tar.gz
-ef9da66d76e4698314eaf2aa88cf40a8430a15f8f6cb9ad17ee9d72498ec049b60e63e1ff5acf13a916c5ea365f9d9a282b6f2b06e28de9e3484eb9a3d7dd98e  default-buildmode-pie.patch
-6b36f3780ab10e5c4902473a8ab5c0417220ece584b537517e9e60979bdc5a548ed14dd2546605392c89ec5ea6691769d337d34e2e19b92eba5bbca1898f4ada  set-external-linker.patch"
+sha512sums="e8155cdceca2ebefd386feef98223bbdc92d9316f7188d4ba701cf43a723b75a9bf67a1eb92ac80987b7a113a2fb6981ef235292bec7dd3964805b7c33abdbb1  go1.13.4.src.tar.gz
+f0c07d9979fc3165fc78158406de8440624b3f2c6f6542c9889c71efbf3d2f02a7ffee27ccba8c2630489895d331b7b9d3a606162134dcb3e8e0b9fc06b529dc  default-buildmode-pie.patch
+faf8de430df185842902322f064254f3e9ecee0884b3075b5550c85da15ff61ea6c2bb8d0fb7cf3887abc0e40974bd73ee8f8c14da7f914dde7e9220177c4e2a  set-external-linker.patch
+6ce14ca43fd35520e667530af91cfcad8902d635e6dd8c04d19428299b9e29ba049120f5eebbb00717a895f052d1cc40d3f522c090786625cce726715a8218ec  disable-flaky-sync-test.patch"

@@ -1,25 +1,24 @@
 # Contributor: Fabio Napoleoni <f.napoleoni@gmail.com>
 # Maintainer: Fabio Napoleoni <f.napoleoni@gmail.com>
 pkgname=google-authenticator
-pkgver=1.02
-pkgrel=1
+pkgver=1.07
+pkgrel=0
 pkgdesc="Google Authenticator PAM module"
-url="https://github.com/google/google-authenticator"
+options="checkroot !check" # 1 of 2 tests fail
+url="https://github.com/google/google-authenticator-libpam"
 arch="all"
-license="ASL-2.0"
-makedepends="autoconf automake libtool linux-pam-dev m4 libressl-dev"
+license="Apache-2.0"
+makedepends="autoconf automake libtool linux-pam-dev m4 openssl-dev"
 subpackages="$pkgname-doc"
-source="$pkgname-$pkgver.tar.gz::https://github.com/google/google-authenticator/archive/$pkgver.tar.gz"
-builddir="$srcdir/$pkgname-$pkgver/libpam"
+source="$pkgname-$pkgver.tar.gz::https://github.com/google/google-authenticator-libpam/archive/$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-libpam-$pkgver"
 
 prepare() {
-	cd "$builddir"
 	default_prepare
 	./bootstrap.sh
 }
 
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -32,11 +31,14 @@ build() {
 }
 
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir" install
 	mkdir -p "$pkgdir/etc/pam.d"
 	echo -e "auth\trequired\tpam_google_authenticator.so" \
 		> "$pkgdir/etc/pam.d/google-authenticator"
 }
 
-sha512sums="8bf81beaf705f0b12f0ed947960dbbc8155add6d83878b651dc1d6658d520dfbbdbe8085b1f244bcfa06d0dd4dfb4cd2177c0a27df4aab5fd1bc4308eef3f7b0  google-authenticator-1.02.tar.gz"
+check() {
+	make check
+}
+
+sha512sums="3e2bc9bfc3759f9004d08b1557868a33b628290b62aa9051d21072a66e18ca4b09cdef0fc8303943cb36ac5b61fe864a9de9fe0a1d8677ee86403cfd4c89c1fb  google-authenticator-1.07.tar.gz"

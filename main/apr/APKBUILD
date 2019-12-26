@@ -1,39 +1,39 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=apr
-pkgver=1.5.2
-pkgrel=1
+pkgver=1.7.0
+pkgrel=0
 pkgdesc="The Apache Portable Runtime"
 url="http://apr.apache.org/"
 arch="all"
-license="ASL 2.0"
-depends=""
+license="Apache-2.0"
 depends_dev="util-linux-dev bash"
 makedepends="$depends_dev"
 subpackages="$pkgname-dev"
-source="http://www.apache.org/dist/$pkgname/$pkgname-$pkgver.tar.bz2
+source="https://www.apache.org/dist/apr/apr-$pkgver.tar.bz2
+	apr-1.6.2-dont-test-dlclose.patch
+	semtimedop-s390x.patch
 	"
 
-_builddir="$srcdir"/$pkgname-$pkgver
-prepare() {
-	cd "$_builddir"
-}
-
 build() {
-	cd "$_builddir"
+	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
 		--prefix=/usr \
 		--datadir=/usr/share \
 		--enable-nonportable-atomics \
-		--with-devrandom=/dev/urandom \
-		|| return 1
-	make || return 1
+		--with-devrandom=/dev/urandom
+	make
+}
+
+check() {
+	cd "$builddir"
+	make -j1 check
 }
 
 package() {
-	cd "$_builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	cd "$builddir"
+	make DESTDIR="$pkgdir" install
 }
 
 # basicly everything thats not a *.so* file belongs to the -dev package
@@ -48,6 +48,6 @@ dev() {
 	return 0
 }
 
-md5sums="4e9769f3349fe11fc0a5e1b224c236aa  apr-1.5.2.tar.bz2"
-sha256sums="7d03ed29c22a7152be45b8e50431063736df9e1daa1ddf93f6a547ba7a28f67a  apr-1.5.2.tar.bz2"
-sha512sums="d1156ad16abf07887797777b56c2147c890f16d8445829b3e3b4917950d24c5fd2f8febd439992467a5ea0511da562c0fb4a7cfd8a235ab55882388bfa2b919d  apr-1.5.2.tar.bz2"
+sha512sums="3dc42d5caf17aab16f5c154080f020d5aed761e22db4c5f6506917f6bfd2bf8becfb40af919042bd4ce1077d5de74aa666f5edfba7f275efba78e8893c115148  apr-1.7.0.tar.bz2
+9fb931e45f30fbe68af56849dfca148c09cdf85e300af14fb259cbd43470113288680bdb21189d4cf13f5ce95f8d28666822535e017e64ace5324339ab50cbef  apr-1.6.2-dont-test-dlclose.patch
+5d1afa9419d0481e7c3369724e8b4c1e199cbfd5d031bd9d9fc4f46ee0d3819353ff03c3b2c508d5b939f66ef4549953bbf9cdae7ff934002b9a01d824c843e8  semtimedop-s390x.patch"

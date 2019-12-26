@@ -1,0 +1,29 @@
+# Maintainer: Rasmus Thomsen <oss@cogitri.dev>
+pkgname=ttf-cantarell
+pkgver=0.111
+pkgrel=0
+pkgdesc="Humanist sans-serif font designed for on-screen reading"
+url="https://wiki.gnome.org/Projects/CantarellFonts"
+arch="noarch"
+license="Custom"
+makedepends="meson gettext-dev appstream-glib-dev"
+install_if="gnome-shell"
+source="https://download.gnome.org/sources/cantarell-fonts/$pkgver/cantarell-fonts-$pkgver.tar.xz"
+builddir="$srcdir/cantarell-fonts-$pkgver"
+
+# it's just data, no testsuites
+options="!check"
+
+build() {
+	meson \
+		--buildtype=release \
+		--prefix=/usr \
+		. build
+	ninja -C build
+}
+
+package() {
+	DESTDIR="$pkgdir" ninja -C build install
+}
+
+sha512sums="638298a6381a3ede862d1b100fcfea943bebb5e1c0dc4f1597ab2f841e933b484436b139090a669c770c02483a24f2b92bbd12bce71d7a40eb4c325573e3df9e  cantarell-fonts-0.111.tar.xz"

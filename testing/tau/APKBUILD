@@ -1,0 +1,42 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Rasmus Thomsen <oss@cogitri.dev>
+pkgname=tau
+pkgver=0.10.1
+pkgrel=0
+pkgdesc="GTK frontend for the Xi text editor, written in Rust"
+url="https://gitlab.gnome.org/World/Tau"
+arch="all !s390x"
+license="MIT"
+makedepends="meson cargo gtk+3.0-dev libhandy-dev"
+checkdepends="appstream-glib desktop-file-utils"
+options="!check" # Rust doesn't like to compile these on musl
+subpackages="$pkgname-lang"
+source="https://gitlab.gnome.org/World/Tau/uploads/25d33d736285ad451bc7b409aa01e957/tau-$pkgver.tar.xz"
+
+build() {
+	# Fails to compile libbacktrace-sys otherwise
+	case "$CARCH" in
+		x86)
+			export CFLAGS="$CFLAGS -fno-stack-protector"
+			;;
+	esac
+
+	meson \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--buildtype=release \
+		. output
+	ninja -C output
+}
+
+check() {
+	ninja -C output test
+}
+
+package() {
+	DESTDIR="$pkgdir" ninja -C output install
+}
+
+sha512sums="fab40a7a3af7afe08a312b29d63805daf3cfd412b59bb32af1244219e562f587ba1c0a1d9b8e27526866bc1369768c7c1a90c588bba4349b6a56178da87601af  tau-0.10.1.tar.xz"

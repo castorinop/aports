@@ -1,24 +1,16 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=ethtool
-pkgver=4.11
+pkgver=5.3
 pkgrel=0
-pkgdesc="gkernel ethtool"
-url="http://sourceforge.net/projects/gkernel/"
+pkgdesc="Utility for controlling network drivers and hardware"
+url="https://mirrors.edge.kernel.org/pub/software/network/ethtool/"
 arch="all"
-license="GPL2"
+license="GPL-2.0"
 makedepends="linux-headers"
-source="http://www.kernel.org/pub/software/network/ethtool/ethtool-$pkgver.tar.xz"
 subpackages="$pkgname-doc"
-
-builddir="$srcdir"/$pkgname-$pkgver
-
-check() {
-	cd "$builddir"
-	make check
-}
+source="https://www.kernel.org/pub/software/network/ethtool/ethtool-$pkgver.tar.xz"
 
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -27,9 +19,12 @@ build() {
 	make
 }
 
+check() {
+	make check
+}
+
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="177bbb725abc725dece99b4198f673b57ac9fc5c466aa36ac9e2a66b5535c82b5a27e916ef3e489232709e0b2d27d821acb4bea17d9b5a1940bf83e6a13ef445  ethtool-4.11.tar.xz"
+sha512sums="ad3651f74850e6773489baec27c51d077e3c080eb1d536a585ae05c618304880caf7598df5c9b1416c47ae9c4eac301032f6ea65fe47650dd9ecb7603c1857b0  ethtool-5.3.tar.xz"

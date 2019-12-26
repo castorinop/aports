@@ -1,22 +1,22 @@
 # Contributor: Sergey Lukin <sergej.lukin@gmail.com>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=icu
-pkgver=59.1
+pkgver=64.2
 
 # convert x.y.z to x_y_z
 _ver=${pkgver//./_}
 
-pkgrel=1
+pkgrel=0
 pkgdesc="International Components for Unicode library"
 url="http://www.icu-project.org/"
 arch="all"
-license="custom:icu"
-subpackages="$pkgname-dev $pkgname-doc $pkgname-libs"
+license="MIT ICU Unicode-TOU"
+subpackages="$pkgname-static $pkgname-dev $pkgname-doc $pkgname-libs"
 depends=
-checkdepends="diffutils"
+depends_dev="$pkgname=$pkgver-r$pkgrel"
+checkdepends="diffutils python3"
 makedepends=
 source="http://download.icu-project.org/files/icu4c/${pkgver}/${pkgname}4c-$_ver-src.tgz
-	icu-timezone.patch
 	"
 
 # secfixes:
@@ -28,6 +28,11 @@ source="http://download.icu-project.org/files/icu4c/${pkgver}/${pkgname}4c-$_ver
 #     - CVE-2017-7867
 #     - CVE-2017-7868
 builddir="$srcdir"/icu/source
+
+# Failing tests on ARMv7
+case "$CARCH" in
+	armv7) options="!check";;
+esac
 
 prepare() {
 	cd "$builddir"
@@ -57,13 +62,13 @@ build() {
 		--sysconfdir=/etc \
 		--with-data-packaging=library \
 		--disable-samples \
+		--enable-static \
 		--mandir=/usr/share/man
+	mkdir -p data/out # work around build issue
 	make
 }
 
 check() {
-	# armhf tests fail with gensprep: Bus error
-	[ "$CARCH" != armhf ] || return 0
 	cd "$builddir"
 	make check
 }
@@ -76,10 +81,15 @@ package() {
 		"$pkgdir"/usr/share/licenses/icu/license.html
 }
 
+static() {
+	pkgdesc="$pkgname static libraries"
+	mkdir -p "$subpkgdir"/usr/lib
+	mv "$pkgdir"/usr/lib/*.a "$subpkgdir"/usr/lib/
+}
+
 libs() {
 	default_libs
 	replaces="icu"
 }
 
-sha512sums="9348aa68d72a74cd1f26588c30c80eee1b48800a26930d7eb0749390fd65f7930ee8843058b6a6dd5f265e79054fef661e807ded16a1ad691cbc5ebc5ab944c4  icu4c-59_1-src.tgz
-40489c36e28e160f08e045acab6c19cdb712ad3b7f87f67099deac7d579aaf13d8841cd3278a6bb0e998b5c34a378348a13fcc8bb14c9c4eb4f6adbd10d66825  icu-timezone.patch"
+sha512sums="5ecb4c230ba45918747a1cf9aef86f555aa07d5b29b1d07ab674e8013f46dfb907a0e9d6945db41155f9dc3012fd94e1152ffc19f61a68b6dfcbabdcb8ae9d78  icu4c-64_2-src.tgz"

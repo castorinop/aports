@@ -1,29 +1,49 @@
-# Contributor: William Pitcock <nenolod@dereferenced.org>
+# Contributor: Oliver Smith <ollieparanoid@postmarketos.org>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=linux-firmware
-pkgver=20170711
-pkgrel=1
+pkgver=20191215
+pkgrel=0
 pkgdesc="firmware files for linux"
-#url="http://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=summary"
+#url="https://git.kernel.org/?p=linux/kernel/git/dwmw2/linux-firmware.git;a=summary"
 url="http://git.kernel.org/?p=linux/kernel/git/firmware/linux-firmware.git;a=summary"
 arch="all"
 license="custom:multiple"
-depends=
 makedepends=
 install=""
-subpackages=
-replaces="linux-grsec linux-vserver"
-options="!strip !check"
-source="http://dev.alpinelinux.org/archive/$pkgname/$pkgname-${pkgver}.tar.gz
-	https://github.com/RPi-Distro/firmware-nonfree/raw/master/brcm80211/brcm/brcmfmac43430-sdio.txt
-	https://github.com/RPi-Distro/firmware-nonfree/raw/master/brcm80211/brcm/brcmfmac43430-sdio.bin
-	LICENSE.brcmfmac43430::https://raw.githubusercontent.com/RPi-Distro/firmware-nonfree/master/brcm80211/LICENSE
-"
+provides="linux-firmware-any"
+provider_priority=1
+options="!strip !check !archcheck !tracedeps !spdx"
+
+_rpi_bt=fff76cb15527c435ce99a9787848eacd6288282c
+
+# cypress fmac: https://community.cypress.com/docs/DOC-17441
+source="https://dev.alpinelinux.org/archive/$pkgname/$pkgname-${pkgver}.tar.gz
+	https://community.cypress.com/servlet/JiveServlet/download/17441-2-50210/cypress-fmac-v4.14.77-2019_1031.zip
+	BCM43430A1.hcd.${_rpi_bt::8}::https://github.com/RPi-Distro/bluez-firmware/raw/$_rpi_bt/broadcom/BCM43430A1.hcd
+	BCM4345C0.hcd.${_rpi_bt::8}::https://github.com/RPi-Distro/bluez-firmware/raw/$_rpi_bt/broadcom/BCM4345C0.hcd
+	"
 
 _giturl="git://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git"
 _upload=dev.alpinelinux.org:/archive/$pkgname/
 
 _builddir="$srcdir"/$pkgname-$pkgver
+
+# Put /lib/firmware/* folders in subpackages
+_folders="3com acenic adaptec advansys amd amd-ucode amdgpu ar3k ath10k ath6k
+	ath9k_htc atmel atusb av7110 bnx2 bnx2x brcm cadence cavium cis cpia2 cxgb3
+	cxgb4 dabusb dpaa2 dsp56k e100 edgeport emi26 emi62 ene-ub6250 ess go7007 i915
+	imx inside-secure intel isci kaweth keyspan keyspan_pda korg libertas liquidio matrox
+	mediatek mellanox meson microchip moxa mrvl mwl8k mwlwifi myricom netronome
+	nvidia ositech qca qcom qed qlogic r128 radeon rockchip rsi rtl8192e rtl_bt
+	rtl_nic rtlwifi rtw88 sb16 slicoss sun sxg tehuti ti-connectivity ti-keystone
+	tigon ttusb-budget ueagle-atm vicam vxge yam yamaha"
+
+subpackages="$pkgname-other::noarch $pkgname-none::noarch"
+depends="linux-firmware-other=$pkgver-r$pkgrel"
+for i in $_folders; do
+	subpackages="$pkgname-$i:_folder:noarch $subpackages"
+	depends="$pkgname-$i=$pkgver-r$pkgrel $depends"
+done
 
 snapshot() {
 	local _date=$(date +%Y%m%d)
@@ -41,24 +61,86 @@ snapshot() {
 	fi
 }
 
-prepare() {
-	return 0
-}
-
-build() {
-	return 0
-}
-
 package() {
 	cd "${_builddir}"
 	make DESTDIR="${pkgdir}" FIRMWAREDIR="/lib/firmware" install
-	for i in brcmfmac43430-sdio.txt brcmfmac43430-sdio.bin LICENSE.brcmfmac43430; do
-		install -Dm 644 "$srcdir/$i" "$pkgdir/lib/firmware/brcm/$i"
+
+	# add compat links for pre-5.0 kernel
+	ln -s brcmfmac43455-sdio.raspberrypi,3-model-b-plus.txt "$pkgdir"/lib/firmware/brcm/brcmfmac43455-sdio.txt
+	ln -s brcmfmac43430-sdio.raspberrypi,3-model-b.txt      "$pkgdir"/lib/firmware/brcm/brcmfmac43430-sdio.txt
+
+	local fw; for fw in $source; do
+		local _f=${fw%::*}
+		case $_f in
+		*.hcd*)
+			install -Dm 644 $srcdir/$_f \
+				"$pkgdir"/lib/firmware/brcm/"${_f%.*}"
+			;;
+		*.zip)
+			unzip -p $srcdir/${fw##*/} "cypress-firmware-*.tar.gz" | \
+				tar xzv -C "$pkgdir"/lib/firmware/brcm/ \
+					--wildcards --strip-components=1 \
+					"*.bin" "*.clm_blob"
+			;;
+		esac
 	done
+
 	rm -f "${pkgdir}/usr/lib/firmware/{Makefile,README,configure,GPL-3}"
+
+	find "${pkgdir}" \( -name '*.S' -or -name '*.asm' -or \
+		-name '*.c' -or -name '*.h' -or -name '*.pl' -or \
+                -name 'Makefile' \) -exec rm -- {} \;
 }
 
-sha512sums="40bc5c366db4b5bcd98876b10354017f872d45620e6a790783592b3b5f1db96888cf35143ebe9a2acedacc104d5d56384a82a8f2b4a5fee4da0cf18d938180cd  linux-firmware-20170711.tar.gz
-bd6417ada7dbb940e75f43d85d9778f362f6c2801b27b4e13043eebfb5f38da4e728bdfe7240304d0ad172ba8ac1a3eff4df40119317093ea19ae23333819024  brcmfmac43430-sdio.txt
-6751470a48e0225731d91ab33464eaeac86da3e10dcf63a85ae0aeea6fa114ab01567fda08604e500c54bb14d38578f6c0b135c7772597d07b5ebda1e662b935  brcmfmac43430-sdio.bin
-345a081c0df701028f7177856881cdba0a4111d11f3b828397fc92a69e87a427d923cf8b8ff5075e3118d94e73726c0a4220c01658b844e8ae1f84b3a74eeba9  LICENSE.brcmfmac43430"
+_folder() {
+	local folder=${subpkgname##linux-firmware-}
+	pkgdesc="firmware files for linux ($folder folder)"
+	depends=""
+	provides="linux-firmware-any"
+	provider_priority=
+
+	# Move /lib/firmware/$folder (case insensitive)
+	mkdir -p "$subpkgdir/lib/firmware"
+	mv "$(find "$pkgdir/lib/firmware" -iname "$folder" -type d)" \
+		"$subpkgdir/lib/firmware"
+}
+
+other() {
+	# Requires subfolders to be split in subpackages
+	local leftover=""
+	local i
+	for i in "$pkgdir"/lib/firmware/*; do
+		[ -d "$i" ] && leftover="$leftover $(basename $i)"
+	done
+	if [ "$leftover" != "" ]; then
+		local fixed
+		error "Not all subfolders have been moved to subpackages!"
+		error "Fix this by adjusting _folders as follows:"
+		fixed="$(echo $_folders$leftover | tr " " "\n" | tr '[A-Z]' '[a-z]' | sort)"
+		echo "_folders=\"$(printf "$fixed" | tr "\n" " ")\"" | fold -s
+		return 1
+	fi
+
+	# Move /lib/firmware (which doesn't have subfolders now)
+	pkgdesc="firmware files for linux (uncategorized)"
+	depends=""
+	provides="linux-firmware-any"
+	provider_priority=
+	mkdir -p "$subpkgdir"/
+	mv "$pkgdir"/lib "$subpkgdir"/
+}
+
+none() {
+	# dummy package with no firmware
+	pkgdesc="Empty linux firwmare package for those who does not need any firmware"
+	provider_priority=
+	provides="linux-firmware-any"
+	depends=
+	mkdir -p "$subpkgdir"
+}
+
+
+sha512sums="c54051447c1959e621e49d00c73e4b24a3a01b62b57e4bb73e093382d7d3d0c3838773dc5d1c004033af16299d647c000f06b6c9dc96da546fc3ceda0c3811f9  linux-firmware-20191215.tar.gz
+53fd07c4db0ed44c3790bdf758e272ea63afc21ac6c26a886e7518ab571699b5d420dfee04f17a35d3c1d9fd743f50e5fbb23ad23bbfa8dbecccf1c7257c0ba9  cypress-fmac-v4.14.77-2019_1031.zip
+a7b37bce092367125e390017bb0329c3b7f8fa891cf30d422ee73ce53d0592d4ff0fc2e2a94a87eefb641d5dd8631fae1cc46664224dea987ca04b68a8af8519  BCM43430A1.hcd.fff76cb1
+a52fdb876131affa85b39434d619580c0e1605094992ffa3bb321af387dd79739736842dea9ffa759e6658aecde40eda6b06d93dbb58234a4b126b756c28521e  BCM4345C0.hcd.fff76cb1"

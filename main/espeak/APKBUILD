@@ -5,11 +5,11 @@ pkgrel=1
 pkgdesc="Speech synthesizer for English and other languages"
 url="http://espeak.sourceforge.net/"
 arch="all"
-license="GPL3"
+license="GPL-3.0"
 subpackages="$pkgname-dev"
 depends=
 makedepends=
-source="http://downloads.sourceforge.net/project/espeak/espeak/espeak-${pkgver%.*}/espeak-$pkgver-source.zip
+source="https://downloads.sourceforge.net/project/espeak/espeak/espeak-${pkgver%.*}/espeak-$pkgver-source.zip
 	fix-narrowing.patch
 	"
 

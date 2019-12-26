@@ -1,41 +1,30 @@
 # Contributor: Francesco Colista <fcolista@alpinelinux.org>
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=guake
-pkgver=0.8.10
-pkgrel=0
+pkgver=3.6.3
+pkgrel=1
 pkgdesc="Drop-down terminal for GNOME"
 url="http://guake-project.org"
-arch="all"
+arch="noarch"
 license="GPL"
-makedepends="python3-dev gtk+2.0-dev py-gtk-dev gconf-dev py2-vte
-	autoconf automake libtool m4 gnome-common intltool"
-subpackages="$pkgname-doc $pkgname-lang"
+depends="py3-pbr"
+makedepends="python3-dev py3-setuptools"
 source="$pkgname-$pkgver.tar.gz::https://github.com/Guake/$pkgname/archive/$pkgver.tar.gz"
 builddir="$srcdir/$pkgname-$pkgver"
 
-check() {
-	cd "$builddir"
-	make check
-}
-
-prepare() {
-	cd "$builddir"
-	NOCONFIGURE=1 ./autogen.sh
-	default_prepare
-}
-
 build() {
 	cd "$builddir"
-	./configure \
-		--prefix=/usr \
-		--disable-nls \
-		--disable-static
-	make
+	python3 setup.py build
+}
+
+check() {
+	cd "$builddir"
+	python3 setup.py check
 }
 
 package() {
 	cd "$builddir"
-	make DESTDIR="$pkgdir" install
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
 }
 
-sha512sums="6a5986b95a3a0b7029276f2b34780dc3d58d7afa186f31a15f4adc3d8368b1dae8ed6100a2baf9683c9d5aa416daf32ef1c6f274c852fa0bd4a17d0c9f50ba98  guake-0.8.10.tar.gz"
+sha512sums="b1e2c25a6e46f6e8ed2b7efb1a06dfd34a9f5d202e274714bd1ec71c87c80721d4d7c0414ff586c5537a06ae58564758f8c6aa7f3c845e5cf797e5f82f09e858  guake-3.6.3.tar.gz"

@@ -1,0 +1,39 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer: Leo <thinkabit.ukim@gmail.com>
+pkgname=ws
+pkgver=7.8.1
+pkgrel=0
+pkgdesc="websocket and http client and server command line swiss army"
+options="!check"
+url="https://github.com/machinezone/IXWebSocket"
+arch="all"
+license="BSD-3-Clause"
+makedepends="cmake openssl-dev zlib-dev jsoncpp-dev"
+source="$pkgname-$pkgver.tar.gz::https://github.com/machinezone/IXWebSocket/archive/v$pkgver.tar.gz"
+builddir="$srcdir/IXWebSocket-$pkgver"
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	mkdir build && cd build
+	cmake \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_CXX_FLAGS="$CXXFLAGS" \
+		-DUSE_TLS=1 \
+		-DUSE_WS=1 \
+		${CMAKE_CROSSOPTS} ..
+	make
+}
+
+package() {
+	make -C build DESTDIR="$pkgdir" install
+
+	# We don't care about anything but the ws binary
+	rm -rf "$pkgdir"/usr/include
+	rm -rf "$pkgdir"/usr/lib
+}
+sha512sums="cb183b267c6d1efcf5b70e730a94b5ddf88dd67af19e2f2c4d18678ff42b1de1cead7cbb13ca40d5d0289085b0e1ef96fb7061e2ec036ca316370212a0c0c414  ws-7.8.1.tar.gz"

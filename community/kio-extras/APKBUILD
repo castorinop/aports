@@ -1,0 +1,42 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kio-extras
+pkgver=19.12.0
+pkgrel=0
+arch="all"
+url="https://www.kde.org/applications/internet/"
+pkgdesc="Additional components to increase the functionality of KIO"
+license="GPL-2.0-or-later (LGPL-2.1-only OR LGPL-3.0-only)"
+depends="kinit"
+makedepends="extra-cmake-modules qt5-qtbase-dev qt5-qtsvg-dev karchive-dev kconfig-dev kconfigwidgets-dev kcoreaddons-dev kdbusaddons-dev kdoctools-dev kdnssd-dev kiconthemes-dev ki18n-dev kio-dev solid-dev kbookmarks-dev kguiaddons-dev syntax-highlighting-dev kpty-dev kactivities-dev phonon-dev samba-dev libssh-dev libmtp-dev gperf khtml-dev shared-mime-info nfs-utils-dev"
+checkdepends="xvfb-run"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kio-extras-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+options="!check" # Requires running dbus-server
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	cd "$builddir"/build
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="0aeb0186da8f4d24ba9020d49f9204ec3fdf3a20aa42a0e6fcc769ae99cba36b3e63d02d56cfd105c66f009f08274fc117219c0296749cf95aad52e4fb7e17eb  kio-extras-19.12.0.tar.xz"

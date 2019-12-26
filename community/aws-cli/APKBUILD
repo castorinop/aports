@@ -1,0 +1,68 @@
+# Maintainer: Valery Kartel <valery.kartel@gmail.com>
+# Contributor: Valery Kartel <valery.kartel@gmail.com>
+pkgname=aws-cli
+pkgver=1.16.244
+pkgrel=1
+_python="python3"
+_libname=${pkgname/-/}
+pkgdesc="Universal Command Line Interface for Amazon Web Services"
+url="https://github.com/aws/aws-cli"
+arch="noarch"
+license="Apache-2.0"
+provides=$_libname
+depends="$_python groff py3-botocore py3-jmespath py3-s3transfer py3-docutils py3-colorama py3-yaml py3-rsa"
+makedepends="$_python-dev py-setuptools"
+subpackages="$pkgname-doc $pkgname-zsh-completion:zshcomp $pkgname-bash-completion:bashcomp $pkgname-completer"
+source="aws-cli-$pkgver.tar.gz::https://github.com/aws/aws-cli/archive/$pkgver.tar.gz"
+
+build() {
+	$_python setup.py build
+}
+
+check() {
+	$_python setup.py check
+}
+
+package() {
+	$_python setup.py install --prefix=/usr --root="$pkgdir"
+	rm -fr "$pkgdir"/usr/bin/aws.cmd \
+		$(find "$pkgdir" -name "*.egg-info")
+}
+
+bashcomp() {
+	depends="$pkgname-completer"
+	pkgdesc="$pkgdesc (bash completions)"
+	install_if="$pkgname=$pkgver-r$pkgrel bash-completion"
+	mkdir -p "$subpkgdir"/usr/share/bash-completion/completions
+	mv "$pkgdir"/usr/bin/aws_bash_completer \
+		"$subpkgdir"/usr/share/bash-completion/completions
+}
+
+zshcomp() {
+	depends="$pkgname-completer"
+	pkgdesc="$pkgdesc (zsh completions)"
+	install_if="$pkgname=$pkgver-r$pkgrel zsh"
+	mkdir -p "$subpkgdir"/usr/share/zsh/site-functions
+	mv "$pkgdir"/usr/bin/aws_zsh_completer.sh \
+		"$subpkgdir"/usr/share/zsh/site-functions
+}
+
+completer() {
+	depends=""
+	pkgdesc="$pkgdesc (completions helper)"
+	cd "$pkgdir"
+	local file; for file in $(find . -name "*completer*"); do
+		echo $(dirname $file)
+		mkdir -p "$subpkgdir"/$(dirname $file)
+		mv "$pkgdir"/$file "$subpkgdir"/$file
+	done
+}
+
+doc() {
+	default_doc
+	local path=$($_python -c "import sys;print(sys.path[-1])")/$_libname
+	mkdir -p "$subpkgdir"/$path
+	mv "$pkgdir"/$path/examples "$pkgdir"/$path/topics \
+		"$subpkgdir"/$path/
+}
+sha512sums="4b79d9cb03bb16aedd192985db190412104d98c1fd25c1587ea079f5df13dc9e20b2f0d86536c0cdb5ce31da04c79d7c0a601593104cfa6e38416b75bb3c0fa4  aws-cli-1.16.244.tar.gz"

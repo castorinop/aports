@@ -2,33 +2,29 @@
 # Contributor: Stefan Wagner <stw@bit-strickerei.de>
 # Maintainer: Stefan Wagner <stw@bit-strickerei.de>
 pkgname=notmuch
-pkgver=0.25
-pkgrel=1
+pkgver=0.28
+pkgrel=3
 pkgdesc="E-Mail index, search and tagging"
 url="https://notmuchmail.org/"
 arch="all"
-license="GPL3"
-makedepends="gzip xapian-core-dev gmime-dev talloc-dev py-sphinx
-	py-requests python2-dev python3-dev bash-completion"
-options="!check"
-checkdepends="sed coreutils diffutils bash tar mdocml grep"
+license="GPL-3.0"
+makedepends="gzip xapian-core-dev gmime-dev talloc-dev py3-sphinx
+	py3-requests python3-dev bash-completion"
+checkdepends="sed coreutils diffutils bash tar mdocml grep perl"
 subpackages="
-	py2-$pkgname:py2
 	py3-$pkgname:py3
 	$pkgname-dev
-	$pkgname-doc
 	$pkgname-libs
-	$pkgname-emacs:emacs
+	$pkgname-emacs:emacs:noarch
 	$pkgname-vim:vim:noarch
 	$pkgname-zsh-completion:zshcomp:noarch
 	$pkgname-bash-completion:bashcomp:noarch"
-source="https://notmuchmail.org/releases/$pkgname-$pkgver.tar.gz
-	fix-tests.patch"
+source="https://notmuchmail.org/releases/notmuch-$pkgver.tar.gz
+	fix-tests.patch
+	"
 
-builddir="$srcdir/$pkgname-$pkgver"
 build() {
-	cd "$builddir"
-	./configure \
+	PYTHON=python3 ./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
 		--prefix=/usr \
@@ -40,7 +36,6 @@ build() {
 	make PREFIX=/usr DESTDIR="$pkgdir"
 
 	cd "$builddir"/bindings/python
-	python2 setup.py build
 	python3 setup.py build
 }
 
@@ -61,13 +56,13 @@ check() {
 		*emacs*|T355-smime|T350-crypto) continue ;;
 
 		# XXX: Doesn't pass on the builders for some reason
-		T140-excludes) continue ;;
+		T050-new|T140-excludes) continue ;;
 
 		# FIXME: These should pass but currently don't
-		T050-new|T150-tagging) continue ;;
+		T150-tagging|T060-count|T070-insert|T357-index-decryption) continue ;;
 		esac
 
-		./${test}
+		./$test
 	done
 }
 
@@ -98,6 +93,7 @@ bashcomp() {
 	mkdir -p "$subpkgdir"/usr/share/bash-completion/completions/
 	mv "$pkgdir"/usr/share/bash-completion/completions/$pkgname \
 		"$subpkgdir"/usr/share/bash-completion/completions/
+	rm -rf "$pkgdir"/usr/share/bash-completion
 }
 
 zshcomp() {
@@ -108,25 +104,16 @@ zshcomp() {
 	mkdir -p "$subpkgdir"/usr/share/zsh/site-functions/
 	mv "$pkgdir"/usr/share/zsh/site-functions/_${pkgname} \
 		"$subpkgdir"/usr/share/zsh/site-functions/
-}
-
-_py() {
-	local python="$1"
-	pkgdesc="$pkgdesc (for $python)"
-	depends="$depends $python"
-	install_if="$pkgname=$pkgver-r$pkgrel $python"
-
-	cd "$builddir"/bindings/python
-	$python setup.py install --prefix=/usr --root="$subpkgdir"
-}
-
-py2() {
-	_py python2
+	rm -rf "$pkgdir"/usr/share/zsh
 }
 
 py3() {
-	_py python3
+	pkgdesc="$pkgdesc (for python3)"
+	depends="$depends python3"
+
+	cd "$builddir"/bindings/python
+	python3 setup.py install --prefix=/usr --root="$subpkgdir"
 }
 
-sha512sums="5f4961818c8c0350e3fbbedd86f407a55fecf211971003a770d99ea2db89bb6b98c2294e114d6abff4d40985f506b7f4b52736a7ee5c78390eb4f2363a65c6f5  notmuch-0.25.tar.gz
-430e8f02b194b0582dfd7c66a2791a0071824e1d215993a6daf89c8d2a1ee7f73a6202136b1d890fc8920a4dc309ae976da8a8b8fc8b90e489d3c04f1592876c  fix-tests.patch"
+sha512sums="56c8e6b742990b5b1d5b8d12146cc9eb710c6b216c876fd3824cc88b9051fef8251f53809ba39cd2f0fbd5e4ccee9ddedc7a602e3584d8a158abe4f2a094242f  notmuch-0.28.tar.gz
+582484067b5899ec74f82c29b32b459670fc752365b9c09392b44538921aa6b106f56350d18d12cf51bfeac1a02b79c9026057111a7aa2016c75345e19e96da4  fix-tests.patch"

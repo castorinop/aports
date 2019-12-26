@@ -1,19 +1,33 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=checkbashisms
-pkgver=2.0.0.2
-pkgrel=3
-pkgdesc="Basic checks on shell scripts for the presence of non portable syntax"
-url="http://sourceforge.net/projects/checkbaskisms/"
+pkgver=2.19.7
+pkgrel=0
+pkgdesc="Check shell scripts for POXIX compliance"
+url="https://tracker.debian.org/pkg/devscripts"
 arch="noarch"
-license="GPL2"
+license="GPL-2.0-or-later"
 depends="perl"
-source="http://downloads.sourceforge.net/project/checkbaskisms/$pkgver/checkbashisms"
+subpackages="$pkgname-doc"
+source="http://cdn.debian.net/debian/pool/main/d/devscripts/devscripts_$pkgver.tar.xz"
+builddir="$srcdir/devscripts-$pkgver/scripts"
 
-builddir="$srcdir"
+check() {
+	cd "$builddir"
+	printf '#!/bin/sh\necho "hello world"\n' > ./testfile
+	perl ./checkbashisms --version
+	perl ./checkbashisms ./testfile
+}
+
+prepare() {
+	default_prepare
+	mv "$pkgname".pl "$pkgname"
+	sed -i "s/###VERSION###/$pkgver/" "$pkgname"
+}
 
 package() {
 	cd "$builddir"
-	install -D -m755 "$srcdir"/$pkgname "$pkgdir"/usr/bin/$pkgname
+	install -D -m755 "$pkgname" "$pkgdir/usr/bin/$pkgname"
+	install -D -m755 "$pkgname".1 "$pkgdir/usr/share/man/man1/$pkgname".1
 }
 
-sha512sums="cd9376f4c34773aba79f81b8bb129d912844102e91e363480b9983092efd36c4827e0447242aecfcdb3cfd4cc50e19e105cc645368e8c9735f49c8e381964dd4  checkbashisms"
+sha512sums="6e31862bc8f0d43678341f40ec527d76cdccc2e6e50c231eb7c6a1eb442f48b6c62e94126644224e9fdbef583be3166e2c7cc65ea15de4a7c20605089b708eb7  devscripts_2.19.7.tar.xz"

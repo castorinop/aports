@@ -2,17 +2,20 @@
 # Contributor: Carlo Landmeter <clandmeter@gmail.com>
 # Maintainer: Carlo Landmeter <clandmeter@gmail.com>
 pkgname=lftp
-pkgver=4.8.0
+pkgver=4.9.0
 pkgrel=0
-pkgdesc="LFTP is sophisticated ftp/http client"
-url="http://lftp.tech/"
+pkgdesc="Sophisticated ftp/http client"
+url="https://lftp.tech"
 arch="all"
-license="GPL"
-makedepends="zlib-dev libressl-dev readline-dev ncurses-dev"
+license="GPL-3.0-or-later"
+makedepends="zlib-dev openssl-dev readline-dev ncurses-dev"
 subpackages="$pkgname-doc"
-source="http://lftp.yar.ru/ftp/$pkgname-$pkgver.tar.xz libressl.patch"
-
+source="https://lftp.yar.ru/ftp/$pkgname-$pkgver.tar.xz"
 builddir="$srcdir"/$pkgname-$pkgver
+
+# secfixes:
+#   4.8.4-r0:
+#     - CVE-2018-10916
 
 build() {
 	cd "$builddir"
@@ -23,10 +26,10 @@ build() {
 		--prefix=/usr \
 		--sysconfdir=/etc \
 		--with-openssl \
-		--with-threads=posix \
 		--with-modules \
 		--disable-nls \
-		--disable-static
+		--disable-static \
+		--enable-threads=posix
 	make
 }
 
@@ -40,8 +43,8 @@ package() {
 
 check() {
 	cd "$builddir"
-	make check
+	# skip ftp tests due to firewall issues
+	make -C tests check check_PROGRAMS=http-get
 }
 
-sha512sums="60b437cadbf15479ca1858f2f49d4414e4eb2a2db7af1bb26d82d6ce97652664be8e7c9683c34fb1168ef23950867aea379c3d7705f638bdced392184d890fd4  lftp-4.8.0.tar.xz
-628fa79101eb048dc30a2e833c67ea88fc4860b07e2f3dd2271d968f1053e2a723ca802cde65a6d08aa1e5d38b555fb28d4845830a565e2bf11ecacaf84dcd5b  libressl.patch"
+sha512sums="8d83ea76390d38cb1f84f02eb7bf45780758afb9fe61f5b7278a48c9a5d216d03bc8b699c0f449a0036bdb441b4225af074da1b5e92a77ddb61aca704758211e  lftp-4.9.0.tar.xz"

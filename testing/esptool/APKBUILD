@@ -1,32 +1,27 @@
 # Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
 # Maintainer:
 pkgname=esptool
-pkgver=2.0.1
-pkgrel=0
-pkgdesc="ESP8266 ROM Bootloader utility"
-url="https://github.com/themadinventor/esptool"
+pkgver=2.8
+pkgrel=1
+pkgdesc="ESP8266 and ESP32 serial bootloader utility"
+url="https://github.com/espressif/esptool"
 arch="noarch"
-license="GPLv2"
-depends="python2 py-serial py-setuptools"
-makedepends="python2-dev"
-install=""
+license="GPL-2.0-or-later"
+depends="python3 py3-serial py3-ecdsa py3-setuptools py3-pyaes"
+options="!check" # tests require older version of pycodestyle
 subpackages="$pkgname-doc"
-source="$pkgname-$pkgver.tar.gz::https://github.com/themadinventor/${pkgname}/archive/v${pkgver}.tar.gz"
+source="$pkgname-$pkgver.tar.gz::https://github.com/espressif/esptool/archive/v$pkgver.tar.gz"
 
-builddir="$srcdir/$pkgname-$pkgver"
 build() {
-	cd "$builddir"
-	python2 setup.py build || return 1
+	python3 setup.py build
 }
 
 package() {
-	cd "$builddir"
-	python2 setup.py install --prefix=/usr \
-		--root="$pkgdir" || return 1
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
 
 	mkdir -p "$pkgdir"/usr/share/doc/$pkgname/
 	install -m644 CONTRIBUTING.md README.md \
-		"$pkgdir"/usr/share/doc/$pkgname/ || return 1
+		"$pkgdir"/usr/share/doc/$pkgname/
 }
 
-sha512sums="bbb5fcb448ac8c5d00e8c50475c6981c9720578429ce6fb6d52d02e2c203a702e25166622536f2516f566a2d374abbbf3a2a1fcad455215d33d1e65a1f69aa1d  esptool-2.0.1.tar.gz"
+sha512sums="14528197e760779f3bf50e2a44d477979675dd42451fa405e2ae87502158b21f999fb94561980c9eb0634d2d1fd3729779b78266403de858ed1d32e8d29604cc  esptool-2.8.tar.gz"

@@ -6,10 +6,10 @@ pkgrel=1
 pkgdesc="French dictionary for aspell"
 url="http://aspell.net/"
 arch="noarch"
-license="GPL2"
+license="GPL-2.0"
 depends=""
 makedepends="aspell-dev"
-source="ftp://ftp.gnu.org/gnu/aspell/dict/fr/aspell-fr-$_ver.tar.bz2"
+source="https://ftp.gnu.org/gnu/aspell/dict/fr/aspell-fr-$_ver.tar.bz2"
 
 _builddir="$srcdir"/aspell-fr-$_ver
 build () {

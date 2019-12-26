@@ -1,36 +1,44 @@
---- ./net/dns/host_resolver_impl.cc.orig
-+++ ./net/dns/host_resolver_impl.cc
-@@ -1881,8 +1881,7 @@
- #endif
-   NetworkChangeNotifier::AddIPAddressObserver(this);
-   NetworkChangeNotifier::AddDNSObserver(this);
--#if defined(OS_POSIX) && !defined(OS_MACOSX) && !defined(OS_OPENBSD) && \
--    !defined(OS_ANDROID)
-+#if defined(__GLIBC__)  
-   EnsureDnsReloaderInit();
- #endif
- 
---- ./net/dns/host_resolver_proc.cc.orig
-+++ ./net/dns/host_resolver_proc.cc
-@@ -193,8 +193,7 @@
-   // Restrict result set to only this socket type to avoid duplicates.
-   hints.ai_socktype = SOCK_STREAM;
- 
--#if defined(OS_POSIX) && !defined(OS_MACOSX) && !defined(OS_OPENBSD) && \
--    !defined(OS_ANDROID)
-+#if defined(__GLIBC__)  
-   DnsReloaderMaybeReload();
- #endif
-   int err = getaddrinfo(host.c_str(), NULL, &hints, &ai);
---- ./net/dns/dns_reloader.cc.orig
+diff --git a/net/dns/dns_reloader.cc b/net/dns/dns_reloader.cc
+index 03e248c..1a7b237 100644
+--- ./net/dns/dns_reloader.cc
 +++ ./net/dns/dns_reloader.cc
 @@ -4,8 +4,7 @@
  
  #include "net/dns/dns_reloader.h"
  
 -#if defined(OS_POSIX) && !defined(OS_MACOSX) && !defined(OS_OPENBSD) && \
--    !defined(OS_ANDROID)
+-    !defined(OS_ANDROID) && !defined(OS_FUCHSIA)
 +#if defined(__GLIBC__)
  
  #include <resolv.h>
  
+diff --git a/net/dns/host_resolver_manager.cc b/net/dns/host_resolver_manager.cc
+index 3c75dde..c748d94 100644
+--- ./net/dns/host_resolver_manager.cc
++++ ./net/dns/host_resolver_manager.cc
+@@ -2386,8 +2386,7 @@ HostResolverManager::HostResolverManager(const Options& options,
+   NetworkChangeNotifier::AddConnectionTypeObserver(this);
+   if (system_dns_config_notifier_)
+     system_dns_config_notifier_->AddObserver(this);
+-#if defined(OS_POSIX) && !defined(OS_MACOSX) && !defined(OS_OPENBSD) && \
+-    !defined(OS_ANDROID)
++#if defined(OS_POSIX) && defined(__GLIBC__)
+   EnsureDnsReloaderInit();
+ #endif
+ 
+diff --git a/net/dns/host_resolver_proc.cc b/net/dns/host_resolver_proc.cc
+index 90d9958..71d9b4a 100644
+--- ./net/dns/host_resolver_proc.cc
++++ ./net/dns/host_resolver_proc.cc
+@@ -197,8 +197,7 @@ int SystemHostResolverCall(const std::string& host,
+   base::ScopedBlockingCall scoped_blocking_call(FROM_HERE,
+                                                 base::BlockingType::WILL_BLOCK);
+ 
+-#if defined(OS_POSIX) && !defined(OS_MACOSX) && !defined(OS_OPENBSD) && \
+-    !defined(OS_ANDROID) && !defined(OS_FUCHSIA)
++#if defined(__GLIBC__)
+   DnsReloaderMaybeReload();
+ #endif
+   int err = getaddrinfo(host.c_str(), nullptr, &hints, &ai);
+--- ./net/dns/host_resolver_manager.cc.orig
++++ ./net/dns/host_resolver_manager.cc

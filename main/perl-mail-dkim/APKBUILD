@@ -1,14 +1,18 @@
 # Maintainer:  Leonardo Arena <rnalrd@alpinelinux.org>
 pkgname=perl-mail-dkim
 _realname=Mail-DKIM
-pkgver=0.41
+pkgver=0.58
 pkgrel=0
 pkgdesc="Signs/verifies Internet mail with DKIM/DomainKey signatures"
-url="http://search.cpan.org/~jaslong/Mail-DKIM-$pkgver/"
+url="http://search.cpan.org/~jaslong/Mail-DKIM/"
 arch="noarch"
-license="unknown"
-depends="perl perl-net-dns perl-net-ip perl-mailtools perl-crypt-openssl-rsa"
+license="Artistic-Perl-1.0 GPL+"
+depends="perl perl-net-dns perl-net-ip perl-mailtools perl-crypt-openssl-rsa
+	perl-yaml-libyaml perl-net-dns-resolver-mock
+	perl-mail-authenticationresults
+	"
 makedepends="perl-dev"
+checkdepends="perl-test-requiresinternet"
 subpackages="$pkgname-doc"
 source="http://search.cpan.org/CPAN/authors/id/M/MB/MBRADSHAW/$_realname-$pkgver.tar.gz"
 builddir="$srcdir/$_realname-$pkgver"
@@ -16,13 +20,13 @@ builddir="$srcdir/$_realname-$pkgver"
 prepare() {
 	cd "$builddir"
 	export CFLAGS=`perl -MConfig -E 'say $Config{ccflags}'`
-	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor || return 1
+	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
 }
 
 build() {
 	cd "$builddir"
 	export CFLAGS=`perl -MConfig -E 'say $Config{ccflags}'`
-	make || return 1
+	make
 }
 
 package() {
@@ -36,4 +40,4 @@ check() {
 	make test
 }
 
-sha512sums="f16a818b058b405ee3ffc0962091e7d47268321b35dcd6ca42e1e37ed1ad5b1b3c1e32655f6f0643e046c53f1247a4b9bb9c0202eca7adce4f14d9b38b414f2e  Mail-DKIM-0.41.tar.gz"
+sha512sums="b06e834286a1ae6c5e2049c26ab1df2f4e784f44cd2ac5ad370be76746da7a32b41733e4b756aded422017cf646d2d0d93dee51cff8320604074cb3375df743d  Mail-DKIM-0.58.tar.gz"

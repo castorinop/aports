@@ -1,33 +1,30 @@
+# Contributor: Michael Pirogov <vbnet.ru@gmail.com>
 # Contributor: Leonardo Arena <rnalrd@alpinelinux.org>
 # Maintainer: Leonardo Arena <rnalrd@alpinelinux.org>
 pkgname="libaio"
-pkgver="0.3.110"
-pkgrel=0
+pkgver=0.3.112
+pkgrel=1
 pkgdesc="Asynchronous input/output library"
-url="http://lse.sourceforge.net/io/aio.html"
+url="https://pagure.io/libaio"
 arch="all"
-license="LGPL2"
-depends=
-makedepends="linux-headers"
-install=
+license="LGPL-2.1-or-later"
+options="!check" # No test suite.
+makedepends_host="linux-headers"
 subpackages="$pkgname-dev"
-source="http://ftp.debian.org/debian/pool/main/liba/$pkgname/${pkgname}_${pkgver}.orig.tar.gz"
-
-_builddir="$srcdir/$pkgname-$pkgver"
-
-build() {
-	cd $_builddir
-}
+source="https://releases.pagure.org/libaio/libaio-$pkgver.tar.gz
+	libaio-optional-werror.patch
+	libaio-cppflags.patch
+	libaio-errno.patch"
 
 package() {
-	cd $_builddir
 	make prefix="$pkgdir/usr" \
-	 sysconfdir="$pkgdir/etc" \
-	 mandir="$pkgdir/usr/share/man" \
-	 infodir="$pkgdir/usr/share/info" \
-	 install || return 1
+		sysconfdir="$pkgdir/etc" \
+		mandir="$pkgdir/usr/share/man" \
+		infodir="$pkgdir/usr/share/info" \
+		install
 }
 
-md5sums="2a35602e43778383e2f4907a4ca39ab8  libaio_0.3.110.orig.tar.gz"
-sha256sums="e019028e631725729376250e32b473012f7cb68e1f7275bfc1bbcdd0f8745f7e  libaio_0.3.110.orig.tar.gz"
-sha512sums="664295d330d6e9adc005e2331e77582619625b479ffc2b81728ba6a682487380ee936079c4a69d35144b458bbe35c612f4ed9b32e913bd7e109b824345763eb3  libaio_0.3.110.orig.tar.gz"
+sha512sums="5f984529c9f747a6c82f1e4457fc0832bb1fc299ae6e700f2ac5a8ea7b9bfc6ea1e75809728cc115a020cff6685ed1f4e38c6aeacc1ea98dfccce04dd19dafaa  libaio-0.3.112.tar.gz
+9b04df1f92b245c3012d161a96bc54d3bcc07d8a1049d7e5acfae50fba9bba94cbdbc220d75d186d6bf2333d58b093b9cf17bd7cd594cfdbfb6682a63daf19fd  libaio-optional-werror.patch
+c9ad6ff35ba12f33e308059d89592281768cef7091213b4702b64af2d194462864ec660dea327f8b718e5c723ec9ba6170b591461e2b140ba94f6838cddb8d7c  libaio-cppflags.patch
+2bf5224f5c5714786cb9ed28d9ae7c1721ad21a498d7e76d0cd1443435f7cd424bd6d80baa961a07f38f20359711b3270cd5913890a47b683e035dfe00f66054  libaio-errno.patch"

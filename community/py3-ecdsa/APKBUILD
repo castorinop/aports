@@ -1,0 +1,37 @@
+# Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+# Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
+pkgname=py3-ecdsa
+_pkgname=ecdsa
+pkgver=0.14.1
+pkgrel=0
+pkgdesc="Python3 cryptographic signature library"
+url="https://github.com/warner/python-ecdsa"
+arch="noarch"
+license="MIT"
+options="!check" # No tests available
+depends="python3 py3-six"
+makedepends="py3-setuptools"
+source="https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+replaces="py-ecdsa" # Backwards compatibility
+provides="py-ecdsa=$pkgver-r$pkgrel" # Backwards compatibility
+
+# secfixes:
+#   0.13.3-r0:
+#     - CVE-2019-14859
+#     - CVE-2019-14853
+
+build() {
+	python3 setup.py build
+}
+
+build() {
+	python3 setup.py check
+}
+
+package() {
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
+}
+
+sha512sums="6a66e07ec75e93af73d2363dfd817b35a103f8ff8d62c5ce3af9e98e917d38213aa4f80d570f81c830938123f9599e24d96605a36650eaefd806ed07ab0c14a5  ecdsa-0.14.1.tar.gz"

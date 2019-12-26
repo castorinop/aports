@@ -3,37 +3,35 @@
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=perl-scalar-list-utils
 _pkgreal=Scalar-List-Utils
-pkgver=1.49
-pkgrel=0
+pkgver=1.53
+pkgrel=1
 pkgdesc="Common Scalar and List utility subroutines"
-url="http://search.cpan.org/dist/Scalar-List-Utils/"
+url="https://metacpan.org/release/Scalar-List-Utils"
 arch="all"
-license="GPL PerlArtistic"
-cpandepends=""
-cpanmakedepends=""
-depends="$cpandepends"
-makedepends="perl-dev $cpanmakedepends"
+license="GPL-1.0-or-later OR Artistic-1.0-Perl"
+makedepends="perl-dev"
 subpackages="$pkgname-doc"
-source="http://search.cpan.org/CPAN/authors/id/P/PE/PEVANS/$_pkgreal-$pkgver.tar.gz"
+source="https://cpan.metacpan.org/authors/id/P/PE/PEVANS/Scalar-List-Utils-$pkgver.tar.gz"
 builddir="$srcdir/$_pkgreal-$pkgver"
 
 prepare() {
-	default_prepare || return 1
-
-	cd "$builddir"
+	default_prepare
 	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
 	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
 }
 
 build() {
-	cd "$builddir"
 	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
-	make && make test
+	make
+}
+
+check() {
+	make test
 }
 
 package() {
 	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 
@@ -42,4 +40,4 @@ doc() {
 	replaces="perl-doc"
 }
 
-sha512sums="f65d8d96b7b96999f8d3ade93fd0eda9126ab416157981e5d206206e7906fea6bb657abb31bc38b48e70c51804bc42c8724e9ed516fc1d5636bbcb30120ccd39  Scalar-List-Utils-1.49.tar.gz"
+sha512sums="b0bcc0f6949a122ef86d64bc5beccc793638af1907ae06047045ae568700f9c01da4a5d8a5cc8e9bc1cf19280a3acbc4c7cd97e239ab4022ad3b6cf9980eb305  Scalar-List-Utils-1.53.tar.gz"

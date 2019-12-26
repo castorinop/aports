@@ -1,0 +1,33 @@
+# Contributor: Roberto Oliveira <robertoguimaraes8@gmail.com>
+# Maintainer: Roberto Oliveira <robertoguimaraes8@gmail.com>
+pkgname=ledger
+pkgver=3.1.3
+pkgrel=1
+pkgdesc="Double-entry accounting system with a command-line reporting interface"
+url="https://www.ledger-cli.org/"
+arch="all"
+license="BSD"
+makedepends="cmake boost-dev gmp-dev mpfr-dev texinfo graphviz doxygen gettext"
+subpackages="$pkgname-doc"
+options="!check" # FIXME: some tests are failing
+source="$pkgname-$pkgver.tar.gz::https://github.com/ledger/$pkgname/archive/v$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-$pkgver"
+
+build() {
+	cd "$builddir"
+	cmake -DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_INSTALL_PREFIX=/usr
+	make
+}
+
+check() {
+	cd "$builddir"
+	make check
+}
+
+package() {
+	cd "$builddir"
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="a2a63c80d7313f94eca5d8701ab623ccbe483972b4194bcc7a99dabe8f615b55aba0b933848295de3b3ac8bfb2b71d1d65c73eef315905678ad332695eebbf75  ledger-3.1.3.tar.gz"

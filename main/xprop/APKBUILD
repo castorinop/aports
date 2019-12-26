@@ -1,44 +1,33 @@
 # Contributor: Natanael Copa <ncopa@alpinelinux.org>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=xprop
-pkgver=1.2.1
+pkgver=1.2.4
 pkgrel=0
 pkgdesc="Property displayer for X"
-url="http://cgit.freedesktop.org/xorg/app/xprop/"
+url="https://cgit.freedesktop.org/xorg/app/xprop"
 arch="all"
-license="AS-IS"
-depends=""
-depends_dev=""
+license="MIT"
 makedepends="libx11-dev util-macros"
-install=""
 subpackages="$pkgname-doc"
-source="http://www.x.org/archive/individual/app/xprop-$pkgver.tar.bz2"
-
-_builddir="$srcdir"/xprop-$pkgver
-prepare() {
-	local i
-	cd "$_builddir"
-	update_config_sub || return 1
-	for i in $source; do
-		case $i in
-		*.patch) msg $i; patch -p1 -i "$srcdir"/$i || return 1;;
-		esac
-	done
-}
+source="https://www.x.org/archive/individual/app/xprop-$pkgver.tar.bz2"
 
 build() {
-	cd "$_builddir"
+	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
-		--prefix=/usr \
-		|| return 1
-	make || return 1
+		--prefix=/usr
+	make
+}
+
+check() {
+	cd "$builddir"
+	make check
 }
 
 package() {
-	cd "$_builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	cd "$builddir"
+	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="29a440aab254f8e6d651b289ba4a638d2c72337d49c64068e7c5d58bcc4f2e295a0430ed324eb9eca8af62fc9d658544bd5997792c2347b9fb80890a3313815a  xprop-1.2.1.tar.bz2"
+sha512sums="6e770cb89ba87ae057858cc9f0f5498979e78c3ef66ce86361b7c646cc0b70c41a18d76e55ed7225fe715b22b62bc07c56272519a2631b92832e9403ce260da7  xprop-1.2.4.tar.bz2"

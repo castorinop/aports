@@ -1,8 +1,8 @@
-# Maintainer: Eivind Uggedal <eivind@uggedal.com>
-# Contributor: Valery Kartel <valery.kartel@gmail.com>
+# Maintainer:
+# Contributor: Eivind Uggedal <eu@eju.no>
 pkgname=spawn-fcgi
 pkgver=1.6.4
-pkgrel=2
+pkgrel=3
 pkgdesc="Spawn FastCGI applications"
 url="http://redmine.lighttpd.net/projects/spawn-fcgi/"
 arch="all"
@@ -10,7 +10,7 @@ license="BSD"
 depends=""
 makedepends=""
 subpackages="$pkgname-doc"
-source="http://www.lighttpd.net/download/$pkgname-$pkgver.tar.bz2
+source="https://www.lighttpd.net/download/$pkgname-$pkgver.tar.bz2
 	$pkgname.confd
 	$pkgname.initd
 	"

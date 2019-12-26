@@ -1,0 +1,40 @@
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=meson
+pkgver=0.52.1
+pkgrel=0
+pkgdesc="Fast and user friendly build system"
+url="https://mesonbuild.com"
+arch="noarch"
+license="Apache-2.0"
+depends="ninja py3-setuptools python3"
+subpackages="$pkgname-doc $pkgname-vim::noarch"
+source="https://github.com/mesonbuild/meson/releases/download/$pkgver/meson-$pkgver.tar.gz
+	"
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	python3 setup.py check
+}
+
+package() {
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
+}
+
+vim() {
+	pkgdesc="$pkgdesc (vim support)"
+	install_if="vim $pkgname=$pkgver-r$pkgrel"
+	cd "$builddir"
+	for kind in ftdetect ftplugin indent syntax
+	do
+		mkdir -p "$subpkgdir"/usr/share/vim/vimfiles/$kind
+		install -Dm644 \
+			"$builddir"/data/syntax-highlighting/vim/$kind/meson.vim \
+			"$subpkgdir"/usr/share/vim/vimfiles/$kind/meson.vim
+	done
+}
+
+sha512sums="81e8c5897ba5311ccffc401fd514bd9a67d16caaea1f28a5c5432605766341ecd82b70c05661fbbe0c9a6006ff5ea892950bbaa548e70c3f87350438775ea6fd  meson-0.52.1.tar.gz"

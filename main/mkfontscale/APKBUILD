@@ -1,17 +1,18 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=mkfontscale
-pkgver=1.1.2
-pkgrel=0
-pkgdesc="X.org font scale"
-url="http://xorg.freedesktop.org/"
+pkgver=1.2.1
+pkgrel=1
+pkgdesc="Scalable font index generator for X"
+url="http://xorg.freedesktop.org"
 arch="all"
-license="custom"
+license="MIT"
+options="!check"  # No test suite.
 subpackages="$pkgname-doc"
-depends=
-makedepends="libfontenc-dev freetype-dev xproto zlib-dev"
-install=
+makedepends="freetype-dev libfontenc-dev util-macros xorgproto zlib-dev"
 triggers="$pkgname.trigger=/usr/share/fonts/*"
-source="http://www.x.org/releases/individual/app/$pkgname-$pkgver.tar.bz2"
+source="https://www.x.org/releases/individual/app/$pkgname-$pkgver.tar.bz2"
+replaces="mkfontdir"
+provides="mkfontdir"
 
 builddir="$srcdir/$pkgname-$pkgver"
 
@@ -20,13 +21,13 @@ build() {
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
-		--prefix=/usr \
-		|| return 1
-	make || return 1
+		--prefix=/usr
+	make
 }
 
 package() {
 	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 }
-sha512sums="5c3331f66cd523afe95347aa36440655ba8fdbc716c5987a24ad624c1fbd718c4a8d67aa36330f6d5ab2eb5a6195a409a041954568c0a3375c0e2aeb6a955601  mkfontscale-1.1.2.tar.bz2"
+
+sha512sums="4d243160e1f7f8dfa6a8f53349c1a42a55fc99426455ebdef58352c5e951fce8b4f1fbd1061a76c9a148095b002eac372db1ae5e2647d2ccb4886635b317b18c  mkfontscale-1.2.1.tar.bz2"

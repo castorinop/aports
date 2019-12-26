@@ -1,35 +1,31 @@
-# Maintainer: William Pitcock <nenolod@dereferenced.org>
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Rasmus Thomsen <oss@cogitri.dev>
 pkgname=network-manager-applet
-pkgver=1.7.1
-pkgrel=1
+pkgver=1.8.24
+pkgrel=0
 pkgdesc="GTK network manager applet"
 url="https://wiki.gnome.org/Projects/NetworkManager"
-arch="all"
-license="GPL"
-depends=""
-depends_dev=""
-makedepends="$depends_dev
+arch="all !s390x" # Limited by networkmanager-dev
+license="GPL-2.0-or-later"
+makedepends="
+	intltool
 	gcr-dev
 	gtk+3.0-dev
 	iso-codes-dev
 	jansson-dev
+	libsecret-dev
 	libgudev-dev
 	libnotify-dev
-	libsecret-dev
-	libsecret-dev
+	mobile-broadband-provider-info
 	modemmanager-dev
 	networkmanager-dev
 	polkit-dev
+	gobject-introspection-dev
 	"
-install=""
 subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
-source="https://download.gnome.org/sources/network-manager-applet/${pkgver%.*}/network-manager-applet-$pkgver.tar.xz
-	fix-without-selinux.patch
-	"
-builddir="$srcdir/network-manager-applet-$pkgver"
+source="https://download.gnome.org/sources/network-manager-applet/${pkgver%.*}/network-manager-applet-$pkgver.tar.xz"
 
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -37,16 +33,20 @@ build() {
 		--sysconfdir=/etc \
 		--mandir=/usr/share/man \
 		--localstatedir=/var \
-		--without-selinux \
 		--with-gcr \
-		|| return 1
-	make || return 1
+		--enable-static=no \
+		--without-selinux \
+		--without-libnm-gtk \
+		--enable-introspection
+	make
+}
+
+check() {
+	make check
 }
 
 package() {
-	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="d4b0cd5dcb219c34abf9c4f4df0861e3198c45edbb1e8d45eb53fe85fc590dd0486eb978c4445430554c70f337bb9e8fa9367c5c1689228ecc2c30194e8d7ff0  network-manager-applet-1.7.1.tar.xz
-ceff76ac33ddd54e0d1428a43cb6cdba177843de6355ab0119b9e54e766330dffa1e91a6a0857e749c76c728af808de45f79433316acf125d58579092a33c47e  fix-without-selinux.patch"
+sha512sums="76e914ec4f2e6eadd21ccc3e1f613fb97cb72d9551730a1dc09454177365dcaa2cdeea4b855c53732ad6a22cfa5e62e03f09fc8b04a277ce213dcf8c3beaf77c  network-manager-applet-1.8.24.tar.xz"

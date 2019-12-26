@@ -1,44 +1,60 @@
 # Contributor: Łukasz Jendrysik <scadu@yandex.com>
-# Contributor: William Pitcock <nenolod@dereferenced.org>
 # Contributor: Jakub Jirutka <jakub@jirutka.cz>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=lxc
-pkgver=2.0.8
+pkgver=3.2.1
 _pkgver=${pkgver/_rc/.rc}
-pkgrel=1
+pkgrel=2
 pkgdesc="Userspace interface for the Linux kernel containment features"
 url="https://linuxcontainers.org/lxc/"
 arch="all"
-license="GPL"
-depends="gzip"
-depends_dev="libcap-dev"
-makedepends="$depends_dev lvm2 util-linux automake autoconf libtool lua5.2-dev
-	linux-headers bash tar docbook2x libseccomp-dev python3-dev dnsmasq wget"
-options="suid"
-subpackages="$pkgname-dev $pkgname-doc $pkgname-lvm::noarch lua5.2-lxc:_lua52
-	$pkgname-download:_download:noarch $pkgname-templates::noarch $pkgname-libs
-	py3-$pkgname:_py3 $pkgname-bridge"
-source="https://github.com/lxc/lxc/archive/lxc-$_pkgver.tar.gz
-	version.patch
-	lxc.initd
-	lxc.conf
+license="GPL-2.0-only"
+makedepends="
+	libcap-dev
+	libcap-static
+	libseccomp-dev
+	linux-pam-dev
+	linux-headers
+	bsd-compat-headers
+	docbook2x
 
-	download-template-tmpfs.patch
-	alpine-default-repos.patch
-	0001-lxc-alpine-Add-support-for-ppc64le.patch
+	automake
+	autoconf
+	libtool
 	"
-builddir="$srcdir/lxc-lxc-$_pkgver"
+
+options="suid"
+subpackages="
+	$pkgname-dev
+	$pkgname-doc
+	$pkgname-openrc
+	$pkgname-lvm::noarch
+	$pkgname-libs
+	$pkgname-bridge::noarch
+	$pkgname-bash-completion:bashcomp:noarch
+	$pkgname-pam
+	$pkgname-download:_download:noarch
+	$pkgname-templates-oci:templates_oci:noarch
+	$pkgname-templates::noarch
+	"
+
+source="https://linuxcontainers.org/downloads/lxc/lxc-$_pkgver.tar.gz
+	cgroups-initialize-cpuset-properly.patch
+	network-restore-ability-to-move-nl80211-devices.patch
+	lxc.initd
+	lxc.confd
+	"
+
+# secfixes:
+#   3.1.0-r1:
+#   - CVE-2019-5736
+#   2.1.1-r9:
+#   - CVE-2018-6556
+#
 
 _tmpldir="usr/share/lxc/templates"
 
-prepare() {
-	default_prepare || return 1
-	./autogen.sh
-}
-
 build() {
-	cd "$builddir"
-	LUA_VERSION=5.2 \
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -46,25 +62,23 @@ build() {
 		--sysconfdir=/etc \
 		--localstatedir=/var \
 		--disable-apparmor \
-		--enable-lua \
-		--enable-python \
-		--with-lua-pc=lua5.2 \
+		--enable-pam \
 		--with-distro=alpine \
 		--disable-werror \
-		|| return 1
-	make VERSION=$pkgver || return 1
+		--enable-doc
+	make
+}
+
+check() {
+	make check
 }
 
 package() {
-	cd "$builddir"
+	make DESTDIR="$pkgdir" install
 
-	make DESTDIR="$pkgdir" install || return 1
-
-	install -Dm755 "$srcdir"/lxc.initd "$pkgdir"/etc/init.d/lxc || return 1
+	install -Dm755 "$srcdir"/lxc.initd "$pkgdir"/etc/init.d/lxc
+	install -Dm644 "$srcdir"/lxc.confd "$pkgdir"/etc/conf.d/lxc
 	install -d "$pkgdir"/var/lib/lxc
-
-	# XXX: workaround for https://github.com/lxc/lxc/issues/1095.
-	install -Dm644 "$srcdir"/lxc.conf "$pkgdir"/etc/lxc/lxc.conf || return 1
 
 	# Remove useless config for SysVinit.
 	rm -r "$pkgdir"/etc/default
@@ -72,30 +86,21 @@ package() {
 
 lvm() {
 	pkgdesc="LVM support for LXC"
-	depends="lvm2 util-linux lxc"
-
+	depends="$pkgname=$pkgver-r$pkgrel lvm2 util-linux"
+	install_if="$pkgname=$pkgver-r$pkgrel lvm2"
 	mkdir "$subpkgdir"
-}
-
-_lua52() {
-	pkgdesc="Lua 5.2 module for LXC"
-
-	local dir; for dir in lib share; do
-		mkdir -p "$subpkgdir"/usr/$dir || return 1
-		mv "$pkgdir"/usr/$dir/lua "$subpkgdir"/usr/$dir/ || return 1
-	done
 }
 
 _py3() {
 	pkgdesc="Python3 module for LXC"
 	depends="python3"
 	mkdir -p "$subpkgdir"/usr/lib
-	mv "$pkgdir"/usr/lib/python3.* "$subpkgdir"/usr/lib || return 1
+	mv "$pkgdir"/usr/lib/python3.* "$subpkgdir"/usr/lib
 }
 
 _download() {
 	pkgdesc="LXC container image downloader template"
-	depends="$pkgname gnupg tar xz wget"
+	depends="$pkgname gnupg1 tar wget"
 
 	mkdir -p "$subpkgdir"/$_tmpldir
 	mv "$pkgdir"/$_tmpldir/lxc-download "$subpkgdir"/$_tmpldir/
@@ -103,20 +108,30 @@ _download() {
 
 templates() {
 	pkgdesc="Templates for LXC (except alpine and download)"
-	depends="bash tar"
-
+	depends="tar"
 	mkdir -p "$subpkgdir"/$_tmpldir
-	mv "$pkgdir"/$_tmpldir/* "$subpkgdir"/$_tmpldir/ || return 1
+	mv "$pkgdir"/$_tmpldir/* "$subpkgdir"/$_tmpldir/
+}
 
-	# Keep alpine template in the base package (doesn't need bash or GNU tar).
-	mv "$subpkgdir"/$_tmpldir/lxc-alpine "$pkgdir"/$_tmpldir/
+templates_oci() {
+	pkgdesc="OCI Template for LXC"
+	depends="bash jq"
+	mkdir -p "$subpkgdir"/usr/share/lxc/templates
+	mv "$pkgdir"/usr/share/lxc/templates/lxc-oci \
+		"$subpkgdir"/usr/share/lxc/templates/
+}
+
+pam() {
+	pkgdesc="PAM module for LXC"
+	mkdir -p "$subpkgdir"/lib/security
+	mv "$pkgdir"/lib/security/pam_cgfs.so "$subpkgdir"/lib/security/
 }
 
 dev() {
-	default_dev || return 1
-
+	default_dev
 	# fix abuild smartness
 	mv "$subpkgdir"/usr/bin/lxc-config "$pkgdir"/usr/bin/
+	mv "$subpkgdir"/usr/bin/lxc-update-config "$pkgdir"/usr/bin/
 }
 
 bridge() {
@@ -128,6 +143,7 @@ bridge() {
 
 	ln -s dnsmasq "$subpkgdir"/etc/init.d/dnsmasq.lxcbr0
 	cat >>"$subpkgdir"/etc/conf.d/dnsmasq.lxcbr0 <<- EOF
+		rc_before="lxc"
 		BRIDGE_ADDR="10.0.3.1"
 		BRIDGE_NETMASK="255.255.255.0"
 		BRIDGE_NETWORK="10.0.3.0/24"
@@ -135,22 +151,24 @@ bridge() {
 		BRIDGE_DHCP_MAX="253"
 		BRIDGE_MAC="00:16:3e:00:00:00"
 		DNSMASQ_CONFFILE="/etc/lxc/dnsmasq.conf"
-EOF
+	EOF
 	cat >>"$subpkgdir"/etc/lxc/dnsmasq.conf <<- EOF
 		#dhcp-host=somehost,10.0.3.3
 		#dhcp-host=otherhost,10.0.3.4
-EOF
-	cat >>"$subpkgdir"/etc/conf.d/lxc <<- EOF
-		rc_need="dnsmasq.lxcbr0"
-EOF
-
+	EOF
 }
 
+bashcomp() {
+	depends=""
+	pkgdesc="Bash completions for $pkgname"
+	install_if="$pkgname=$pkgver-r$pkgrel bash-completion"
+	mkdir -p "$subpkgdir"/usr/share/bash-completion/completions
+	mv "$pkgdir"/etc/bash_completion.d/$pkgname "$subpkgdir"/usr/share/bash-completion/completions
+	rmdir "$pkgdir"/etc/bash_completion.d
+}
 
-sha512sums="a71a6408e23b0a03f59e6e68b9b87147fb6d0843932942f9e46da59ca58ed357203d0bca1d0e65d53ca441c4a6c36945fc51a0d4a835a866f23cf7405a6a6cd9  lxc-2.0.8.tar.gz
-e2ffcbf55447291a8434a4f37255c3a6a119bc4116c75d205006aa2b070bf6be28535cf6107bead14bbf64bf9fa415346ab544bd1c15e1add7d1c6380e6b2def  version.patch
-1037e0b773553aa04b619cec7cfc8fa504af830e58c8211eda367da7e36aeb88f45fca1f955a08fc4fa3f9da660017d5fe7145a326a2064cf15e24d1772d9e27  lxc.initd
-5b83b0323e58bf00bd1e124c265729499cee97559b6fe18482962e3bed50d121b4c7a09f25cbce7b1e18d4234627bc4b4581ba2060e33cd022f105b4429cef01  lxc.conf
-b3b8c47a8594cefff58cef74efe9e6bf0dd8422a40289c4398ea34e61d04dd3d95c567e880a4b123df42ffac3fae179b63b130b357eb6659f73f922f2908d971  download-template-tmpfs.patch
-a8ce110414578ba58cee8c15762f59d5185d7e543e8fdd46e1e7148895600b3603499e2c2b9222ee36d867b07e8c9776d8dee994a1647bac4d1fb478129faaf9  alpine-default-repos.patch
-16e6fb35827f05b0aae48264f9f32dc8e7295348a5f44719f72a70e8b18ca5070b52fa9a407b7aab9dba73e48ba5d0a6afbbc0dc4b175bf4ada699ad9946dc6f  0001-lxc-alpine-Add-support-for-ppc64le.patch"
+sha512sums="4b3046fc6c4aa497fb26bd45839e60de503184af86d3966e796d14e619203536b9a9ed67bdcd8a108cf1a548f8d095fb46dff53094a08abd8d268c866db685c0  lxc-3.2.1.tar.gz
+2bebe6cc24987354b6e7dc9003c3a4df450ca10263e6dc0e9313977fdfc2eb57c0d68560da4d1071c8de2f8e3e394ed3ca17af445bea524daa5f8ae8955b3ba6  cgroups-initialize-cpuset-properly.patch
+d302b7296918680901d034dc12ae0687dbbc65766800a9f7256e661f638d3dcad66bcc737aec2c6de8c27d3b9c08833e00420c2064f356d6d73efda9ae9bd707  network-restore-ability-to-move-nl80211-devices.patch
+b74ffe7c3e8f193265a90ffeb6e5743b1212bc1416b898e5a7e59ddd7f06fc77dc34e2dcbb3614038ac6222a95e2b9beb9f03ab734c991837203ab626b1b091f  lxc.initd
+91de43db5369a9e10102933514d674e9c875218a1ff2910dd882e5b9c308f9e430deacb13d1d7e0b2ed1ef682d0bb035aa6f8a6738f54fa2ca3a05acce04e467  lxc.confd"

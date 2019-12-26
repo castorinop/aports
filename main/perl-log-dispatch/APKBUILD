@@ -3,12 +3,12 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=perl-log-dispatch
 _pkgreal=Log-Dispatch
-pkgver=2.62
+pkgver=2.69
 pkgrel=0
 pkgdesc="Dispatches messages to one or more outputs"
-url="http://search.cpan.org/dist/Log-Dispatch/"
+url="https://metacpan.org/release/Log-Dispatch"
 arch="noarch"
-license="Artistic-2"
+license="Artistic-2.0"
 cpandepends="perl-module-runtime perl-params-validate perl-dist-checkconflicts
 	perl-devel-globaldestruction"
 cpanmakedepends="perl-ipc-run3 perl-test-fatal perl-test-requires perl-test-needs
@@ -16,26 +16,31 @@ cpanmakedepends="perl-ipc-run3 perl-test-fatal perl-test-requires perl-test-need
 depends="$cpandepends"
 makedepends="perl-dev $cpanmakedepends"
 subpackages="$pkgname-doc"
-source="http://search.cpan.org/CPAN/authors/id/D/DR/DROLSKY/$_pkgreal-$pkgver.tar.gz"
+source="https://cpan.metacpan.org/authors/id/D/DR/DROLSKY/Log-Dispatch-$pkgver.tar.gz"
 
-_builddir="$srcdir/$_pkgreal-$pkgver"
+builddir="$srcdir/$_pkgreal-$pkgver"
 
 prepare() {
-	cd "$_builddir"
-	export CFLAGS=`perl -MConfig -E 'say $Config{ccflags}'`
+	cd "$builddir"
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
 	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
 }
 
 build() {
-	cd "$_builddir"
-	export CFLAGS=`perl -MConfig -E 'say $Config{ccflags}'`
-	make && make test
+	cd "$builddir"
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
+	make
+}
+
+check() {
+	cd "$builddir"
+	make test
 }
 
 package() {
-	cd "$_builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	cd "$builddir"
+	make DESTDIR="$pkgdir" install
 	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 
-sha512sums="cc4ca40e62d2ec3caffabafcab187e8122c0316d2165c21057afa1ad0c15eba4dbd4b5152219a5886b1445ab9d9502f7502cecbc31850a9429f5c79189ca76ce  Log-Dispatch-2.62.tar.gz"
+sha512sums="641d050c054843739fd43f97e88e17303d2e3e87ead0a756c88a8bd28fc27a56dd4cf4b228a5c23f240fca94f1a7894eb892070120b1a10ed293504826e6ace8  Log-Dispatch-2.69.tar.gz"

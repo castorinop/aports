@@ -1,0 +1,37 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer: Leo <thinkabit.ukim@gmail.com>
+pkgname=kvantum
+pkgver=0.13.0
+pkgrel=0
+pkgdesc="SVG-based theme engine for Qt5"
+options="!check" # No testsuite
+url="https://github.com/tsujan/Kvantum"
+arch="all"
+license="GPL-2.0-or-later"
+depends="hicolor-icon-theme"
+makedepends="cmake qt5-qtbase-dev qt5-qtsvg-dev qt5-qtx11extras-dev libx11-dev
+	libxext-dev kwindowsystem-dev qt5-qttools-dev"
+source="$pkgname-$pkgver.tar.gz::https://github.com/tsujan/Kvantum/archive/V$pkgver/kvantum-$pkgver.tar.gz"
+builddir="$srcdir/Kvantum-$pkgver/Kvantum"
+
+build() {
+	if [ "$CBUILD" != "$CHOST" ]; then
+		CMAKE_CROSSOPTS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_HOST_SYSTEM_NAME=Linux"
+	fi
+	cmake \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DBUILD_SHARED_LIBS=True \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_CXX_FLAGS="$CXXFLAGS" \
+		-DCMAKE_C_FLAGS="$CFLAGS" \
+		-DENABLE_QT4=OFF \
+		${CMAKE_CROSSOPTS} .
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+	rm -rf "$pkgdir"/usr/share/kde4
+}
+
+sha512sums="4250fd83ec53d24c02601c2b9fb4f23b847b9e3c0796d7bfc78aed329793c5293941f004f17d8e18011cc13cd9fbde066004c33dcec26dd291a1d0d3cc070232  kvantum-0.13.0.tar.gz"

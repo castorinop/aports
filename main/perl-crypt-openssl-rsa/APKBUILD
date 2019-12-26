@@ -1,37 +1,42 @@
 # Contributor: Leonardo Arena <rnalrd@alpinelinux.org>
 # Maintainer:  Leonardo Arena <rnalrd@alpinelinux.org>
 pkgname=perl-crypt-openssl-rsa
-_realname=Crypt-OpenSSL-RSA
-pkgver=0.28
-pkgrel=8
+_pkgname=Crypt-OpenSSL-RSA
+pkgver=0.31
+pkgrel=3
 pkgdesc="RSA encoding and decoding, using the openSSL libraries"
 url="http://search.cpan.org/~perler/"
 arch="all"
-license="Perl Artistic, GPL"
-depends="perl perl-crypt-openssl-random"
-makedepends="perl-dev libressl-dev"
+license="Perl Artistic GPL"
+depends="perl perl-crypt-openssl-random perl-crypt-openssl-guess"
+makedepends="perl-dev openssl-dev"
 install=
 subpackages="$pkgname-doc"
-source="http://search.cpan.org/CPAN/authors/id/P/PE/PERLER/$_realname-$pkgver.tar.gz"
-
-_builddir="$srcdir"/$_realname-$pkgver
+source="http://search.cpan.org/CPAN/authors/id/T/TO/TODDR/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir"/$_pkgname-$pkgver
 
 prepare() {
-	cd $_builddir
-	return 0
+	default_prepare
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
+	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
 }
 
 build() {
-	cd $_builddir
-	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor || return 1
-	make || return 1
+	cd $builddir
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
+	make
+}
+
+check() {
+	cd "$builddir"
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
+	make test
 }
 
 package() {
-	cd $_builddir
+	cd $builddir
 	make DESTDIR="$pkgdir" install
-	# creates file collision among perl modules
-	find "$pkgdir" -name perllocal.pod -delete
+	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 
-sha512sums="4a20c3f814e80ea15304b2a189001172e72237d703a0f9281e7e46d593c521508abfac3a259701994ec867f160821bec37e4e8234d04b792168db19b065ce324  Crypt-OpenSSL-RSA-0.28.tar.gz"
+sha512sums="e00d25fc1d39253ea2d7d6ee478403d2b38bd9125602baf5815672fb9e81674ff58bbb47539e425526db1988ebc1a40837372cf42ffd466cb532efa2e450ccab  Crypt-OpenSSL-RSA-0.31.tar.gz"

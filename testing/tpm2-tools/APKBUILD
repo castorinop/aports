@@ -1,0 +1,36 @@
+# Contributor: Alexander Sack <asac@pantacor.com>
+# Maintainer: Alexander Sack <asac@pantacor.com>
+pkgname="tpm2-tools"
+pkgver="4.1"
+pkgrel=0
+pkgdesc="TPM2 Tools"
+url="https://github.com/tpm2-software/tpm2-tools/"
+arch="all !s390x" # missing tpm2-tss
+license="BSD-2-Clause"
+makedepends="tpm2-tss-dev tpm2-tss-rc tpm2-tss-tctildr
+	automake autoconf autoconf-archive libtool openssl-dev
+	doxygen linux-headers curl-dev"
+subpackages="$pkgname-doc"
+_sourcever="${pkgver/_/-}"
+source="https://github.com/tpm2-software/tpm2-tools/releases/download/$_sourcever/tpm2-tools-$_sourcever.tar.gz"
+builddir="$srcdir/$pkgname-$_sourcever"
+options="!check"
+
+
+prepare() {
+	./bootstrap
+}
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="34bbb57cb646e762e50e6b44d2fc81babef1b27a74f1fea27391255bb77232f8c3342a470b591b58c1f9aede8fff167e838dcbd36b85f2f606365cb62286ec93  tpm2-tools-4.1.tar.gz"

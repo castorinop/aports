@@ -1,0 +1,33 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kdenlive
+pkgver=19.12.0
+pkgrel=0
+arch="all"
+url="https://kdenlive.org"
+pkgdesc="An intuitive and powerful multi-track video editor, including most recent video technologies"
+license="GPL-2.0-or-later"
+depends="frei0r-plugins mlt"
+makedepends="extra-cmake-modules qt5-qtbase-dev qt5-qtsvg-dev qt5-qtmultimedia-dev mlt-dev kxmlgui-dev kfilemetadata-dev purpose-dev kdoctools-dev knotifyconfig-dev knewstuff-dev kdeclarative-dev rttr-dev"
+checkdepends="xvfb-run"
+source="https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+options="!check" # Broken
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="dc692db5dc4e0c7c8daa51fb8722d5d60efc22bb10b61c1048a67a50c15e9bac44bd009f6379153f1e1c21c12cb4b88f56ebe2db21a095c00bd068d0c1bbcb61  kdenlive-19.12.0.tar.xz"

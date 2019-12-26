@@ -1,0 +1,37 @@
+# Contributor: Fabio Ribeiro <fabiorphp@gmail.com>
+# Maintainer: Fabio Ribeiro <fabiorphp@gmail.com>
+pkgname=php7-pecl-mongodb
+_pkgreal=mongodb
+pkgver=1.6.1
+_pkgver=${pkgver/_rc/RC}
+pkgrel=0
+pkgdesc="PHP7 MongoDB driver"
+url="https://pecl.php.net/package/mongodb"
+arch="all"
+license="Apache-2.0"
+depends="php7-json"
+makedepends="openssl-dev pcre-dev php7-dev autoconf re2c"
+source="https://pecl.php.net/get/$_pkgreal-$_pkgver.tgz"
+builddir="$srcdir"/$_pkgreal-$_pkgver
+provides="php7-mongodb=$pkgver-r$pkgrel" # for backward compatibility
+replaces="php7-mongodb" # for backward compatibility
+
+build() {
+	phpize7
+	./configure --prefix=/usr \
+		--with-php-config=/usr/bin/php-config7
+	make
+}
+
+check() {
+	# tests requires additional dependencies (vagrant)
+	php7 -d extension="$builddir"/modules/$_pkgreal.so --ri $_pkgreal
+}
+
+package() {
+	make INSTALL_ROOT="$pkgdir/" install
+	install -d "$pkgdir"/etc/php7/conf.d
+	echo "extension=$_pkgreal.so" > "$pkgdir"/etc/php7/conf.d/$_pkgreal.ini
+}
+
+sha512sums="cc5e3c79f7af1cd7e3f661dd1b7f69be174b7f8acca13cfa2115d8d200680e8e665649e576742a01311b9b1d4a548442e55367bcb1435a080dbf34138205c945  mongodb-1.6.1.tgz"

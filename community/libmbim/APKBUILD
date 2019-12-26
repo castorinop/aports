@@ -1,19 +1,22 @@
 # Contributor: Stuart Cardall <developer@it-offshore.co.uk>
 # Maintainer: Stuart Cardall <developer@it-offshore.co.uk>
 pkgname=libmbim
-pkgver=1.14.2
+pkgver=1.20.4
 pkgrel=0
 pkgdesc="MBIM modem protocol helper library"
-url="http://www.freedesktop.org/wiki/Software/libmbim"
+url="https://www.freedesktop.org/wiki/Software/libmbim/"
 arch="all"
-license="GPL2"
-makedepends="$depends_dev gtk-doc python2 glib-dev py-gobject libgudev-dev"
-subpackages="$pkgname-dev $pkgname-doc"
-source="https://www.freedesktop.org/software/$pkgname/$pkgname-$pkgver.tar.xz"
-builddir="$srcdir"/$pkgname-$pkgver
+license="GPL-2.0-or-later AND LGPL-2.1-or-later"
+makedepends="$depends_dev gtk-doc python3 glib-dev py3-gobject3 libgudev-dev"
+subpackages="
+	$pkgname-dev
+	$pkgname-doc
+	$pkgname-tools
+	$pkgname-bash-completion:bashcomp:noarch
+	"
+source="https://www.freedesktop.org/software/libmbim/libmbim-$pkgver.tar.xz"
 
 build() {
-	cd "$builddir"
 	./configure \
 		--prefix=/usr \
 		--sysconfdir=/etc \
@@ -23,13 +26,31 @@ build() {
 }
 
 check() {
-	cd "$builddir"
 	make check
 }
 
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="217af4177602273fc547c2436c26664bafa06ce8fb64aafd4a64448b3e4e2b55ea6b3c7dfc0791bd44d4a211383864c574f53fe916fc8fbbe16c38a7195663dc  libmbim-1.14.2.tar.xz"
+bashcomp() {
+	depends=""
+	pkgdesc="Bash completions for $pkgname"
+	install_if="$pkgname-tools=$pkgver-r$pkgrel bash-completion"
+
+	mkdir -p "$subpkgdir"/usr/share/bash-completion/completions
+	mv "$pkgdir"/usr/share/bash-completion/completions/* \
+		"$subpkgdir"/usr/share/bash-completion/completions/mbimcli
+	rmdir -p "$pkgdir"/usr/share/bash-completion/completions 2>/dev/null || true
+}
+
+tools() {
+	pkgdesc="Tools for libmbim"
+
+	mkdir -p "$subpkgdir"/usr/bin "$subpkgdir"/usr/libexec
+	mv "$pkgdir"/usr/bin/* "$subpkgdir"/usr/bin
+	mv "$pkgdir"/usr/libexec/* "$subpkgdir"/usr/libexec
+	rmdir -p "$pkgdir"/usr/bin "$pkgdir"/usr/libexec 2>/dev/null || true
+}
+
+sha512sums="246f601ddda48b10e8a7b337d6e996dc65f6300e87f13d5260a5c903f95e9035e8a8d1c88540101c22fb3c44eca242451ab75bbfdb6503cfbce279c6d4cf99c8  libmbim-1.20.4.tar.xz"

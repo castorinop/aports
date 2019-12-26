@@ -6,13 +6,13 @@ pkgrel=5
 pkgdesc="A C++ port of Lucene"
 url="http://www.sourceforge.net/projects/clucene"
 arch="all"
-license="LGPLv2+ or ASL 2.0"
+license="LGPL-2.0-or-later or Apache-2.0"
 depends=""
 depends_dev="zlib-dev boost-dev"
 makedepends="cmake $depends_dev"
 install=""
 subpackages="$pkgname-dev $pkgname-contribs"
-source="http://downloads.sourceforge.net/clucene/clucene-core-$pkgver.tar.gz
+source="https://downloads.sourceforge.net/clucene/clucene-core-$pkgver.tar.gz
 	clucene-core-2.3.3.4-pkgconfig.patch
 	clucene-core-2.3.3.4-install_contribs_lib.patch
 	"

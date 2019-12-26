@@ -1,23 +1,18 @@
 # Contributor: Michael Jeanson <mjeanson@efficios.com>
 # Maintainer: Michael Jeanson <mjeanson@efficios.com>
 pkgname=babeltrace
-pkgver=1.5.1
+pkgver=1.5.7
 pkgrel=0
-pkgdesc="a trace converter and read/write library"
+pkgdesc="Trace converter and read/write library"
 url="https://www.efficios.com/babeltrace"
 arch="all"
 license="MIT"
-depends=""
 depends_dev="glib-dev"
 makedepends="$depends_dev popt-dev util-linux-dev bash perl"
-install=""
 subpackages="$pkgname-dev $pkgname-doc"
-source="https://www.efficios.com/files/$pkgname/$pkgname-$pkgver.tar.bz2"
-
-builddir="$srcdir/$pkgname-$pkgver"
+source="https://www.efficios.com/files/babeltrace/babeltrace-$pkgver.tar.bz2"
 
 build() {
-	cd "$builddir"
 	# This package uses _init functions to initialise extensions. With
 	# --as-needed this will not work.
 	export LDFLAGS="$LDFLAGS -Wl,--no-as-needed"
@@ -26,18 +21,16 @@ build() {
 		--host=$CHOST \
 		--prefix=/usr \
 		--disable-static \
-		--disable-debug-info \
-		|| return 1
-	make V=1 || return 1
-	[ "$CARCH" = "aarch64" ] || make check || return 1
+		--disable-debug-info
+	make V=1
+}
+
+check() {
+	make check
 }
 
 package() {
-	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
-	install -Dm644 LICENSE "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
+	make DESTDIR="$pkgdir" install
 }
 
-md5sums="3f7d29ba2821a966d24759a928a15cdf  babeltrace-1.5.1.tar.bz2"
-sha256sums="379e96f1cf867f0a198cf1c315c52ec7d7ad67898402bbe22d1404fc38d19d98  babeltrace-1.5.1.tar.bz2"
-sha512sums="c9b7786b7389761a2a93070778fee43e599681316e10ace7358642b90ca9a35b7204ed78bb3b31f71e37bc3fc17886e698d5d957a60b26e66c3778700d9c287a  babeltrace-1.5.1.tar.bz2"
+sha512sums="1cab84b63fd0935574cca8d4c70302a917776e83e738e73aa3ce4070c6d3279556ab665285c932d1b2159115a58cade7cfa9b0416b4a2807e1ce11bb9c7ea8cb  babeltrace-1.5.7.tar.bz2"

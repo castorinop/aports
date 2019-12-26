@@ -1,0 +1,40 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kimagemapeditor
+pkgver=19.12.0
+pkgrel=0
+arch="all !ppc64le !s390x" # Blocked by missing qt5-qtwebengine
+url="https://kde.org/applications/development/org.kde.kimagemapeditor"
+pkgdesc="An editor of image maps embedded inside HTML files, based on the <map> tag"
+license="GPL-2.0-or-later"
+makedepends="extra-cmake-modules qt5-qtbase-dev qt5-qtwebengine-dev kconfig-dev kconfigwidgets-dev kcoreaddons-dev kcrash-dev kdbusaddons-dev kdoctools-dev kguiaddons-dev kiconthemes-dev khtml-dev kparts-dev ki18n-dev kwidgetsaddons-dev kxmlgui-dev"
+source="https://download.kde.org/stable/release-service/$pkgver/src/kimagemapeditor-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+options="!check" # No tests
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	cd "$builddir"/build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="0e2d3ce6104de869a2cf12a661034e02a035d6698e4f62943e80e3901d7b8a299bf4f6683f19b18c93cb700cc30515e20dd2486356e704fefde96a63118e81a6  kimagemapeditor-19.12.0.tar.xz"

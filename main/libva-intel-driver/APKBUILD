@@ -1,52 +1,32 @@
 # Contributor: Carlo Landmeter <clandmeter@gmail.com>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=libva-intel-driver
-pkgver=1.7.3
+pkgver=2.4.0
 pkgrel=0
-pkgdesc="VA-API implementation for Intel G45 chipsets and Intel HD Graphics for Intel Core processor family"
-url="http://freedesktop.org/wiki/Software/vaapi"
+pkgdesc="VA-API implementation for Intel GMA chipsets and Intel HD Graphics"
+url="https://freedesktop.org/wiki/Software/vaapi"
 arch="x86 x86_64"
 license="MIT"
-depends=""
-depends_dev="libdrm-dev libva-dev"
-makedepends="$depends_dev autoconf automake libtool"
-install=""
-subpackages=""
+makedepends="libdrm-dev libva-dev wayland-dev meson"
 install_if="libva xf86-video-intel"
-source="http://www.freedesktop.org/software/vaapi/releases/libva-intel-driver/libva-intel-driver-$pkgver.tar.bz2"
+source="$pkgname-$pkgver.tar.gz::https://github.com/intel/intel-vaapi-driver/archive/$pkgver.pre1.tar.gz"
 
-_builddir="$srcdir"/$pkgname-$pkgver
-prepare() {
-	local i
-	cd "$_builddir"
-	for i in $source; do
-		case $i in
-		*.patch) msg $i; patch -p1 -i "$srcdir"/$i || return 1;;
-		esac
-	done
-	# we need to regen the configure script which will unconditionally
-	# depend on wayland scanner otherwise
-	libtoolize --force && aclocal -I m4 && autoconf \
-		&& automake --add-missing
-}
+builddir="$srcdir"/intel-vaapi-driver-$pkgver.pre1
 
 build() {
-	cd "$_builddir"
-	./configure \
-		--build=$CBUILD \
-		--host=$CHOST \
+	meson builddir \
 		--prefix=/usr \
-		--enable-x11 \
-		--disable-wayland \
-		--disable-static \
-		--enable-shared \
-		|| return 1
-	make || return 1
+		-Dwith_wayland=yes \
+		-Dwith_x11=yes
+	ninja -C builddir
+}
+
+check() {
+	ninja -C builddir test
 }
 
 package() {
-	cd "$_builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	DESTDIR="$pkgdir" ninja -C builddir install
 }
 
-sha512sums="90567b94e3373287b1b5fe776e291dfd33577bbe5e4ec1bee359c88544c9c17bbae2aac511ff3d704d7b99b19fbc908c9a38ebbd3162e3625c86c416142390e6  libva-intel-driver-1.7.3.tar.bz2"
+sha512sums="de4840a0e999defbccf4965b02fb0787b777795e5134894a4f30f67ec11fd1c99b765cd4a79802972671d38b3d20b443e76f75d34c03112a8fcb9b345a8640b5  libva-intel-driver-2.4.0.tar.gz"

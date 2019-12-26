@@ -1,0 +1,30 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=py3-pygithub
+_pkgname=PyGithub
+pkgver=1.44.1
+pkgrel=0
+pkgdesc="Typed interactions with the GitHub API v3"
+url="https://github.com/PyGithub/PyGithub"
+arch="noarch"
+license="LGPL-3.0-or-later"
+depends="python3 py3-jwt py3-requests py3-deprecated"
+makedepends="py3-setuptools"
+checkdepends="py3-httpretty py3-cryptography"
+source="https://github.com/PyGithub/PyGithub/archive/v$pkgver/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	python3 -m lib2to3 -w -n tests
+	python3 setup.py test
+}
+
+package() {
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
+}
+
+sha512sums="87b6c05f3bbfa463995b67d0bb257700e8c67050dd291c60737a84c4e8bc6bcbde1c0e2add98ec38174c55f2c21abcf4c46bba8be752d132d7e63e423ab6fd1e  PyGithub-1.44.1.tar.gz"

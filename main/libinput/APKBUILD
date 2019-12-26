@@ -1,38 +1,38 @@
 # Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
 # Maintainer: Daniel Sabogal <dsabogalcc@gmail.com>
 pkgname=libinput
-pkgver=1.8.1
-pkgrel=1
+pkgver=1.14.3
+pkgrel=0
 pkgdesc="Library for handling input devices"
-url="http://www.freedesktop.org/wiki/Software/libinput/"
+url="https://www.freedesktop.org/wiki/Software/libinput"
 arch="all"
 license="MIT"
-depends=""
-makedepends="mtdev-dev eudev-dev libevdev-dev grep"
+makedepends="eudev-dev libevdev-dev meson mtdev-dev"
+checkdepends="diffutils bash"
 subpackages="$pkgname-dev $pkgname-doc $pkgname-libs"
-options="!check"
-source="http://freedesktop.org/software/$pkgname/$pkgname-$pkgver.tar.xz"
-builddir="$srcdir/$pkgname-$pkgver"
+source="https://freedesktop.org/software/libinput/libinput-$pkgver.tar.xz"
 
 build() {
 	cd "$builddir"
-	./configure \
-		--build=$CBUILD \
-		--host=$CHOST \
+	meson \
+		--buildtype=plain \
 		--prefix=/usr \
-		--sysconfdir=/etc \
-		--libexecdir=/usr/lib \
-		--mandir=/usr/share/man \
-		--with-udev-dir=/lib/udev \
-		--disable-documentation \
-		--disable-debug-gui \
-		--disable-libwacom \
-		--disable-tests
-	make
+		--libdir=lib \
+		-Ddocumentation=false \
+		-Dlibwacom=false \
+		-Ddebug-gui=false \
+		-Dtests=false builddir/
+	ninja -C builddir/
+}
+
+check() {
+	cd "$builddir/builddir"
+	ninja test
 }
 
 package() {
-	make DESTDIR="$pkgdir" -C "$builddir" install
+	cd "$builddir"
+	DESTDIR="$pkgdir" ninja -C builddir/ install
 }
 
-sha512sums="1566ccb7d1721ee2d16badc404896d31e3ac45fda71e2577db17141a507594f3827ed0a389bb537f946cb380d77feedef8e71df76ac89f8c11c44463df01ee4f  libinput-1.8.1.tar.xz"
+sha512sums="f01d1bd1b25b8060519575644597d35f0c89de5386d298441f440128ceee3e57549921a058adec31adc8b33dbdedf4c0bd12c76905a69f752859d3136e26336d  libinput-1.14.3.tar.xz"

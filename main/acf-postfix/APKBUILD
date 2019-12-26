@@ -4,14 +4,14 @@ pkgname=acf-postfix
 pkgver=0.10.0
 pkgrel=2
 pkgdesc="A web-based system administration interface for postfix"
-url="http://git.alpinelinux.org/cgit/acf/acf-postfix"
+url="https://git.alpinelinux.org/cgit/acf/acf-postfix"
 arch="noarch"
-license="GPL2"
+license="GPL-2.0"
 depends="acf-core postfix"
 makedepends=""
 install=
 subpackages=""
-source="http://dev.alpinelinux.org/archive/$pkgname/$pkgname-$pkgver.tar.xz"
+source="https://dev.alpinelinux.org/archive/$pkgname/$pkgname-$pkgver.tar.xz"
 
 package() {
 	cd "$srcdir/$pkgname-$pkgver"

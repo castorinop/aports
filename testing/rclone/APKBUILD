@@ -1,0 +1,41 @@
+# Maintainer: Chloe Kudryavtsev <toast@toastin.space>
+pkgname=rclone
+pkgver=1.50.2
+pkgrel=0
+pkgdesc="Rsync for cloud storage"
+url="https://rclone.org/"
+arch="all"
+license="MIT"
+makedepends="binutils-gold go"
+options="net"
+source="$pkgname-$pkgver.tar.gz::https://github.com/ncw/$pkgname/archive/v$pkgver.tar.gz"
+subpackages="$pkgname-doc"
+
+export GOPATH="$srcdir"
+export CGO_ENABLED=0
+
+build() {
+	GO111MODULE=on go build -o bin/"$pkgname"
+}
+
+check() {
+	# fs/rc: fails on ppc64le
+	GO111MODULE=on go test $(go list ./... | grep -v \
+		-e 'fs/rc$'
+		)
+}
+
+package() {
+	install -Dm755 "$builddir"/bin/"$pkgname" \
+		"$pkgdir"/usr/bin/"$pkgname"
+
+	install -Dm644 "$builddir"/"$pkgname".1 \
+		"$pkgdir"/usr/share/man/man1/"$pkgname".1
+}
+
+cleanup_srcdir() {
+	go clean -modcache
+	default_cleanup_srcdir
+}
+
+sha512sums="30c0088f521132522a5813cf8eb3bdf704c2fefe391ecde3abd3f94969864d7872f095f0f431018b08bdc07f2e867d164311930c5fb51c06bc9581e9067205b2  rclone-1.50.2.tar.gz"

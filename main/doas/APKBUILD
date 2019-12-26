@@ -1,0 +1,43 @@
+# Maintainer: Drew DeVault <sir@cmpwn.com>
+pkgname=doas
+pkgver=6.6
+pkgrel=2
+pkgdesc="OpenBSD's temporary privledge escalation tool"
+url="https://github.com/Duncaen/OpenDoas"
+arch="all"
+license="BSD"
+makedepends="bison"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/Duncaen/OpenDoas/archive/v$pkgver.tar.gz"
+builddir="$srcdir/OpenDoas-$pkgver"
+options="$options suid"
+
+build() {
+	cd "$builddir"
+	./configure \
+		--prefix=/usr \
+		--without-pam \
+		--with-timestamp
+	make
+}
+
+check() {
+	cd "$builddir"
+	# doas -v returns 1
+	./doas -v || test $? = 1
+}
+
+package() {
+	cd "$builddir"
+	make install DESTDIR="$pkgdir"
+	install -d "$pkgdir"/etc
+	cat > "$pkgdir"/etc/doas.conf <<-EOF
+	# see doas.conf(5) for configuration details
+
+	# Uncomment to allow group "wheel" to become root
+	# permit persist :wheel
+	EOF
+	chmod 440 "$pkgdir"/etc/doas.conf
+}
+
+sha512sums="0ccd84eda9ec109926bfc58997ef7b0ab47ac75208b7e2f98477ec9f0211dd468d826bfc2758340188c934e6198b98eff0662b684166575f12742c7c1ab05e89  doas-6.6.tar.gz"

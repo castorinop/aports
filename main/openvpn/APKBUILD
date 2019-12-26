@@ -1,17 +1,17 @@
 # Contributor: Valery Kartel <valery.kartel@gmail.com>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=openvpn
-pkgver=2.4.3
-pkgrel=0
+pkgver=2.4.7
+pkgrel=1
 pkgdesc="A robust, and highly configurable VPN (Virtual Private Network)"
-url="http://openvpn.sourceforge.net/"
+url="https://openvpn.net/"
 arch="all"
 license="custom"
-subpackages="$pkgname-doc $pkgname-dev $pkgname-auth-pam:pam"
+subpackages="$pkgname-doc $pkgname-dev $pkgname-openrc $pkgname-auth-pam:pam"
 depends="iproute2"
-makedepends="libressl-dev lzo-dev linux-pam-dev linux-headers"
+makedepends="openssl-dev lzo-dev linux-pam-dev linux-headers"
 install="$pkgname.pre-install"
-source="http://swupdate.openvpn.net/community/releases/$pkgname-$pkgver.tar.gz
+source="https://swupdate.openvpn.net/community/releases/$pkgname-$pkgver.tar.xz
 	openvpn.initd
 	openvpn.confd
 	openvpn.up
@@ -28,19 +28,22 @@ build() {
 		--mandir=/usr/share/man \
 		--sysconfdir=/etc/openvpn \
 		--enable-crypto \
-		--enable-iproute2 \
-		|| return 1
-	make || return 1
+		--enable-iproute2
+	make
+}
+
+check() {
+	cd "$builddir"
+	make check
 }
 
 package() {
 	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 
 	# install samples
 	mkdir -p "$pkgdir"/usr/share/doc/$pkgname/samples
-	cp -a sample/sample-* "$pkgdir"/usr/share/doc/$pkgname/samples \
-		|| return 1
+	cp -a sample/sample-* "$pkgdir"/usr/share/doc/$pkgname/samples
 	install -D -m644 COPYING "$pkgdir"/usr/share/licenses/$pkgname/COPYING
 
 	# install init.d and conf.d
@@ -50,7 +53,6 @@ package() {
 	# install up and down scripts
 	install -Dm755 "$srcdir"/openvpn.up "$pkgdir"/etc/openvpn/up.sh
 	install -Dm755 "$srcdir"/openvpn.down "$pkgdir"/etc/openvpn/down.sh
-
 }
 
 pam() {
@@ -60,8 +62,8 @@ pam() {
 		"$subpkgdir"/usr/lib/openvpn/plugins/
 }
 
-sha512sums="1d1f9afa6d0858fa32f73b2a51ed7652beac52ef974b104b51b521e6d8e872b8f5659c55ec1ef442fed3b6c6b058627b0af73e765a1261871b1cd96c8acd657e  openvpn-2.4.3.tar.gz
-8a4080b7784faa156aa0775f7b73fe5c054707270af2a3139150629450ad0f1f5954dce5fc850f1bfd7b93bcc47ed4bc9b22159c536874698c78d81ba99338a7  openvpn.initd
-982ade883afbe2e656a9cbbe36c31c0e8b4f7bbbe5b63df9f7b834f02a9153032fb7445c85d3e91f62c68a7ddd13c3afbf420fb71cdd13d9c4b69f867bdd9f37  openvpn.confd
-f904d6125ed1ddb48ea632c3b290a7a4a7a7436be0d46b323fc8c92f919f9d076fdc78ff7bed0dd65675f0bc3559e531e372b805fc11ef287efeeb4d54fe52f4  openvpn.up
-8f2889dc92b57deaea15970945ac8b1bacdfa660e2a74ce13acaf6f9b431823fec82cdc7d942d0bacd1f54edf727c7c240a6eb8f7d0c745bc52838535c37c901  openvpn.down"
+sha512sums="5398084ad0002b3ed34871375888a1ec5d4d0f0dbc7c979ab12fc16b00559613c0654f1760e84bea77d4fe7284bce25e2e9d3d309fe85ffd1060ced10978ff95  openvpn-2.4.7.tar.xz
+3594937d4cc9d7b87ac6a3af433f651ed9695f41586994f9d9789554fbe3f87f054b997b89486eda4ae0b852d816aac9007222168d585910aa9f255073324bd9  openvpn.initd
+6b2353aca9df7f43044e4e37990491b4ba077e259ebe13b8f2eb43e35ca7a617c1a65c5bfb8ab05e87cf12c4444184ae064f01f9abbb3c023dbbc07ff3f9c84e  openvpn.confd
+cdb73c9a5b1eb56e9cbd29955d94297ce5a87079419cd626d6a0b6680d88cbf310735a53f794886df02030b687eaea553c7c569a8ea1282a149441add1c65760  openvpn.up
+4456880d5c2db061219ba94e4052786700efa5e685f03b0d12d75a6023e3c0fc7b5242cc3d2bd3988e42fcd99701ab13a6257b1a0943b812318d30c64843ad27  openvpn.down"

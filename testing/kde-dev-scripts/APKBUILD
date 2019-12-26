@@ -1,0 +1,27 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kde-dev-scripts
+pkgver=19.12.0
+pkgrel=0
+arch="all"
+url="https://kde.org/applications/development/"
+pkgdesc="Scripts and setting files useful during development of KDE software"
+license="GPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="extra-cmake-modules kdoctools-dev"
+source="https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-doc"
+options="!check" # No code to test
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="f5c0d6d9a5fe6f3e09b9273ab6b8e1d42784c1af86088284a438e06035d8cbad08be9b0f31b97190aa754cb27019b2cdfe75e42fb3702bdcf5f0bad4d6fc64ec  kde-dev-scripts-19.12.0.tar.xz"

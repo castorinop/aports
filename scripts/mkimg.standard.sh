@@ -4,34 +4,35 @@ profile_standard() {
 		Just enough to get you started.
 		Network connection is required."
 	profile_base
+	profile_abbrev="std"
 	image_ext="iso"
-	arch="x86 x86_64"
+	arch="aarch64 x86 x86_64 ppc64le s390x"
 	output_format="iso"
 	kernel_cmdline="nomodeset"
 	kernel_addons="xtables-addons"
-}
-
-profile_vanilla() {
-	profile_standard
-	title="Vanilla"
-	desc="Includes a vanilla kernel.
-		Does not include grsec patch set.
-		Suitable for debugging."
-	#arch="$arch aarch64"
-	arch="$arch ppc64le"
-	kernel_flavors="vanilla"
-	kernel_addons=
+	case "$ARCH" in
+	s390x)
+		apks="$apks s390-tools"
+		initfs_features="$initfs_features dasd_mod qeth"
+		initfs_cmdline="modules=loop,squashfs,dasd_mod,qeth quiet"
+		;;
+	ppc64le)
+		initfs_cmdline="modules=loop,squashfs,sd-mod,usb-storage,ibmvscsi quiet"
+		;;
+	esac
 }
 
 profile_extended() {
 	profile_standard
+	profile_abbrev="ext"
 	title="Extended"
 	desc="Most common used packages included.
 		Suitable for routers and servers.
 		Runs from RAM."
-	kernel_addons="dahdi-linux xtables-addons zfs spl"
+	arch="x86 x86_64"
+	kernel_addons="xtables-addons zfs"
 	apks="$apks
-		dahdi-linux dahdi-tools ethtool hwdata lftp links
+		ethtool hwids lftp links doas
 		logrotate lua5.3 lsof lm_sensors lxc lxc-templates nano
 		pax-utils paxmark pciutils screen strace sudo tmux
 		usbutils v86d vim xtables-addons curl
@@ -42,13 +43,13 @@ profile_extended() {
 		igmpproxy ip6tables iproute2 iproute2-qos ipsec-tools
 		iptables iputils irssi ldns-tools links
 		ncurses-terminfo net-snmp net-snmp-tools nrpe nsd
-		opennhrp openvpn openvswitch pingu ppp quagga
-		quagga-nhrp rpcbind sntpc socat ssmtp strongswan
-		sysklogd tcpdump tcpproxy tinyproxy unbound
+		opennhrp openvpn pingu ppp quagga
+		quagga-nhrp rng-tools rpcbind sntpc socat ssmtp strongswan
+		sysklogd tcpdump tinyproxy unbound
 		wireless-tools wpa_supplicant zonenotify
 
 		btrfs-progs cksfv dosfstools cryptsetup
-		cciss_vol_status lvm2 mdadm mkinitfs mtools nfs-utils
+		cciss_vol_status grub-bios grub-efi lvm2 mdadm mkinitfs mtools nfs-utils
 		parted rsync sfdisk syslinux unrar util-linux xfsprogs
 		zfs
 		"
@@ -65,12 +66,14 @@ profile_extended() {
 
 profile_virt() {
 	profile_standard
+	profile_abbrev="virt"
 	title="Virtual"
 	desc="Similar to standard.
 		Slimmed down kernel.
 		Optimized for virtual systems."
+	arch="aarch64 x86 x86_64"
 	kernel_addons=
-	kernel_flavors="virthardened"
+	kernel_flavors="virt"
 	kernel_cmdline="console=tty0 console=ttyS0,115200"
 	syslinux_serial="0 115200"
 }

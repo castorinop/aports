@@ -1,0 +1,45 @@
+# Contributor: Carlo Landmeter <clandmeter@gmail.com>
+# Maintainer: Fathi Boudra <fathi.boudra@linaro.org>
+pkgname=uboot-tools
+pkgver=2019.10
+pkgrel=1
+pkgdesc="U-Boot bootloader utility tools"
+url="https://www.denx.de/wiki/U-Boot/WebHome"
+arch="all !s390x !ppc64le"
+license="GPL"
+makedepends="$depends_dev bison flex openssl-dev linux-headers sdl-dev"
+subpackages="$pkgname-examples"
+options="!check" # No test suite
+source="http://ftp.denx.de/pub/u-boot/u-boot-$pkgver.tar.bz2
+	fix-ulong-typedef.patch
+	"
+builddir="$srcdir/u-boot-$pkgver"
+
+build() {
+	cd "$builddir"
+	make defconfig
+	make tools-all
+}
+
+examples() {
+	mkdir -p "${subpkgdir}/usr/share/doc/${pkgname}"
+	mv "${pkgdir}/usr/share/doc/${pkgname}/examples/" \
+	   "${subpkgdir}/usr/share/doc/${pkgname}"
+}
+
+package() {
+	cd "$builddir"
+	for tool in bmp_logo dumpimage env/fw_printenv \
+		fit_check_sign fit_info gdb/gdbcont gdb/gdbsend gen_eth_addr img2srec \
+		mkenvimage mkimage ncb proftool ubsha1 xway-swap-bytes env/fw_printenv; do
+			install -D tools/$tool \
+				$pkgdir/usr/bin/$(basename $tool)
+	done
+	install -Dm644 tools/env/fw_env.config \
+	        "${pkgdir}/usr/share/doc/${pkgname}/examples/fw_env.config"
+	cd "$pkgdir"/usr/bin
+	ln -sf fw_printenv fw_setenv
+}
+
+sha512sums="d8e98fca4b6af8d49d20ec09beab16b77863fcee88cda3605cc14435de21030bf3ca5e7cf7d06e42d4c0f75279c7295ecd628d2b77666eff7b7fd50374e051fd  u-boot-2019.10.tar.bz2
+813dd152afa8863d3c7456449c9b0b358232edae7c8575ebe4af71bfe74019d4c27f30dc6fcf307018e36f5afdaf7de32253c0a773955d5be74c625ddd5668c7  fix-ulong-typedef.patch"

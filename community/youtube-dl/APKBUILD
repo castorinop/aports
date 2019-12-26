@@ -3,60 +3,65 @@
 # Contributor: Timo Teräs <timo.teras@iki.fi>
 # Maintainer: Timo Teräs <timo.teras@iki.fi>
 pkgname=youtube-dl
-pkgver=2017.08.27.1
+pkgver=2019.12.25
 pkgrel=0
-pkgdesc="A small command-line program to download videos from YouTube"
-url="http://youtube-dl.org"
+pkgdesc="Command-line program to download videos from YouTube"
+url="https://youtube-dl.org/"
 arch="noarch"
 license="Unlicense"
-depends="python2 py-setuptools ffmpeg"
-subpackages="
-	$pkgname-doc
+depends="python3 py3-setuptools"
+checkdepends="py3-flake8 py3-nose"
+subpackages="$pkgname-doc
 	$pkgname-zsh-completion:zshcomp
 	$pkgname-bash-completion:bashcomp
 	$pkgname-fish-completion:fishcomp"
-source="https://github.com/rg3/$pkgname/releases/download/$pkgver/$pkgname-$pkgver.tar.gz"
+source="https://github.com/rg3/youtube-dl/releases/download/$pkgver/youtube-dl-$pkgver.tar.gz"
 builddir="$srcdir/$pkgname"
 
 prepare() {
-	cd "$builddir"
-	sed -i 's|etc/bash_completion.d|share/bash-completion/completions|' setup.py || return 1
-	sed -i 's|etc/fish/completions|share/fish/completions|' setup.py || return 1
+	default_prepare
+	sed -i \
+		-e 's|etc/bash_completion.d|share/bash-completion/completions|' \
+		-e 's|etc/fish/completions|share/fish/completions|' \
+		"$builddir"/setup.py
+}
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	PYTHON=/usr/bin/python3 make offlinetest
 }
 
 package() {
-	cd "$builddir"
-	python2 setup.py install --root="$pkgdir/" --optimize=1 || return 1
-	install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE" || return 1
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
 }
 
 zshcomp() {
 	pkgdesc="Zsh completions for $pkgname"
-	depends=""
 	install_if="$pkgname=$pkgver-r$pkgrel zsh"
 
 	install -Dm644 "$builddir"/$pkgname.zsh \
-		"$subpkgdir"/usr/share/zsh/site-functions/_$pkgname || return 1
+		"$subpkgdir"/usr/share/zsh/site-functions/_$pkgname
 }
 
 bashcomp() {
 	pkgdesc="Bash completions for $pkgname"
-	depends=""
 	install_if="$pkgname=$pkgver-r$pkgrel bash-completion"
 
 	mkdir -p "$subpkgdir"/usr/share/bash-completion/completions/
 	mv "$pkgdir"/usr/share/bash-completion/completions/$pkgname.bash-completion \
-		"$subpkgdir"/usr/share/bash-completion/completions/$pkgname || return 1
+		"$subpkgdir"/usr/share/bash-completion/completions/$pkgname
 }
 
 fishcomp() {
 	pkgdesc="Fish completions for $pkgname"
-	depends=""
 	install_if="$pkgname=$pkgver-r$pkgrel fish"
 
 	mkdir -p "$subpkgdir"/usr/share/fish/completions/
 	mv "$pkgdir"/usr/share/fish/completions/$pkgname.fish \
-		"$subpkgdir"/usr/share/fish/completions/ || return 1
+		"$subpkgdir"/usr/share/fish/completions/
 }
 
-sha512sums="4cbe2c2b917b59ccb5a171a171c69d5bdd915a56a4ca2d4bf67a04c7425b2d4849403a78d954cd0aa8401f8f4b61e4ebe96160aba2a9d2f3da1eae026739e9ba  youtube-dl-2017.08.27.1.tar.gz"
+sha512sums="951219648597d5e19fd3bcb3c64d8641bffd63cf3c6b4b30332d9148ad8b12c1be252e4cacbcd8169ce502b0fe20b2ff7163620382769b5e83e82d155e4f38c8  youtube-dl-2019.12.25.tar.gz"

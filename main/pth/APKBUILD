@@ -3,13 +3,13 @@ pkgname=pth
 pkgver=2.0.7
 pkgrel=4
 pkgdesc="The GNU Portable Threads."
-url="http://www.gnu.org/software/pth"
+url="https://www.gnu.org/software/pth"
 arch="all"
-license="LGPL2.1"
+license="LGPL-2.1"
 depends=""
 subpackages="$pkgname-dev $pkgname-doc"
 options="!libc_musl"
-source="ftp://ftp.gnu.org/gnu/$pkgname/$pkgname-$pkgver.tar.gz
+source="https://ftp.gnu.org/gnu/$pkgname/$pkgname-$pkgver.tar.gz
 	pth-2.0.5-parallelfix.patch
 	pth-2.0.6-ldflags.patch
 	pth-2.0.6-sigstack.patch

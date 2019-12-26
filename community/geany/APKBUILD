@@ -1,71 +1,61 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=geany
-pkgver=1.30.1
+pkgver=1.36
 pkgrel=0
 pkgdesc="A fast and lightweight IDE"
-url="http://www.geany.org"
+url="https://www.geany.org"
 arch="all"
-license="GPL"
+license="GPL-2.0-or-later"
 subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
-makedepends="gtk+-dev intltool perl-xml-parser vte-dev"
-depends=
-depends_dev="gtk+2.0-dev"
-install=
+makedepends="gtk+3.0-dev intltool perl-xml-parser vte3-dev"
 replaces="geany-dev"
-source="http://download.$pkgname.org/$pkgname-$pkgver.tar.gz
-	http://download.geany.org/contrib/tags/dbus-glib-0.76.c.tags
-	http://download.geany.org/contrib/tags/drupal.php.tags
-	http://download.geany.org/contrib/tags/ethos-1.0.c.tags
-	http://download.geany.org/contrib/tags/geany-api-0.19.c.tags
-	http://download.geany.org/contrib/tags/gladeui-1.0.c.tags
-	http://download.geany.org/contrib/tags/gnt.c.tags
-	http://download.geany.org/contrib/tags/gtk220.c.tags
-	http://download.geany.org/contrib/tags/gtkscintilla-2.0.c.tags
-	http://download.geany.org/contrib/tags/gtksourceview-3.0.c.tags
-	http://download.geany.org/contrib/tags/libdevhelp-2.0.c.tags
-	http://download.geany.org/contrib/tags/libgdl-3.0.c.tags
-	http://download.geany.org/contrib/tags/libxml-2.0.c.tags
-	http://download.geany.org/contrib/tags/openjdk8-8u66-b01.java.tags
-	http://download.geany.org/contrib/tags/sqlite3.c.tags
-	http://download.geany.org/contrib/tags/standard.css.tags
-	http://download.geany.org/contrib/tags/std.glsl.tags
-	http://download.geany.org/contrib/tags/std.latex.tags
-	http://download.geany.org/contrib/tags/std.vala.tags
-	http://download.geany.org/contrib/tags/v4l2.c.tags
-	http://download.geany.org/contrib/tags/webkit-1.0.c.tags
-	http://download.geany.org/contrib/tags/wordpress.php.tags
-	http://download.geany.org/contrib/tags/xfce46.c.tags
-	http://download.geany.org/contrib/tags/xfce48.c.tags
+source="https://download.geany.org/geany-$pkgver.tar.gz
+	https://download.geany.org/contrib/tags/dbus-glib-0.76.c.tags
+	https://download.geany.org/contrib/tags/drupal.php.tags
+	https://download.geany.org/contrib/tags/ethos-1.0.c.tags
+	https://download.geany.org/contrib/tags/geany-api-0.19.c.tags
+	https://download.geany.org/contrib/tags/gladeui-1.0.c.tags
+	https://download.geany.org/contrib/tags/gnt.c.tags
+	https://download.geany.org/contrib/tags/gtk220.c.tags
+	https://download.geany.org/contrib/tags/gtkscintilla-2.0.c.tags
+	https://download.geany.org/contrib/tags/gtksourceview-3.0.c.tags
+	https://download.geany.org/contrib/tags/libdevhelp-2.0.c.tags
+	https://download.geany.org/contrib/tags/libgdl-3.0.c.tags
+	https://download.geany.org/contrib/tags/libxml-2.0.c.tags
+	https://download.geany.org/contrib/tags/openjdk8-8u66-b01.java.tags
+	https://download.geany.org/contrib/tags/sqlite3.c.tags
+	https://download.geany.org/contrib/tags/standard.css.tags
+	https://download.geany.org/contrib/tags/std.glsl.tags
+	https://download.geany.org/contrib/tags/std.latex.tags
+	https://download.geany.org/contrib/tags/std.vala.tags
+	https://download.geany.org/contrib/tags/v4l2.c.tags
+	https://download.geany.org/contrib/tags/webkit-1.0.c.tags
+	https://download.geany.org/contrib/tags/wordpress.php.tags
+	https://download.geany.org/contrib/tags/xfce46.c.tags
+	https://download.geany.org/contrib/tags/xfce48.c.tags
 	http://advamacs.com/pub/tcl.tcl.tags
 	set_default_terminal.patch
 "
 
-_builddir="$srcdir"/$pkgname-$pkgver
-prepare() {
-        local i
-        cd "$_builddir"
-        for i in $source; do
-                case $i in
-                *.patch) msg $i; patch -p1 -i "$srcdir"/$i || return 1;;
-                esac
-        done
-}
-
 build() {
-	cd "$_builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
 		--prefix=/usr \
-		|| return 1
-	make || return 1
+		--enable-vte \
+		--enable-gtk3
+	make
+}
+
+check() {
+	make check
 }
 
 package() {
-	cd "$_builddir"
-	sed -i 's|MimeType=text/plain;|MimeType=|' geany.desktop || return 1
-	sed -i 's|Sh=|Sh=APKBUILD;|' data/filetype_extensions.conf || return 1
-	make DESTDIR="$pkgdir" install || return 1
+	sed -i 's|MimeType=text/plain;|MimeType=|' geany.desktop
+	sed -i 's|Sh=|Sh=APKBUILD;|' data/filetype_extensions.conf
+	make DESTDIR="$pkgdir" install
 
 	# install the tags
 	local _tags=
@@ -81,11 +71,9 @@ package() {
 
 dev() {
 	default_dev
-	mv "$subpkgdir"/usr/share/geany/filedefs/*.c "$pkgdir"/usr/share/geany/filedefs/ \
-		|| return 1
+	mv "$subpkgdir"/usr/share/geany/filedefs/*.c "$pkgdir"/usr/share/geany/filedefs/
 	mv "$subpkgdir"/usr/share/geany/templates/files/*.c \
-		"$pkgdir"/usr/share/geany/templates/files/ \
-		|| return 1
+		"$pkgdir"/usr/share/geany/templates/files/
 	rmdir "$subpkgdir"/usr/share/geany/templates/files \
 		"$subpkgdir"/usr/share/geany/templates \
 		"$subpkgdir"/usr/share/geany/filedefs \
@@ -93,7 +81,7 @@ dev() {
 		"$subpkgdir"/usr/share
 }
 
-sha512sums="fd6bd1f7b3682caf683350e02d2adbc7efba9cabeefb393de2db812d03384f82fcf915038c5ccda41f3fab2443c6ae984a1bca5c1968be30df1ecd8062ead2d0  geany-1.30.1.tar.gz
+sha512sums="0716197d02d13fdd50423058c64f1bd29e9ce7316f6beeede4b851a91c2c02462856dc75cdc06fcf48ceaefa93533736882a8be5daf296d4e684a1e0493fbaad  geany-1.36.tar.gz
 89551143b5557a632b325cceef9c0fa56ea0f9a28d1bd7bed4dba99af5005812702bbf0519f6ce97ce77c362fa454caac8d18c168ffb4af5f91ed6a4df2995e9  dbus-glib-0.76.c.tags
 9d06d993ddd3fbc6445a215e327e4d0bfb498bcf0431fff69b66b4fc2163717a313c5a876d0dcd922859f97fb8f5beb20f034dafb99b321be37282f226c76057  drupal.php.tags
 1db55822822fe5f9d85ff619c6e2fb9703ed7646eefb8925f8e2f632fb9f6aecaddf1580496e0d9daa9d3d7e466febc80d73ae3955075d1dd92fc238571d5fd1  ethos-1.0.c.tags

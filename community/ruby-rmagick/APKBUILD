@@ -1,0 +1,49 @@
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
+pkgname=ruby-rmagick
+_gemname=rmagick
+pkgver=4.0.0
+_pkgver=${pkgver//./-}
+pkgrel=1
+pkgdesc="Ruby bindings for ImageMagick"
+url="https://rmagick.github.io/"
+arch="all !s390x"
+license="MIT"
+depends="ghostscript-fonts"
+checkdepends="ruby-rake ruby-rspec"
+makedepends="imagemagick6-dev ruby ruby-dev"
+source="https://github.com/rmagick/rmagick/archive/RMagick_$_pkgver.tar.gz
+	gemspec.patch
+	"
+builddir="$srcdir/rmagick-RMagick_$_pkgver"
+
+build() {
+	gem build $_gemname.gemspec
+	gem install --local \
+		--install-dir dist \
+		--ignore-dependencies \
+		--no-document \
+		--verbose \
+		$_gemname
+}
+
+check() {
+	GEM_PATH='dist:.gem' rspec
+}
+
+package() {
+	local gemdir="$pkgdir/$(ruby -e 'puts Gem.default_dir')"
+	cd "$builddir"/dist
+
+	mkdir -p "$gemdir"
+	cp -r extensions gems specifications "$gemdir"/
+
+	# Remove unnecessary files and rubbish...
+	find "$gemdir"/extensions/ -name mkmf.log -delete
+
+	cd "$gemdir"/gems/$_gemname-$pkgver
+	rm -r ext/ lib/*.so
+}
+
+sha512sums="b0570390113c8ce8a7964c088a8e6992fb707c9b0250c1e3d69ca8e76e7ad5a20a948bbd437ef41fe88281455863bcc405ff3093136204fa5976c058b8d40e79  RMagick_4-0-0.tar.gz
+a8e26195bf08f240aa892c061da562dc5dfc98543d653b821b70ea3b67575fe8eafc7324b8d64e894084947425270328e44351fc945bd5b8ea3255870c54cc3f  gemspec.patch"

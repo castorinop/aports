@@ -2,34 +2,34 @@
 # Maintainer:  Leonardo Arena <rnalrd@alpinelinux.org>
 pkgname=perl-compress-raw-zlib
 _realname=Compress-Raw-Zlib
-pkgver=2.074
-pkgrel=1
+pkgver=2.093
+pkgrel=0
 pkgdesc="Perl low-level interface to zlib compression library"
-url="http://search.cpan.org/dist/Compress-Raw-Zlib/"
+url="https://metacpan.org/release/Compress-Raw-Zlib"
 arch="all"
-license="GPL PerlArtistic"
+license="GPL-1.0-or-later OR Artistic-1.0-Perl"
 depends="perl"
 makedepends="perl-dev"
-install=
-subpackages=""
-source="http://search.cpan.org/CPAN/authors/id/P/PM/PMQS/${_realname}-${pkgver}.tar.gz"
+source="http://search.cpan.org/CPAN/authors/id/P/PM/PMQS/$_realname-$pkgver.tar.gz"
+builddir="$srcdir/$_realname-$pkgver"
 
-_builddir="$srcdir/$_realname-$pkgver"
 build() {
-	cd $_builddir
-	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor || return 1
-	#PERL_MM_USE_DEFAULT=1 perl Makefile.PL || return 1
-	make || return 1
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
+	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
+	make
+}
+
+check() {
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
+	make test
 }
 
 package() {
-	cd $_builddir
 	make DESTDIR="$pkgdir" install
-	# creates file collision among perl modules
-	find "$pkgdir" -name perllocal.pod -delete
+	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 
 	# man pages are already provided by perl-doc
-	rm -rf "$pkgdir"/usr/share/man || return 1
+	rm -rf "$pkgdir"/usr/share/man
 }
 
-sha512sums="b077133c822ad8402f0576804f51d891fb82ec6ecf4b11464749a6672726a9000c2306e667700cf833afac88213f0b753870fbfd7bd6579c938a03e4a73bc5f8  Compress-Raw-Zlib-2.074.tar.gz"
+sha512sums="451f844da7758390c030739c2869609d58398a799c27fc0ae1164de60a487c53d53513bfa7db25736dc13f48546131eed7bbf1f09d3414c212f5f33b46c7a9b2  Compress-Raw-Zlib-2.093.tar.gz"

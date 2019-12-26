@@ -1,0 +1,28 @@
+# Contributor: Kevin Daudt <kdaudt@alpinelinux.org>
+# Maintainer: Kevin Daudt <kdaudt@alpinelinux.org>
+pkgname=atools
+pkgver=18.9.1
+pkgrel=0
+pkgdesc="Auxilary scripts for abuild"
+url="https://github.com/maxice8/atools"
+arch="noarch"
+license="MIT"
+depends="grep"
+makedepends="scdoc redo"
+checkdepends="bats"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://gitlab.alpinelinux.org/Leo/atools/-/archive/$pkgver/atools-$pkgver.tar.gz"
+
+build() {
+	redo build
+}
+
+check() {
+	redo check
+}
+
+package() {
+	DESTDIR="$pkgdir" redo install
+}
+
+sha512sums="fdb1fc8d2407cd6ab3c901ba98686e2e7090d1d6f322b20b54b53ac71958357a452d0272bcbfb2041aff918f8aa2ce2d7c789b1ecc617195932cbc45a1000866  atools-18.9.1.tar.gz"

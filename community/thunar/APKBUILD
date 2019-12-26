@@ -1,0 +1,64 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=thunar
+pkgver=1.8.11
+pkgrel=0
+pkgdesc="File manager for Xfce"
+url="https://docs.xfce.org/xfce/thunar/start"
+arch="all"
+license="GPL-2.0-or-later LGPL-2.0-only"
+depends="desktop-file-utils hicolor-icon-theme shared-mime-info"
+depends_dev="exo-dev"
+makedepends="$depends_dev libexif-dev xfce4-panel-dev pcre-dev libgudev-dev
+	libnotify-dev startup-notification-dev libxfce4ui-dev dbus-glib-dev
+	gtk-doc gtk+3.0-dev glib-dev"
+install="$pkgname.post-install"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+source="https://archive.xfce.org/src/xfce/thunar/${pkgver%.*}/thunar-$pkgver.tar.bz2
+	thunar-sendto-audacious-playlist.desktop
+	thunar-sendto-bluetooth.desktop
+	"
+
+prepare() {
+	# fix icon in thunar-sendto-email.desktop
+	sed -i 's!internet-mail!mail-message-new!' \
+		plugins/thunar-sendto-email/thunar-sendto-email.desktop.in.in
+	default_prepare
+}
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--libexecdir=/usr/lib \
+		--localstatedir=/var \
+		--disable-static \
+		--enable-exif \
+		--enable-pcre \
+		--enable-gio-unix \
+		--enable-gudev \
+		--enable-gtk-doc
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	local f
+	make DESTDIR="$pkgdir" install
+	for f in $source; do
+		case $f in
+		thunar-sendto*.desktop)
+			install -m644 "$srcdir"/$f \
+				"$pkgdir"/usr/share/Thunar/sendto/
+			;;
+		esac
+	done
+}
+
+sha512sums="13576616fc556dae9be97f2390e85c12c01b78d86a59e5e8700b67dca7a2e70fe5f1e5716d3d77d22e158e7573a89e096aa8098ccccb78e7bd8e81cb319a6809  thunar-1.8.11.tar.bz2
+dce525f22abf8e723111673b8fdad48079d5379cef49cc013383bb0944274cdd0de1dda6e8894dd8c9efb54cc9eea2baf8f4c76265665b84f3f58aeb01c72390  thunar-sendto-audacious-playlist.desktop
+b4e8024e093b8e3f9bf5d460335fd9d19c1e394383bd58a7ac05c720103612dea9dde8a02f090f0af09d89e6644b292236ef257dd1790eccd627efce0577828e  thunar-sendto-bluetooth.desktop"

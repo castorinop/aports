@@ -1,20 +1,18 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=tevent
-pkgver=0.9.33
+pkgver=0.10.2
 pkgrel=0
 pkgdesc="The tevent library"
-url="http://tevent.samba.org/"
+url="https://tevent.samba.org/"
 arch="all"
-license="LGPLv3+"
-makedepends="python2-dev talloc-dev"
+license="LGPL-3.0-or-later"
+makedepends="libtirpc-dev python3-dev talloc-dev"
 replaces="samba"
-subpackages="$pkgname-dev py-$pkgname:_py"
-source="http://samba.org/ftp/tevent/tevent-$pkgver.tar.gz"
-
-builddir="$srcdir/$pkgname-$pkgver"
+subpackages="$pkgname-dev py3-$pkgname:_py3"
+source="https://samba.org/ftp/tevent/tevent-$pkgver.tar.gz
+	fix-public-header.patch"
 
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -30,19 +28,19 @@ build() {
 }
 
 check() {
-	cd "$builddir"
 	make check
 }
 
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir" install
 }
 
-_py() {
-	pkgdesc="Python binding for the tevent library"
+_py3() {
+	pkgdesc="Python 3 binding for the tevent library"
+
 	mkdir -p "$subpkgdir"/usr/lib
-	mv "$pkgdir"/usr/lib/python* "$subpkgdir"/usr/lib/
+	mv "$pkgdir"/usr/lib/python3* "$subpkgdir"/usr/lib/
 }
 
-sha512sums="3a437957859a556e06f24334301c41a3db1433c1e90d651fa74585a638a36d71369f235a8ab51aa0dd8f9d9bb88ad42f2c3ddeba0b99c4234c63866a8c922b91  tevent-0.9.33.tar.gz"
+sha512sums="1da8f28898f35daab515892b880d1de601062cc3e2b2570cd62e6913df17b0195a05acb7b484c628cddc0eb8b0cde893105ede3feb32bc5764e7d25684f332ba  tevent-0.10.2.tar.gz
+ee4cce8591dfe31288975596d8464b7cc160580715f88e4fd19b5ae7e1a831650b072954731f015f52d76600597faee894f0174b9e92d18dca9629f9d056230c  fix-public-header.patch"

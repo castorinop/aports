@@ -2,24 +2,23 @@
 # Contributor: Leonardo Arena <rnalrd@alpinelinux.org>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=vlc
-pkgver=2.2.6
-_pkgver=${pkgver/_/-}
-_ver=${_pkgver%[a-z]}
-pkgrel=0
+pkgver=3.0.8
+pkgrel=6
 pkgdesc="A multi-platform MPEG, VCD/DVD, and DivX player"
 triggers="vlc-libs.trigger=/usr/lib/vlc/plugins"
 pkgusers="vlc"
 pkggroups="vlc"
-url="http://www.videolan.org/vlc/"
-arch="all"
-license="GPL2+"
+url="https://www.videolan.org/vlc/"
+arch="all !s390x"
+license="GPL-2.0-or-later"
+options="!checkroot"
 subpackages="$pkgname-dev
 	$pkgname-doc
 	$pkgname-qt
 	$pkgname-xorg
 	$pkgname-daemon::noarch
 	$pkgname-libs
-	$pkgname-plugins
+	$pkgname-plugins::noarch
 
 	$pkgname-plugins-access:plugins_access
 	$pkgname-plugins-access_output:plugins_access_output
@@ -34,7 +33,7 @@ subpackages="$pkgname-dev
 	$pkgname-plugins-meta_engine:plugins_meta_engine
 	$pkgname-plugins-misc:plugins_misc
 	$pkgname-plugins-mux:plugins_mux
-	$pkgname-plugins-notify:plugins_notify
+	$pkgname-plugins-notify:plugins_notify:noarch
 	$pkgname-plugins-packetizer:plugins_packetizer
 	$pkgname-plugins-services_discovery:plugins_services_discovery
 	$pkgname-plugins-stream_filter:plugins_stream_filter
@@ -51,14 +50,15 @@ makedepends="
 	automake
 	autoconf
 	avahi-dev
+	bison
 	libtool
 	dbus-dev
 	faad2-dev
 	ffmpeg-dev
 	flac-dev
+	flex
 	freetype-dev
-	fribidi-dev
-	gtk+-dev
+	gtk+3.0-dev
 	libbluray-dev>=0.2.1 libbluray-dev<20100000
 	libavc1394-dev
 	libcddb-dev
@@ -74,12 +74,14 @@ makedepends="
 	libnotify-dev
 	libogg-dev
 	libraw1394-dev>=2.0.1
+	librsvg-dev
 	libshout-dev
 	libsm-dev
 	libtheora-dev
 	libva-dev
 	libvdpau-dev
 	libvorbis-dev
+	libvpx-dev
 	libx11-dev
 	libxext-dev
 	libxinerama-dev
@@ -88,50 +90,49 @@ makedepends="
 	libxv-dev
 	live-media-dev>=2012.01.26
 	lua5.2-dev
-	ncurses-dev
 	mesa-dev
+	ncurses-dev
+	opus-dev
 	pkgconfig
 	qt5-qtbase-dev
+	qt5-qtsvg-dev
+	qt5-qtx11extras-dev
 	sdl2-dev
 	speex-dev
+	speexdsp-dev
 	sysfsutils-dev
 	taglib-dev
 	eudev-dev
 	v4l-utils-dev
+	wayland-protocols
 	x264-dev
+	x265-dev
 	xcb-util-renderutil-dev
 	xcb-util-keysyms-dev
 	xdg-utils
 	samba-dev
+	gnutls-dev
 	"
-source="http://download.videolan.org/pub/videolan/$pkgname/${_ver}/$pkgname-$_pkgver.tar.xz
-	vlc-2.2.4-gcc6_fixes-1.patch
-	vlc-2.2.4-ffmpeg3-1.patch
-	fix-waitpid-usage.patch
+source="https://get.videolan.org/vlc/$pkgver/vlc-$pkgver.tar.xz
 	omxil-rpi-codecs.patch
-	vlc-libs.trigger"
+	check-headless.patch
+	disable-sub-autodetect-fuzzy-1-test.patch
+	test-s390x.patch
+	fribidi_allow_deprecated.patch
+	"
 
-builddir="$srcdir"/$pkgname-$_ver
+# secfixes:
+#   3.0.7.1-r2:
+#     - CVE-2019-13602
 
 prepare() {
-	cd "$builddir"
 	default_prepare
-	sed -i -e "/^libxscreensaver_plugin_la_SOURCES/s/^/#/" \
-		modules/misc/Modules.am || return 1
-	NOCONFIGURE=1 ./bootstrap || return 1
+	NOCONFIGURE=1 ./bootstrap
 }
 
 build() {
 	local _arch_opts=
-	export CXXFLAGS="$CXXFLAGS -std=gnu++11"
-	cd "$builddir"
-	sed -e 's:/usr/share/fonts/truetype/freefont/FreeSerifBold.ttf:/usr/share/fonts/TTF/DejaVuSerif-Bold.ttf:' \
-		-i modules/text_renderer/freetype.c
-
-	# -fpermissive is needed due to zlib 1.2.6 changing
-	# void* to gzFile on gz*() functions
 	export CFLAGS="$CFLAGS -D_GNU_SOURCE"
-	export CXXFLAGS="$CXXFLAGS -fpermissive"
 
 	case "$CARCH" in
 	arm*) _arch_opts="--enable-omxil --enable-omxil-vout --enable-rpi-omxil" ;;
@@ -139,14 +140,12 @@ build() {
 
 	LUA=lua5.2 \
 	LUAC=luac5.2 \
+	BUILDCC="${CC:-gcc} -std=c99" \
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
 		--prefix=/usr \
-		--disable-mmx \
-		--disable-sse \
 		--disable-nls \
-		--disable-optimizations \
 		--disable-rpath \
 		--enable-a52 \
 		--enable-avcodec \
@@ -159,14 +158,12 @@ build() {
 		--enable-dvdnav \
 		--enable-faad \
 		--enable-flac \
-		--enable-httpd \
 		--enable-libcddb \
 		--enable-libva \
 		--enable-live555 \
 		--enable-merge-ffmpeg \
 		--enable-ncurses \
 		--enable-realrtsp \
-		--enable-sdl \
 		--enable-shout \
 		--enable-skins2 \
 		--enable-speex \
@@ -180,20 +177,23 @@ build() {
 		--enable-wma-fixed \
 		--enable-x264 \
 		--enable-xvideo \
-		$_arch_opts \
-		|| return 1
+		--enable-gnutls \
+		$_arch_opts
 
-	make || return 1
+	make
 }
 
 package() {
-	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 	# delete cache as it's autocreated by trigger
 	rm -rf "$pkgdir"/usr/lib/vlc/plugins/plugins.dat
 	# delete unneeded mozilla and kde support files
 	rm -rf "$pkgdir"/usr/lib/mozilla
 	rm -rf "$pkgdir"/usr/share/kde4
+}
+
+check() {
+	make check
 }
 
 plugins() {
@@ -239,7 +239,7 @@ qt() {
 	cd "$pkgdir"
 	for i in $(find . -type f ); do
 		if ldd $i 2>/dev/null | grep -q "libQt"; then
-			_mv "$i" || return 1
+			_mv "$i"
 		fi
 	done
 	mkdir -p "$subpkgdir"/usr/bin
@@ -256,7 +256,7 @@ xorg() {
 	cd "$pkgdir"
 	for i in $(find . -type f ); do
 		if ldd $i 2>/dev/null | grep -E -q "libX|x11|libxcb|libGL"; then
-			echo $i | grep libavcodec_plugin.so || _mv "$i" || return 1
+			echo $i | grep libavcodec_plugin.so || _mv "$i"
 		fi
 	done
 
@@ -286,7 +286,7 @@ daemon() {
 }
 
 libs() {
-	depends=
+	depends=""
 	mkdir -p "$subpkgdir"/usr/lib/vlc
 	mv "$pkgdir"/usr/lib/vlc/vlc-cache-gen \
 		"$subpkgdir"/usr/lib/vlc/
@@ -296,7 +296,7 @@ libs() {
 _mv_plugins() {
 	local plugin=$1
 	pkgdesc="$pkgname $plugin plugin"
-	depends=
+	depends=""
 	mkdir -p "$subpkgdir"/usr/lib/vlc/plugins
 	mv "$pkgdir"/usr/lib/vlc/plugins/"$plugin" \
 		"$subpkgdir"/usr/lib/vlc/plugins
@@ -326,9 +326,9 @@ plugins_video_filter()		{ _mv_plugins video_filter; }
 plugins_video_output()		{ _mv_plugins video_output; }
 plugins_visualization()		{ _mv_plugins visualization; }
 
-sha512sums="9aff5922eb8b3c6a24e6153c367b0170dbc67602ae3e9304f52d2da00c9081d66cc98abd722b7c95b6c7d2e6cc7c86f21f9cba42c7d4bf29ca97d0f2d3553f8d  vlc-2.2.6.tar.xz
-0dffb15a320899060d2239d4bbefd7e88bedcd017348227092ed943b1104e971a5da934f0c1569773230186d4727be83f530cc0d253559a04d1f2cdef80e6043  vlc-2.2.4-gcc6_fixes-1.patch
-3ac37f5d552b3f4a536ead974756ea39142bb1aebbb5fa4fd41917e3dabb5af333dea5ae028bdae8589ff3016f2d1d87ea328e63d8b795ac90c3eb11945ea87b  vlc-2.2.4-ffmpeg3-1.patch
-680cfa3eed5501ba6f06c51eae508204f4c77d2bdd07eead1a3da3939b433abfe84025d133e7a1c7a869e4ffac374bd5eba2bd3dd242ec4645e1d1c6122d0ffb  fix-waitpid-usage.patch
+sha512sums="5ade0b350e98fd6fa90035bffabda96f0addb3844a7c0a242b4db1cab6a746e1adb1d713ddcb48ae51a7d1736090f096f5d3b0637a9f958ccf4fcf27e838cf70  vlc-3.0.8.tar.xz
 e13e398b7bfd977f6e099bcb6cf8dc5cd5bad6dea3eff715881826246dc4329468846084aff2576de2b7fd28d3f06e7c327a6e4511a28d22e5cd198a81146c89  omxil-rpi-codecs.patch
-b67b6e21e9d4027aef1006e6057f9ba8e65ce3895b08f7b911b1675cff9bc423f64ee2c187c584860e9e5d4635a30408a7781add9694d9bba753eac37f357406  vlc-libs.trigger"
+22d80df599b8b65a5439cefbb7140af8e9530f326d54945da3769af65f37518b99ec2cc8647aafd2763324a0698280915afe043cc87e5720c4694881ed35bffa  check-headless.patch
+e214b407235cb3afb8bec93f20c9b42957b57e6fd3960679d3d4235e77762e03e64d03c01f00ef63d589e7c85aaad02ce6abbeeccd66b1867bc92451a5b5e9b0  disable-sub-autodetect-fuzzy-1-test.patch
+c0107655249687655846a9547ca1a5670b9207443180600e7a149c69ffb96d7226787c19b018d4033db9b284c1a5faa8d7d42188ed40c3b8bb051256febf11c5  test-s390x.patch
+8230a83306905cdda07fecdb6cb2b791196034775cc5c8986ab63e97cd3476317544011cbce92948059ac9f7b57ef450cd71820f0f134bc3ab3bed38463a67c3  fribidi_allow_deprecated.patch"

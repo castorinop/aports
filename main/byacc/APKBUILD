@@ -1,16 +1,16 @@
 # Maintainer: Nathan Angelacos <nangel@alpinelinux.org>
 pkgname=byacc
-pkgver=20170709
+pkgver=20191125
 pkgrel=0
 pkgdesc="The Berkeley Yacc general-purpose parser generator"
-url="http://invisible-island.net/byacc/byacc.html"
+url="https://invisible-island.net/byacc/byacc.html"
 arch="all"
-license="Public Domain"
+options="!checkroot"
+license="Public-Domain"
 depends="!bison"
 subpackages="$pkgname-doc"
-source="ftp://invisible-island.net/$pkgname/$pkgname-${pkgver}.tgz"
+source="https://invisible-mirror.net/archives/byacc/byacc-$pkgver.tgz"
 
-builddir="$srcdir/$pkgname-$pkgver"
 build() {
 	cd "$builddir"
 	./configure \
@@ -23,9 +23,14 @@ build() {
 	make
 }
 
+check() {
+	cd "$builddir"
+	make check
+}
+
 package() {
 	cd "$builddir"
 	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="81b6e2dfe674d7e7650e1583c46f67e20cc5ff56b06ef73a54ec2070abd7f4af1a0db7909f31264d0e6157acd3661c19c3478e06c9bab395f53d0371bc1e9097  byacc-20170709.tgz"
+sha512sums="ef35ec6a294b07c71958dbd7106cc9b4a99d0eb45336d71c2763b3861a2cf97ed1de7f8c242a5eeb2841578711ed4a0bd874b7d6ac5e63db7f1d418847767c7f  byacc-20191125.tgz"

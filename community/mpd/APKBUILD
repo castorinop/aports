@@ -1,0 +1,83 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Contributor: Łukasz Jendrysik <scadu@yandex.com>
+# Contributor: Sebastian Wicki <gandro@gmx.net>
+# Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Maintainer: Carlo Landmeter <clandmeter@alpinelinux.org>
+pkgname=mpd
+pkgver=0.21.18
+case $pkgver in
+*.*.*) _branch=${pkgver%.*};;
+*.*) _branch=$pkgver;;
+esac
+pkgrel=0
+pkgdesc="Music daemon that plays MP3, FLAC, Ogg Vorbis files and Audio CDs"
+url="https://musicpd.org"
+pkgusers="mpd"
+pkggroups="mpd audio"
+arch="all"
+license="GPL-2.0-or-later"
+makedepends="py3-sphinx lame-dev glib-dev curl-dev libao-dev libmad-dev flac-dev
+	libogg-dev faad2-dev libid3tag-dev libvorbis-dev alsa-lib-dev
+	libsamplerate-dev libshout-dev libmodplug-dev boost-dev icu-dev
+	libnfs-dev samba-dev opus-dev ffmpeg-dev meson libmpdclient-dev
+	py3-attrs"
+checkdepends="gtest-dev gtest"
+install="$pkgname.pre-install"
+subpackages="$pkgname-doc $pkgname-dbg $pkgname-openrc"
+source="https://www.musicpd.org/download/mpd/$_branch/mpd-$pkgver.tar.xz
+	stacksize.patch
+	mpd.initd
+	mpd.confd
+	disable-iso-test.patch
+	"
+
+build() {
+	meson \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--buildtype=release \
+		-Dshout=enabled \
+		-Dopus=enabled \
+		-Dmodplug=enabled \
+		-Dnfs=enabled \
+		-Dsmbclient=enabled \
+		-Dffmpeg=enabled \
+		-Dlibmpdclient=enabled \
+		-Dcdio_paranoia=disabled \
+		-Dtest=true \
+		-Ddocumentation=true \
+		. output
+	ninja -C output
+}
+
+check() {
+	ninja -C output -v test
+}
+
+package() {
+	DESTDIR="$pkgdir" ninja -C output install
+
+	# provide a config that works by default
+	install -d "$pkgdir"/etc
+	sed	-e 's:\#user.*:user\t\t"mpd":' \
+		-e 's:\#log_file.*:log_file\t\t"syslog":' \
+		doc/mpdconf.example > "$pkgdir"/etc/mpd.conf
+	install -m755 -D "$srcdir"/$pkgname.initd \
+		"$pkgdir"/etc/init.d/$pkgname
+	install -m644 -D "$srcdir"/$pkgname.confd \
+		"$pkgdir"/etc/conf.d/$pkgname
+	install -d -g audio -o mpd -m775 \
+		"$pkgdir"/var/run/mpd \
+		"$pkgdir"/var/log/mpd \
+		"$pkgdir"/var/lib/mpd \
+		"$pkgdir"/var/lib/mpd/playlists \
+		"$pkgdir"/var/lib/mpd/music
+}
+
+sha512sums="68b4d9dc4be8454d7ef92df2a7b42513dc2d97bfd6b11ba99bce6709fc58ccbeab05419863bacb7a3427f1325bc88da74f9f4b48206222349085f02d0135e1a8  mpd-0.21.18.tar.xz
+f60f6f3e921d20732c1a4c31a97f28660b43fd649e767d6c39661b6a90145231a79ad3f740ae0d706380b245ad040e98b661a513463c54cea161d1f64fc261e0  stacksize.patch
+1fcb7bcd90bd9bc5b4f502c56d1b0d3a3b794f5c3c1b26a2286a5936bc4e1f94f6317d52e54c958c23e40d69aa3e440535aec0fcbaaa73544ecd0c65ff6774a5  mpd.initd
+41b2467f5b03f5c4dd7003cd5f56f6cfc1f67af7a9aa2538d70360f839625222bdd0c4b04c33e8cd52eeecfc354da3ca22f5aaab8aee357a5774aaf3503594e7  mpd.confd
+94de2fb5e984e3246f79c2c7ab2f3123bba6c7d34e0f9b075ba3946d65912fd7f5e9d37bdb0bdee769fa6f6f8abb8ca5f2788b7976e2e5490b848800b31539fb  disable-iso-test.patch"

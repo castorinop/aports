@@ -1,32 +1,37 @@
 # Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=mercurial
-pkgver=4.3.1
+pkgver=5.2.1
 pkgrel=0
-pkgdesc="A scalable distributed SCM tool"
-url="https://www.mercurial-scm.org/"
+pkgdesc="Scalable distributed SCM tool"
+url="https://www.mercurial-scm.org"
 arch="all"
-license="GPL2+"
-depends=""
-makedepends="python2-dev"
+license="GPL-2.0-or-later"
+depends="python3"
+makedepends="python3-dev"
 subpackages="
 	$pkgname-doc
 	$pkgname-vim:vim:noarch
 	$pkgname-zsh-completion:zshcomp:noarch
-	$pkgname-bash-completion:bashcomp:noarch"
-source="https://www.mercurial-scm.org/release/$pkgname-$pkgver.tar.gz"
-builddir="$srcdir"/$pkgname-$pkgver
+	$pkgname-bash-completion:bashcomp:noarch
+	"
+source="https://www.mercurial-scm.org/release/mercurial-$pkgver.tar.gz"
+
+# secfixes:
+#   4.9-r0:
+#   - CVE-2019-3902
 
 build() {
 	cd "$builddir"
-	python2 setup.py build
+	HGPYTHON3=1 python3 setup.py build
 }
 
 package() {
 	cd "$builddir"
-	python2 setup.py install --root="$pkgdir"
-	install -m755 contrib/hgk hgeditor "$pkgdir"/usr/bin
+	HGPYTHON3=1 python3 setup.py install --root="$pkgdir"
+	install -m755 contrib/hgk contrib/hg-ssh hgeditor "$pkgdir"/usr/bin
 
+	local man
 	for man in doc/*.?; do
 		install -Dm644 "$man" \
 			"$pkgdir"/usr/share/man/man${man##*.}/${man##*/}
@@ -46,20 +51,20 @@ vim() {
 
 zshcomp() {
 	depends=""
-	pkgdesc="Zsh completions for $pkgname"
+	pkgdesc="Zsh completion for $pkgname"
 	install_if="$pkgname=$pkgver-r$pkgrel zsh"
 
 	install -Dm644 "$builddir"/contrib/zsh_completion \
-		"$subpkgdir"/usr/share/zsh/site-functions/_${pkgname}
+		"$subpkgdir"/usr/share/zsh/site-functions/_$pkgname
 }
 
 bashcomp() {
 	depends=""
-	pkgdesc="Bash completions for $pkgname"
+	pkgdesc="Bash completion for $pkgname"
 	install_if="$pkgname=$pkgver-r$pkgrel bash-completion"
 
 	install -Dm644 "$builddir"/contrib/bash_completion \
-		"$subpkgdir"/usr/share/bash-completion/completions/${pkgname}
+		"$subpkgdir"/usr/share/bash-completion/completions/$pkgname
 }
 
-sha512sums="4c42d06b7f111a3e825dd927704a30f88f0b2225cf87ab8954bf53a7fbc0edf561374dd49b13d9c10140d98ff5853a64acb5a744349727abae81d32da401922b  mercurial-4.3.1.tar.gz"
+sha512sums="7be88570769561157eb8ef3510cb88c519c4db29278abdf4e4219721531d70d59b94be03d9b7da26b9322581d89d26b9833f063525ceb1ac749fe0b7fb1826d2  mercurial-5.2.1.tar.gz"

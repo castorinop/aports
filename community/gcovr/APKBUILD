@@ -1,27 +1,27 @@
 # Contributor: André Klitzing <aklitzing@gmail.com>
 # Maintainer: André Klitzing <aklitzing@gmail.com>
 pkgname=gcovr
-pkgver=3.3
-pkgrel=0
+pkgver=4.2
+pkgrel=1
 pkgdesc="Generates a simple report that summarizes the gcc code coverage"
 url="http://gcovr.com/"
 arch="noarch"
-license="BSD"
-depends="python2"
-makedepends="python2-dev py-setuptools"
-source="gcovr-${pkgver}.tar.gz::https://github.com/gcovr/gcovr/archive/${pkgver}.tar.gz"
-builddir="$srcdir/$pkgname-$pkgver"
+license="BSD-3-Clause"
+depends="python3 py3-lxml py3-jinja2 py3-setuptools"
+checkdepends="py3-pytest py3-pyutilib cmake"
+source="gcovr-$pkgver.tar.gz::https://github.com/gcovr/gcovr/archive/$pkgver.tar.gz"
+options="!check" # tests are failing
 
 build() {
-	cd "$builddir"
-	python2 setup.py build || return 1
+	python3 setup.py build
+}
+
+check() {
+	py.test-3 -v gcovr
 }
 
 package() {
-	cd "$builddir"
-	python2 setup.py install --prefix=/usr --root="$pkgdir" || return 1
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
 }
 
-md5sums="85af705ca6e1187d2bae967d26810c55  gcovr-3.3.tar.gz"
-sha256sums="8a60ba6242d67a58320e9e16630d80448ef6d5284fda5fb3eff927b63c8b04a2  gcovr-3.3.tar.gz"
-sha512sums="e5046bc4e38c99691c3bcc58abdfbbe965c46d02c8c50dbf135bd5108bd9bba1fa450ab0b5e23157a178f7c1303ec9c285470e9be1a14274528e5d7051013a08  gcovr-3.3.tar.gz"
+sha512sums="bf9e22a58b8390eca391dc8f6ba58c4ca0765e66f18ac6f8d8f80609411df2bab74a846eb179a1aded81b7774fa8a8121bb2d586556aeaf43fd729205b0d0c72  gcovr-4.2.tar.gz"

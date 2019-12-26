@@ -1,37 +1,37 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=gtksourceview
-pkgver=3.24.1
+pkgver=3.24.11
 pkgrel=0
 pkgdesc="A text widget adding syntax highlighting and more to GNOME"
-url="http://live.gnome.org/GtkSourceView"
-arch="all"
-license="GPL"
+url="https://wiki.gnome.org/action/show/Projects/GtkSourceView"
+arch="all !s390x" # Limited by ibus
+license="LGPL-2.1-or-later"
 replaces="gtksourceview"
-depends=
 depends_dev="gtk+3.0-dev libxml2-dev"
-makedepends="$depends_dev gobject-introspection-dev"
+makedepends="$depends_dev gobject-introspection-dev automake autoconf libtool"
+checkdepends="xvfb-run ibus"
 subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
-source="http://ftp.gnome.org/pub/gnome/sources/gtksourceview/${pkgver%.*}/gtksourceview-$pkgver.tar.xz"
-
-_builddir="$srcdir/gtksourceview-$pkgver"
+source="https://download.gnome.org/sources/gtksourceview/${pkgver%.*}/gtksourceview-$pkgver.tar.xz"
 
 prepare() {
-	cd "$_builddir"
+	default_prepare
+	autoreconf -fi
 }
 
 build() {
-	cd "$_builddir"
 	./configure \
 		--prefix=/usr \
 		--sysconfdir=/etc \
 		--localstatedir=/var \
-		--disable-static \
-		|| return 1
-	make || return 1
+		--disable-static
+	make
+}
+
+check() {
+	xvfb-run make check
 }
 
 package() {
-	cd "$_builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 }
-sha512sums="b95a3fcba87115098a7a5b72adda20a955268faf682b69eae5d3621bcb02662b8a7751cc6dc3d870119a3368eada9a2976be7f077c16c4b8d6835ff59f164f63  gtksourceview-3.24.1.tar.xz"
+sha512sums="3490b34c6432a2e2ef292ad5bf982fdd22d33b1472434549b4ea8ddae0fc8808e128ef947e4d0dcb41e8de5e601b202f52532bbbbfa11d35050acfc42f9936b2  gtksourceview-3.24.11.tar.xz"

@@ -1,0 +1,34 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=akonadi
+pkgver=19.12.0
+pkgrel=0
+pkgdesc="A cross-desktop storage service for PIM data and meta data providing concurrent read, write, and query access"
+arch="all"
+url="https://community.kde.org/KDE_PIM"
+license="LGPL-2.0-or-later"
+depends="mariadb"
+depends_dev="qt5-qtbase-dev kcompletion-dev kconfig-dev kconfigwidgets-dev kcoreaddons-dev kdbusaddons-dev ki18n-dev kiconthemes-dev kitemmodels-dev kitemviews-dev kio-dev kwidgetsaddons-dev kwindowsystem-dev kxmlgui-dev kcrash-dev boost-dev shared-mime-info libxml2-dev sqlite-dev"
+makedepends="$depends_dev extra-cmake-modules qt5-qttools-dev"
+checkdepends="xvfb-run"
+source="https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-lang"
+options="!check" # Requires running dbus server
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_DESIGNERPLUGIN=ON
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+sha512sums="1c3d770dfccae7b596dd45af65aa05652a96f2c81fbd6094a089d7fa610b55b30339eb2b2cecb798ed8a40f389f896fcbd381ea8a8bb6f05951a7f8b7dc5fed3  akonadi-19.12.0.tar.xz"

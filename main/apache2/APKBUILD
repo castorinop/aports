@@ -2,19 +2,20 @@
 # Contributor: Valery Kartel <valery.kartel@gmail.com>
 pkgname=apache2
 _pkgreal=httpd
-pkgver=2.4.27
+pkgver=2.4.41
 pkgrel=0
 pkgdesc="A high performance Unix-based HTTP server"
-url="http://httpd.apache.org/"
+url="https://httpd.apache.org/"
 arch="all"
-license="ASL 2.0"
+license="Apache-2.0"
 depends=""
 install="$pkgname.pre-install $pkgname.pre-upgrade"
 pkgusers="apache"
 pkggroups="apache"
 makedepends="apr-dev apr-util-dev autoconf automake libxml2-dev lua-dev
-             nghttp2-dev libressl-dev pcre-dev sed zlib-dev"
-subpackages="$pkgname-dev
+             nghttp2-dev openssl-dev pcre-dev sed zlib-dev"
+subpackages="$pkgname-ctl
+             $pkgname-dev
              $pkgname-doc
              $pkgname-error:_error:noarch
              $pkgname-http2
@@ -26,8 +27,7 @@ subpackages="$pkgname-dev
              $pkgname-ssl
              $pkgname-utils
              $pkgname-webdav"
-source="http://archive.apache.org/dist/$_pkgreal/$_pkgreal-$pkgver.tar.bz2
-	libressl.patch
+source="https://archive.apache.org/dist/$_pkgreal/$_pkgreal-$pkgver.tar.bz2
 	apache2.confd
 	apache2.logrotate
 	apache2.initd
@@ -51,6 +51,39 @@ options="suid"
 builddir="$srcdir"/$_pkgreal-$pkgver
 
 # secfixes:
+#   2.4.41-r0:
+#     - CVE-2019-9517
+#     - CVE-2019-10081
+#     - CVE-2019-10082
+#     - CVE-2019-10092
+#     - CVE-2019-10097
+#     - CVE-2019-10098
+#   2.4.39-r0:
+#     - CVE-2019-0196
+#     - CVE-2019-0197
+#     - CVE-2019-0211
+#     - CVE-2019-0215
+#     - CVE-2019-0217
+#     - CVE-2019-0220
+#   2.4.38-r0:
+#     - CVE-2018-17189
+#     - CVE-2018-17199
+#     - CVE-2019-0190
+#   2.4.35-r0:
+#     - CVE-2018-11763
+#   2.4.34-r0:
+#     - CVE-2018-1333
+#     - CVE-2018-8011
+#   2.4.33-r0:
+#     - CVE-2017-15710
+#     - CVE-2017-15715
+#     - CVE-2018-1283
+#     - CVE-2018-1301
+#     - CVE-2018-1302
+#     - CVE-2018-1303
+#     - CVE-2018-1312
+#   2.4.27-r1:
+#     - CVE-2017-9798
 #   2.4.26-r0:
 #     - CVE-2017-3167
 #     - CVE-2017-3169
@@ -63,7 +96,7 @@ prepare() {
 
 	for i in $source; do
 		case $i in
-		*.patch) msg $i; patch -p1 -i "$srcdir"/$(basename $i) || return 1;;
+		*.patch) msg $i; patch -p1 -i "$srcdir"/$(basename $i);;
 		esac
 	done
 
@@ -111,23 +144,21 @@ build() {
 		--enable-exception-hook \
 		--enable-dav \
 		--enable-dav-fs \
-		--enable-dav-lock \
-		|| return 1
-	make || return 1
+		--enable-dav-lock
+	make
 }
 
 package() {
 	cd "$builddir"
-	make -j1 DESTDIR="$pkgdir" install || return 1
+	make -j1 DESTDIR="$pkgdir" install
 
 	# config
 	rm -r "$pkgdir"/etc/apache2/extra/httpd-vhosts.conf \
-		"$pkgdir"/etc/apache2/original || return 1
-	mv "$pkgdir"/etc/apache2/extra "$pkgdir"/etc/apache2/conf.d || return 1
+		"$pkgdir"/etc/apache2/original
+	mv "$pkgdir"/etc/apache2/extra "$pkgdir"/etc/apache2/conf.d
 	for file in "$pkgdir"/etc/apache2/conf.d/httpd-*; do
 		mv "$file" \
-			"$(dirname $file)/${file#$pkgdir/etc/apache2/conf.d/httpd-}" || \
-			return 1
+			"$(dirname $file)/${file#$pkgdir/etc/apache2/conf.d/httpd-}"
 	done
 	sed -Ei \
 		's:^(\t?#?LoadModule .+ )lib/apache2/:\1modules/:;ta;b;:a;s/^#?LoadModule (dav.*|lbmethod_.+|.*ldap|lua|proxy.*|ssl|xml2enc)_module //;tb;b;:b;d' \
@@ -135,14 +166,14 @@ package() {
 
 	# init scripts and logrotate
 	install -D -m755 "$srcdir"/apache2.initd \
-		"$pkgdir"/etc/init.d/apache2 || return 1
+		"$pkgdir"/etc/init.d/apache2
 	install -D -m644 "$srcdir"/apache2.logrotate \
-		"$pkgdir"/etc/logrotate.d/apache2 || return 1
+		"$pkgdir"/etc/logrotate.d/apache2
 	install -D -m644 "$srcdir"/apache2.confd \
-		"$pkgdir"/etc/conf.d/apache2 || return 1
+		"$pkgdir"/etc/conf.d/apache2
 
-	install -d "$pkgdir"/var/www || return 1
-	install -d -m 2750 -g wheel "$pkgdir"/var/log/apache2 || return 1
+	install -d "$pkgdir"/var/www
+	install -d -m 2750 -g wheel "$pkgdir"/var/log/apache2
 	ln -fs /var/log/apache2 "$pkgdir"/var/www/logs
 	ln -fs /run/apache2 "$pkgdir"/var/www/run
 	ln -fs /usr/lib/apache2 "$pkgdir"/var/www/modules
@@ -153,9 +184,12 @@ package() {
 	for i in prefork event worker; do
 		if ! [ -e "$pkgdir"/usr/lib/apache2/mod_mpm_$i.so ]; then
 			error "$i MPM was not built"
-			return 1
 		fi
 	done
+
+	# create the run directory
+	# ref #9982
+	mkdir -p "$pkgdir"/run/apache2
 }
 
 _make_conf_dir() {
@@ -191,12 +225,12 @@ dev() {
 	# install apxs utility
 	install -d "$subpkgdir"/usr/bin
 	mv "$pkgdir"/usr/bin/apxs \
-		"$subpkgdir"/usr/bin/apxs || return 1
+		"$subpkgdir"/usr/bin/apxs
 
 
 	install -d "$subpkgdir"/usr/share/apache2
 	mv "$pkgdir"/usr/share/apache2/build \
-		"$subpkgdir"/usr/share/apache2/ || return 1
+		"$subpkgdir"/usr/share/apache2/
 }
 
 doc() {
@@ -207,7 +241,7 @@ _error() {
 	pkgdesc="Apache Multi Language Custom Error Documents"
 	install -d "$subpkgdir"/usr/share/apache2
 	mv "$pkgdir"/usr/share/apache2/error \
-		"$subpkgdir"/usr/share/apache2/ || return 1
+		"$subpkgdir"/usr/share/apache2/
 	_mv_conf multilang-errordoc
 }
 
@@ -215,7 +249,7 @@ http2() {
 	pkgdesc="HTTP/2 transport layer for the Apache HTTP Server"
 	install -d "$subpkgdir"/usr/lib/apache2
 	mv "$pkgdir"/usr/lib/apache2/mod_http2.so \
-		"$subpkgdir"/usr/lib/apache2 || return 1
+		"$subpkgdir"/usr/lib/apache2
 	_load_mods
 }
 
@@ -223,42 +257,48 @@ icons() {
 	pkgdesc="Apache Public Domain Icons"
 	install -d "$subpkgdir"/usr/share/apache2
 	mv "$pkgdir"/usr/share/apache2/icons \
-		"$subpkgdir"/usr/share/apache2/ || return 1
+		"$subpkgdir"/usr/share/apache2/
 	_mv_conf autoindex
 }
 
 utils() {
-	local _bin
 	pkgdesc="Apache utility programs for webservers"
+
+	install -d "$subpkgdir"/usr/sbin
+	mv "$pkgdir"/usr/bin "$subpkgdir"/usr/
+	for i in checkgid htcacheclean rotatelogs envvars*; do
+		mv "$pkgdir"/usr/sbin/$i "$subpkgdir"/usr/sbin/
+	done
+}
+
+ctl() {
+	pkgdesc="Apache control script"
 	depends=lynx
 
-	install -d "$subpkgdir"/usr/sbin || return 1
-	mv "$pkgdir"/usr/bin "$subpkgdir"/usr/
-	for i in checkgid htcacheclean rotatelogs apachectl envvars*; do
-		mv "$pkgdir"/usr/sbin/$i "$subpkgdir"/usr/sbin/ || return 1
-	done
+	install -d "$subpkgdir"/usr/sbin
+	mv "$pkgdir"/usr/sbin/apachectl "$subpkgdir"/usr/sbin/
 }
 
 ssl() {
 	pkgdesc="SSL/TLS module for the Apache HTTP Server"
 	install="apache2-ssl.post-install"
-	depends="apache2 libressl"
+	depends="apache2 openssl"
 
-	install -d "$subpkgdir"/usr/lib/apache2 || return 1
+	install -d "$subpkgdir"/usr/lib/apache2
 	mv "$pkgdir"/usr/lib/apache2/mod_ssl.so \
-		"$subpkgdir"/usr/lib/apache2/mod_ssl.so || return 1
-	_mv_conf ssl || return 1
-	install -d "$subpkgdir"/etc/ssl/apache2 || return 1
+		"$subpkgdir"/usr/lib/apache2/mod_ssl.so
+	_mv_conf ssl
+	install -d "$subpkgdir"/etc/ssl/apache2
 }
 
 ldap() {
 	pkgdesc="LDAP authentication/authorization module for the Apache HTTP Server"
-	url="http://httpd.apache.org/docs/2.4/mod/mod_authnz_ldap.html"
+	url="https://httpd.apache.org/docs/2.4/mod/mod_authnz_ldap.html"
 	depends="apache2 apr-util-ldap"
 
-	install -d "$subpkgdir"/usr/lib/apache2 || return 1
+	install -d "$subpkgdir"/usr/lib/apache2
 	mv "$pkgdir"/usr/lib/apache2/mod_*ldap.so \
-		"$subpkgdir"/usr/lib/apache2/ || return 1
+		"$subpkgdir"/usr/lib/apache2/
 	_load_mods
 }
 
@@ -267,30 +307,31 @@ webdav() {
 	depends="apache2"
 	replaces="apache2"
 
-	install -d "$subpkgdir"/usr/lib/apache2 || return 1
+	install -d "$subpkgdir"/usr/lib/apache2
 	mv "$pkgdir"/usr/lib/apache2/mod_dav*.so \
-		"$subpkgdir"/usr/lib/apache2/ || return 1
+		"$subpkgdir"/usr/lib/apache2/
 	_mv_conf dav
 }
 
 proxy_html() {
 	pkgdesc="HTML and XML content filters for the Apache HTTP Server"
 	depends="apache2"
-	install -d "$subpkgdir"/usr/lib/apache2 || return 1
+	install -d "$subpkgdir"/usr/lib/apache2
 	mv "$pkgdir"/usr/lib/apache2/mod_proxy_html.so \
 		"$pkgdir"/usr/lib/apache2/mod_xml2enc.so \
-		"$subpkgdir"/usr/lib/apache2/ || return 1
+		"$subpkgdir"/usr/lib/apache2/
 	_mv_conf proxy-html
 }
 
 proxy() {
 	pkgdesc="Proxy modules for the Apache HTTP Server"
 	depends="apache2"
-	install -d "$subpkgdir"/usr/lib/apache2 || return 1
+	install -d "$subpkgdir"/usr/lib/apache2
 	mv "$pkgdir"/usr/lib/apache2/mod_proxy*.so \
 		"$pkgdir"/usr/lib/apache2/mod_lbmethod_*.so \
-		"$subpkgdir"/usr/lib/apache2/ || return 1
+		"$subpkgdir"/usr/lib/apache2/
 
+	_load_mod slotmem_shm
 	_load_mod watchdog
 	_load_mods
 }
@@ -298,13 +339,12 @@ proxy() {
 _lua() {
 	pkgdesc="Lua support for the Apache HTTP server"
 	depends="apache2"
-	install -d "$subpkgdir"/usr/lib/apache2 || return 1
+	install -d "$subpkgdir"/usr/lib/apache2
 	mv "$pkgdir"/usr/lib/apache2/mod_lua.so \
-		"$subpkgdir"/usr/lib/apache2/ || return 1
+		"$subpkgdir"/usr/lib/apache2/
 	_load_mods
 }
-sha512sums="7e7e8070715b74cb6890096a74e194f4c6a49c14bda685b1ad832e84312f1ac4316ea03a430e679502bfd8e1853aefa544ee002a20d0f7e994b9a590c74bc42c  httpd-2.4.27.tar.bz2
-7ccd6ba80836e5d8481779855e5b5618f10f20fb00c765e94a3788e746e99311d687c20053ed348fc1a31532fc8900c24915c7b0aff83418f2f40dc7b94944cc  libressl.patch
+sha512sums="350cc7dcd2c439e0590338fa6da3f44df44f9bb885c381e91f91b14c2f48597f6f0bbac0ea118a8a67eaa70ae7edbb769beace368643ed73f6daee44c307b335  httpd-2.4.41.tar.bz2
 8e62b101f90c67babe864bcb74f711656180b011df3fd4b541dc766b980b72aa409e86debf3559a55be359471c1cad81b8779ef3a55add8d368229fc7e9544fc  apache2.confd
 18e8859c7d99c4483792a5fd20127873aad8fa396cafbdb6f2c4253451ffe7a1093a3859ce719375e0769739c93704c88897bd087c63e1ef585e26dcc1f5dd9b  apache2.logrotate
 81a2d2a297d8049ba1b021b879ec863767149e056d9bdb2ac8acf63572b254935ec96c2e1580eba86639ea56433eec5c41341e4f1501f9072745dccdb3602701  apache2.initd

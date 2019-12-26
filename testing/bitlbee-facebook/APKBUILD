@@ -1,30 +1,29 @@
 # Contributor: Marvin Steadfast <marvin@xsteadfastx.org>
 # Maintainer: Marvin Steadfast <marvin@xsteadfastx.org>
 pkgname=bitlbee-facebook
-pkgver=1.1.1
+pkgver=1.2.0
 pkgrel=0
 pkgdesc="Facebook protocol plugin for BitlBee"
 url="https://github.com/jgeboski/bitlbee-facebook"
 arch="all"
-license="GPL"
+license="GPL-2.0-or-later"
 depends="bitlbee"
-depends_dev=""
-makedepends="$depends_dev bitlbee-dev autoconf automake libtool json-glib-dev"
-install=""
-subpackages=""
-source="https://github.com/jgeboski/bitlbee-facebook/releases/download/v${pkgver}/bitlbee-facebook-${pkgver}.tar.gz"
+makedepends="bitlbee-dev autoconf automake libtool json-glib-dev"
+source="https://github.com/jgeboski/bitlbee-facebook/releases/download/v$pkgver/bitlbee-facebook-$pkgver.tar.gz"
 
-_builddir="$srcdir/bitlbee-facebook-${pkgver}"
+
+prepare() {
+	default_prepare
+	./autogen.sh
+}
+
 build() {
-	cd "$_builddir"
-	./autogen.sh || return 1
-	./configure || return 1
-	make || return 1
+	./configure
+	make
 }
 
 package() {
-	cd "$_builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="e83f8c34655d58d0fab25e4847c90a5f8c175b9521bc8d9723948a6032dde54e5edf016d1990d85d78a14571600d0fe7bac96b698598bef0143624decded6274  bitlbee-facebook-1.1.1.tar.gz"
+sha512sums="5cd5e7cd85b24c76ebb62932c9ad513d08059f08e3b8817e1a767d5677cd0a28812a622237a1de77cf5f6b62b3df65ec236a7f552fdd647248e315e8fb050a6e  bitlbee-facebook-1.2.0.tar.gz"

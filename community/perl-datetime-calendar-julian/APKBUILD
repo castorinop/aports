@@ -3,22 +3,22 @@
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=perl-datetime-calendar-julian
 _pkgreal=DateTime-Calendar-Julian
-pkgver=0.04
+pkgver=0.102
 pkgrel=0
 pkgdesc="DateTime object in the Julian calendar"
 url="http://search.cpan.org/dist/DateTime-Calendar-Julian/"
 arch="noarch"
 license="GPL PerlArtistic"
 cpandepends="perl-datetime"
-cpanmakedepends="   "
+cpanmakedepends=""
 depends="$cpandepends"
 makedepends="perl-dev $cpanmakedepends"
 subpackages="$pkgname-doc"
-source="http://search.cpan.org/CPAN/authors/id/P/PI/PIJLL/$_pkgreal-$pkgver.tar.gz"
+source="https://cpan.metacpan.org/authors/id/W/WY/WYANT/$_pkgreal-$pkgver.tar.gz"
 builddir="$srcdir/$_pkgreal-$pkgver"
 
 prepare() {
-	default_prepare || return 1
+	default_prepare
 
 	cd "$builddir"
 	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
@@ -28,15 +28,18 @@ prepare() {
 build() {
 	cd "$builddir"
 	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
-	make && make test
+	make
+}
+
+check() {
+        cd "$builddir"
+        make test
 }
 
 package() {
 	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 
-md5sums="de688324eb33a27449ac2a5bfe1453a0  DateTime-Calendar-Julian-0.04.tar.gz"
-sha256sums="bb5968ad18bcd0772d2c311cd2deb23b777475ea05aa1099688247cd27a5000e  DateTime-Calendar-Julian-0.04.tar.gz"
-sha512sums="e822d57dabbf76dcca9dc1eb097cef9c15579aeb1782a51eb3dd01d47eda0aef2aa92096df67602297a24c387445f6eb381bb3eedfe33486990844f3c96b4960  DateTime-Calendar-Julian-0.04.tar.gz"
+sha512sums="7adb5ab1c6115e9ba62f46a3a925cfd246e4c12ed1688a4fe03930ea3ebf3662886066bc45b25bf9b25095490a47e2d047763fbbdc6454f00a9de67b08fa03cf  DateTime-Calendar-Julian-0.102.tar.gz"

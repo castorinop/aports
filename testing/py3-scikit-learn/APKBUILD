@@ -1,0 +1,31 @@
+# Contributor: Carlos Giraldo <cgiraldo@gradiant.org>
+# Maintainer: Carlos Giraldo <cgiraldo@gradiant.org>
+pkgname=py3-scikit-learn
+_pkgname=scikit-learn
+pkgver=0.22
+pkgrel=0
+pkgdesc="a Python module for machine learning built on top of SciPy"
+url="http://scikit-learn.org/"
+arch="all"
+license="BSD-3-Clause"
+options="!check" # No test suite
+depends="py3-numpy py3-scipy"
+makedepends="py3-setuptools py3-numpy-dev python3-dev cython"
+source="https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+case "$CARCH" in
+	aarch64)
+		export SKLEARN_NO_OPENMP=1
+		;;
+esac
+
+build() {
+	python3 setup.py build
+}
+
+package() {
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
+}
+
+sha512sums="3a960e7870ebbc1ed6d7b405fd1ec93a06c25ab65bff89f0f948ea54ca06f4c395eedb5a0eed0191aa1625c32d9aff1a02309e03a4d015adcd0b40b595d9cf26  scikit-learn-0.22.tar.gz"

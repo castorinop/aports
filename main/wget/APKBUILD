@@ -2,25 +2,31 @@
 # Contributor: Carlo Landmeter <clandmeter@gmail.com>
 # Maintainer: Carlo Landmeter <clandmeter@gmail.com>
 pkgname=wget
-pkgver=1.19.1
-pkgrel=2
+pkgver=1.20.3
+pkgrel=0
 pkgdesc="A network utility to retrieve files from the Web"
-url="http://www.gnu.org/software/wget/wget.html"
+url="https://www.gnu.org/software/wget/wget.html"
 arch="all"
-license="GPL3+"
+license="GPL-3.0-or-later"
 depends=""
-makedepends="libressl-dev perl"
+makedepends="openssl-dev perl"
+checkdepends="perl-http-daemon"
 subpackages="$pkgname-doc"
 install=""
-source="ftp://ftp.gnu.org/gnu/$pkgname/$pkgname-$pkgver.tar.gz
-	CVE-2017-6508.patch
-	"
+source="https://ftp.gnu.org/gnu/$pkgname/$pkgname-$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-$pkgver"
 
 # secfixes:
+#   1.20.3-r0:
+#     - CVE-2019-5953
+#   1.20.1-r0:
+#     - CVE-2018-20483
+#   1.19.5-r0:
+#     - CVE-2018-0494
 #   1.19.1-r1:
-#   - CVE-2017-6508
-
-builddir="$srcdir/$pkgname-$pkgver"
+#     - CVE-2017-6508
+#   1.19.2-r0:
+#     - CVE-2017-13090
 
 build() {
 	cd "$builddir"
@@ -32,17 +38,23 @@ build() {
 		--mandir=/usr/share/man \
 		--infodir=/usr/share/info \
 		--with-ssl=openssl \
-		--disable-nls \
-		|| return 1
-	make || return 1
+		--disable-nls
+	make
+}
+
+check() {
+	cd "$builddir"
+
+	# FIXME: We're not running top-level "check" to skip fuzz tests that
+	# are currently broken.
+	make -C tests check
 }
 
 package() {
 	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 
 	rm -rf "$pkgdir"/usr/lib
 }
 
-sha512sums="d212ce1387b8e4269c6010bd4c2b4822c14e290d2af6442f3eebe05df27433434600e8e0bdf89a3cb1b5eff1a58eca193bddeac44c1691efe44eb245c5ee7f04  wget-1.19.1.tar.gz
-666b94bcba6a257be01f0d18897c13afe7dcc4eb156e7d6b386de06fdcbdd0da31a2cc7a8ffaa5108dff67872f610b9df30d0df9e8132283255ec6c608fff904  CVE-2017-6508.patch"
+sha512sums="e8b82b40e270296228094a78d47f81580bdbdea9e6b93fd61b37dccb39430aeb9bda5397dc53a31c952a61629383c7e2a8c8abf414c8a4dd369af6ecf2717e6c  wget-1.20.3.tar.gz"

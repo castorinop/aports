@@ -1,19 +1,15 @@
 # Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
 # Maintainer: Valery Kartel <valery.kartel@gmail.com>
 pkgname=wayland-protocols
-pkgver=1.10
+pkgver=1.18
 pkgrel=0
 pkgdesc="Protocols and protocol extensions complementing the Wayland core protocol"
 url="http://wayland.freedesktop.org"
 arch="noarch"
 license="MIT"
-depends=
 provides="$pkgname-dev"
 makedepends="wayland-dev"
-subpackages=
-options="!check"
 source="https://wayland.freedesktop.org/releases/$pkgname-$pkgver.tar.xz"
-builddir="$srcdir/$pkgname-$pkgver"
 
 build() {
 	cd "$builddir"
@@ -23,13 +19,17 @@ build() {
 		--prefix=/usr \
 		--sysconfdir=/etc \
 		--mandir=/usr/share/man \
-		--localstatedir=/var
+		--localstatedir=/var \
+		--with-noarch-pkgconfigdir=/usr/lib/pkgconfig
 	make
 }
 
-package() {
-	make DESTDIR="$pkgdir" \
-		-C "$builddir" install
+check() {
+	make -C "$builddir" check
 }
 
-sha512sums="4cecee723c67b483ecb2a1e36e415935a90f080307531d8fb27cb3f0fe1ae10c1f2aae9b919c8744c2e33cb52943d15202aee960302763a338bdcd16fea7aeb5  wayland-protocols-1.10.tar.xz"
+package() {
+	make -C "$builddir" DESTDIR="$pkgdir" install
+}
+
+sha512sums="166be44f370a99281da442e7e2c2fc2f3169b61eeaa69263611b4e33847e93d1071f3cc89537597e1252d48d03993ce39c7d65f43b66a23c9b1551f47959e483  wayland-protocols-1.18.tar.xz"

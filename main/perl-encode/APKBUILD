@@ -3,36 +3,34 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=perl-encode
 _pkgreal=Encode
-pkgver=2.88
-pkgrel=2
+pkgver=3.02
+pkgrel=0
 pkgdesc="character encodings in Perl"
 url="http://search.cpan.org/dist/Encode/"
 arch="all"
-license="GPL PerlArtistic"
-cpandepends=""
-cpanmakedepends="   "
-depends="$cpandepends"
+license="GPL-1.0-or-later OR Artistic-1.0-Perl"
 depends_dev="$pkgname-utils"
-makedepends="perl-dev $cpanmakedepends"
+makedepends="perl-dev"
 subpackages="$pkgname-doc $pkgname-dev $pkgname-utils::noarch"
 source="http://search.cpan.org/CPAN/authors/id/D/DA/DANKOGAI/$_pkgreal-$pkgver.tar.gz"
 builddir="$srcdir/$_pkgreal-$pkgver"
 
 prepare() {
-	cd "$builddir"
-	export CFLAGS=`perl -MConfig -E 'say $Config{ccflags}'`
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
 	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
 }
 
 build() {
-	cd "$builddir"
-	export CFLAGS=`perl -MConfig -E 'say $Config{ccflags}'`
-	make && make test
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
+	make
+}
+
+check() {
+	make test
 }
 
 package() {
-	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 
@@ -49,11 +47,11 @@ dev() {
 	default_dev
 	replaces="perl-dev"
 	mkdir -p "$subpkgdir"/usr/bin
-	mv "$pkgdir"/usr/bin/enc2xs "$subpkgdir"/usr/bin || return 1
+	mv "$pkgdir"/usr/bin/enc2xs "$subpkgdir"/usr/bin
 	local file; for file in $(find "$pkgdir" -name "*.e2x"); do
 		file=${file#$pkgdir/}
-		mkdir -p "$subpkgdir"/${file%/*} || return 1
-		mv "$pkgdir"/$file "$subpkgdir"/$file || return 1
+		mkdir -p "$subpkgdir"/${file%/*}
+		mv "$pkgdir"/$file "$subpkgdir"/$file
 	done
 }
 
@@ -62,11 +60,9 @@ doc() {
 	replaces="perl-doc"
 	local file; for file in $(find "$pkgdir" -name "*.pod"); do
 		file=${file#$pkgdir/}
-		mkdir -p "$subpkgdir"/${file%/*} || return 1
-		mv "$pkgdir"/$file "$subpkgdir"/$file || return 1
+		mkdir -p "$subpkgdir"/${file%/*}
+		mv "$pkgdir"/$file "$subpkgdir"/$file
 	done
 }
 
-md5sums="119e8668e1d7b128ce39375445526a7e  Encode-2.88.tar.gz"
-sha256sums="e45ce444dfc87b01a16d3029d9a027beab1fdeff9860699b4b62a141420be338  Encode-2.88.tar.gz"
-sha512sums="1261415abd9c2ad5f8d009441e1f2f541d7e94c570549d3b895df57d5c7480087ec646b2691724007a5797238cb7249347d9b97b7c46018973a7ef33274fe162  Encode-2.88.tar.gz"
+sha512sums="9a2ccb01f23e9fd27cf3f50ee0dfdfdd2a1b299215d56d7bf77f3adadd85d40a2cbd884c2f4980752e0e365e241252e4672222b239568259ae9701f188d9cb00  Encode-3.02.tar.gz"

@@ -1,0 +1,39 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kross
+pkgver=5.65.0
+pkgrel=0
+pkgdesc="Framework for scripting KDE applications"
+arch="all"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.1-or-later"
+depends_dev="qt5-qtbase-dev qt5-qttools-dev kcompletion-dev kcoreaddons-dev ki18n-dev kiconthemes-dev kio-dev kparts-dev kwidgetsaddons-dev kxmlgui-dev"
+makedepends="$depends_dev extra-cmake-modules kdoctools-dev qt5-qttools-static"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/portingAids/kross-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	cd "$builddir"/build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+sha512sums="3a6b05c221aa2caad140b9c406181acd80822c896cd98a11574fd106b2388074899debf1c10941bc37f8c4ad7f2ffb2037fa2910b2b93723df21fd980f80ab19  kross-5.65.0.tar.xz"

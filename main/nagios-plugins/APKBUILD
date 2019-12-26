@@ -1,54 +1,61 @@
+# Contributor: Michael Pirogov <vbnet.ru@gmail.com>
 # Contributor: Łukasz Jendrysik <scadu@yandex.com>
 # Contributor: Jakub Jirutka <jakub@jirutka.cz>
 # Maintainer: Jeff Bilyk <jbilyk@gmail.com>
 pkgname=nagios-plugins
-pkgver=2.2.1
+pkgver=2.3.1
 pkgrel=0
 pkgdesc="Plugins for Nagios to check services on hosts"
-url="http://nagiosplugins.org"
+url="https://nagios-plugins.org"
 arch="all"
-license="GPL2"
-depends=""
-depends_by_ssh="openssh-client"
-depends_dig="bind-tools"
-depends_disk_smb="samba-client"
-depends_dns="bind-tools"
-depends_fping="fping"
-depends_log="grep"
-depends_rcp="rpcbind"
-depends_sensors="grep lm_sensors"
-depends_snmp="net-snmp-tools"
+license="GPL-2.0"
+_depends_by_ssh="openssh-client"
+_depends_dig="bind-tools"
+_depends_disk_smb="samba-client"
+_depends_dns="bind-tools"
+_depends_fping="fping"
+_depends_log="grep"
+_depends_rcp="rpcbind"
+_depends_sensors="grep lm-sensors"
+_depends_snmp="net-snmp-tools"
 makedepends="openssh-client bind-tools samba-client fping grep rpcbind
-	lm_sensors net-snmp-tools
+	lm-sensors net-snmp-tools
 	file freeradius-client-dev libdbi-dev libpq linux-headers mariadb-dev
-	net-snmp-dev openldap-dev opensmtpd libressl-dev postgresql-dev"
+	mariadb-connector-c-dev
+	net-snmp-dev openldap-dev opensmtpd openssl-dev postgresql-dev"
 install="$pkgname.post-upgrade"
 pkgusers="nagios"
 pkggroups="nagios"
 options="suid"
-source="https://www.nagios-plugins.org/download/$pkgname-$pkgver.tar.gz"
-builddir="$srcdir/$pkgname-$pkgver"
+source="https://www.nagios-plugins.org/download/nagios-plugins-$pkgver.tar.gz
+	fix-mysql-headers.patch
+	check_openrc
+	nagios-openrc.sudoers"
 
 _plugins_dir="/usr/lib/nagios/plugins"
 
 # Note: Split function takes $name*, so ntp must be before nt etc.
 _plugins="breeze by_ssh cluster dbi dhcp dig disk_smb disk dns dummy file_age
 	fping hpjd http icmp ide_smart ifoperstatus ifstatus ircd ldap load log
-	mailq mrtgtraf mrtg mysql nagios ntp nt nwstat overcr pgsql ping procs
-	radius real rpc sensors smtp snmp ssh swap time ups uptime users wave"
+	mailq mrtgtraf mrtg mysql nagios ntp nt nwstat overcr pgsql ping
+	procs radius real rpc sensors smtp snmp ssh swap time ups uptime users
+	wave ssl_validity"
 for _sub in $_plugins; do
 	subpackages="$subpackages $pkgname-$_sub:_plugin"
 done
-subpackages="$subpackages $pkgname-tcp $pkgname-all:_all"  # all must be the last
+subpackages="$subpackages
+	$pkgname-openrc:_openrc:noarch
+	$pkgname-tcp
+	$pkgname-all:_all"  # all must be the last
+_plugins="$_plugins openrc tcp"
 
 
 prepare() {
-	cd "$builddir"
+	default_prepare
 	update_config_sub
 }
 
 build() {
-	cd "$builddir"
 
 	./configure \
 		--build=$CBUILD \
@@ -65,15 +72,13 @@ build() {
 		--with-ps-varlist="procstat,&procpid,&procppid,&procvsz,&procrss,procprog,&pos" \
 		--with-ps-cols=7 \
 		--with-ping-command="/bin/ping -c %d %s" \
-		--disable-nls \
-		|| return 1
+		--disable-nls
 	make all
 }
 
 package() {
-	cd "$builddir"
 
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 
 	# Remove plugins that are useless or doesn't work on Alpine.
 	local name; for name in apt flexlm oracle; do
@@ -92,18 +97,28 @@ tcp() {
 
 	mkdir -p "$destdir"
 	local name; for name in tcp $plugins; do
-		mv "$pkgdir/$_plugins_dir"/check_$name "$destdir"/ || return 1
+		mv "$pkgdir/$_plugins_dir"/check_$name "$destdir"/
 	done
+}
+
+_openrc() {
+	pkgdesc="Nagios plugin check_openrc"
+	depends="$pkgname openrc sudo"
+
+	install -m 755 -D "$srcdir"/check_openrc \
+		"$subpkgdir"/$_plugins_dir/check_openrc
+	install -m 600 -D "$srcdir"/nagios-openrc.sudoers \
+		"$subpkgdir"/etc/sudoers.d/nagios-openrc
 }
 
 _plugin() {
 	local name="${subpkgname#$pkgname-}"
 	local destdir="$subpkgdir/$_plugins_dir"
 	pkgdesc="Nagios plugin check_$name"
-	depends="$pkgname $(eval "echo \$depends_$name")"
+	depends="$pkgname $(eval "echo \$_depends_$name")"
 
 	mkdir -p "$destdir"
-	mv "$pkgdir/$_plugins_dir"/check_$name* "$destdir"/ || return 1
+	mv "$pkgdir/$_plugins_dir"/check_$name* "$destdir"/
 
 	if file -bi "$destdir"/* | grep -qw text/x-perl; then
 		depends="$depends perl"
@@ -116,7 +131,7 @@ _plugin() {
 _all() {
 	pkgdesc="Metapackage that installs *all* Nagios plugins from the nagios-plugins package"
 
-	depends="$pkgname-tcp"
+	depends=''
 	local plugin; for plugin in $_plugins; do
 		depends="$depends $pkgname-$plugin"
 	done
@@ -134,4 +149,7 @@ _all() {
 	return $retval
 }
 
-sha512sums="6ffe313a56a305b382f62abc0f0958d7078f9050e1340f30721d6e6f71944b57b1650e90e6835c35dd7c9f3f4b4cee9f235b8382b0811db30b3729daaafc9bc3  nagios-plugins-2.2.1.tar.gz"
+sha512sums="89208f211e51db4e0d56725a6ff6d2fcf4eb2207f877a2b8f130cda8480a70f318eceb94140eb4f2a17fe3dd967bb3615ccc366c1a531ebd4ff0a04b60c61b8a  nagios-plugins-2.3.1.tar.gz
+5db87cf63fb6d1f72122bd7c72f012aab2724328d3d71da546970792a6cdeedbe008f3feef03f7432f100836ace3701c1902b820c93a79e5fa13abe8b337da0d  fix-mysql-headers.patch
+12d87542631494df1c961e547c19107a025829509e174e8208111736141c12e20dbf490c55d487af39d47cefca5507cd98c973b7b20ae3f961dcbfd167195d8e  check_openrc
+171c9ad14d1027541b78df76063e6d34483dd536219fb83e0346e191739529d59c8d6be468af7f1c4c93b20baf9a32879510f15ec3d06aa1eefaf5d785ea8546  nagios-openrc.sudoers"

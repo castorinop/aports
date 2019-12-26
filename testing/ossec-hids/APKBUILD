@@ -1,64 +1,95 @@
 # Contributor: Francesco Colista <fcolista@alpinelinux.org>
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=ossec-hids
-pkgver=2.8.3
+pkgver=3.5.0
 pkgrel=0
 pkgdesc="Open Source Host-based Intrusion Detection System"
-url="http://www.ossec.net/"
-arch="all !aarch64 !armhf"
-license="GPL3"
+url="https://www.ossec.net/"
+arch="all !aarch64 !armhf !armv7"
+license="GPL-2.0-only WITH openssl-exception"
 depends="inotify-tools procps"
-makedepends="linux-headers inotify-tools-dev findutils file"
+makedepends="linux-headers bsd-compat-headers openssl-dev
+libevent-dev inotify-tools-dev findutils file zlib-dev pcre2-dev
+sqlite-dev lua5.3-dev"
 install="$pkgname.pre-install"
-subpackages="$pkgname-doc"
+options="!check"
+subpackages="$pkgname-doc $pkgname-contrib::noarch $pkgname-openrc"
 pkgusers="ossec ossecm ossecr"
 pkggroups="ossec"
 source="$pkgname-$pkgver.tar.gz::https://github.com/ossec/$pkgname/archive/v$pkgver.tar.gz
 	$pkgname.initd
 	$pkgname.logrotate
-	00_a-out-h-path.patch
-	01_makefile.patch
-	02_ossec-server.conf.patch
 	musl_lack_of_a_out_h.patch
-	alpine-install-server.patch"
-builddir="$srcdir/$pkgname-$pkgver"
+	makefile.patch
+	config"
+
+prepare() {
+	default_prepare
+	export USER_NO_STOP=yes
+	export USER_DIR=/var/ossec
+	export USER_BINARYINSTALL=x
+	export PCRE2_SYSTEM=yes
+}
 
 build() {
-	cd "$builddir"
-	make all || return 1
+	cd "$builddir"/src
+	for t in server agent; do
+		make clean
+		make TARGET=$t \
+			USE_INOTIFY=yes \
+			USE_SQLITE=yes \
+			LUA_ENABLE=yes \
+			V=1
+	done
 }
 
 package() {
-	cd "$builddir"
-	make DESTDIR="$pkgdir" install
 	install -D -m755 "$srcdir"/$pkgname.initd \
-		"$pkgdir"/etc/init.d/$pkgname || return 1
-	install -m644 -D "$srcdir"/$pkgname.logrotate "$pkgdir"/etc/logrotate.d/$pkgname || return 1
-	cat << EOF > "$pkgdir"/etc/ossec-init.conf
+		"$pkgdir"/etc/init.d/$pkgname
+	install -m644 -D "$srcdir"/$pkgname.logrotate "$pkgdir"/etc/logrotate.d/$pkgname
+
+	mkdir -p "$pkgdir"/var/ossec/etc
+    cat << EOF > "$pkgdir"/var/ossec/etc/ossec-init.conf
 DIRECTORY="/var/ossec"
 VERSION="$(cat src/VERSION)"
 DATE="$(date)"
 TYPE="server"
 EOF
-	mkdir -p "$pkgdir"/var/ossec/logs
+
 	set -- $pkgusers
-	cd src
-	./InstallServer.sh $1 $2 $3 $pkggroups $pkgdir
+	cd "$builddir"/src
+	find "$pkgdir" -user nobody -exec chown 524 '{}' ';'
+	find "$pkgdir" -user mail -exec chown 525 '{}' ';'
+	find "$pkgdir" -user daemon -exec chown 526 '{}' ';'
+	find "$pkgdir" -group nobody -exec chgrp 525 '{}' ';'
+
+	mkdir -p "$pkgdir"/var/ossec
+
+	for t in server agent; do
+		make TARGET="$t" PREFIX="$pkgdir"/var/ossec install
+	done
 }
 
 doc() {
-	pkgdesc="Documentation for $pkgname"
 	cd "$builddir"
+	pkgdesc="Documentation for $pkgname"
 	mkdir -p "$subpkgdir"/usr/share/doc/$pkgname
 	cp -a doc/* \
 	  "$subpkgdir"/usr/share/doc/$pkgname
 }
 
-sha512sums="3ec9504b5a6d36c303710b3aa9cfbe616b40deca671f4814340008b6e5edd9b2094bb7f1b441da788a5eec0f8095a0624ed42b8a8fc922274cd99db634994d1a  ossec-hids-2.8.3.tar.gz
+contrib() {
+	pkgdesc="Contrib files for $pkgname"
+	mkdir -p "$subpkgdir"/usr/share/$pkgname
+	cp -a "$builddir"/contrib/* "$subpkgdir"/usr/share/$pkgname
+	for r in selinux debian-packages specs; do
+		rm -rf "$subpkgdir"/usr/share/$pkgname/$r
+	done
+}
+
+sha512sums="8d23c2fd17f793a3c92e9088578e67273d9e4119ecb7ec2ef41e6bce5ca1c35eb3191ba7a5a8eae7859ecb93d8432b658d7691e41926684868a1b4947b7b1df6  ossec-hids-3.5.0.tar.gz
 62f52d91de3751c149b1c354ebb87c0a8c4a81129403b80a8448c5e6542a67b4aa9e132aab2429781913eb909320b431b381828e414d44235bb8e9a8959e0d8b  ossec-hids.initd
 6cdf4852feabfdd043405e2570bb9a3013eb11c1865e9178fb67a019717d44fb0fedba05ab74c4334a1bae0a0c45912213dd7d6c7e1eab31853d40beea7596a0  ossec-hids.logrotate
-f99f53ce5b84228de33ec3fc0bc4419714d2d7d2167d33629ab6c0d7372060c0eeb3cfc1f0696ddcacfcb7f3280f515b67427f85e5e925aeb0a6c5f6cc54f411  00_a-out-h-path.patch
-1ba449afa65a9374c8fd2b1c2d00897b54c5e8ef2e0be95a1d8a8dd45dfe27d5b19c12f3a075d6021449bc1d2946fdc8c7654ddfce1e55d79d104a3add7e2850  01_makefile.patch
-ee0baecaeacae782f43849e8c3c4afc0aef3cb238748209f8d1d0b2bd94bea59384474caba6a45bb4022e496ef1a50a3877447a3ccd1885a0a942c9cb6051c74  02_ossec-server.conf.patch
-2649b0992c62511c587b5787c5dbb2e997088f905df0a0c3530906224ec000e0ac519c75979d460202c7881df51099787f070ac74a6f8b1d9905509d1154f129  musl_lack_of_a_out_h.patch
-46ada63e1f9ddaf6eb6ed6f2cfaa1e4f16b665307fbab15e34e39444075b9a0e8efef63164d4f90bc47a95720cf3afc0c6f7ff6d892ca018f3739116ca961bd5  alpine-install-server.patch"
+4e076581cc3977c527f30da6c43552db18bc35ea7b745c1504f4d15ebfbcef42c9604804af28fc90744a85f847a0f0c5bf991476cae71e3d860adb7cfa33a63b  musl_lack_of_a_out_h.patch
+cf747dce1b9b744faed55a7c7df30c203286bcbec7ea97c0b34c5c3c2db7dd7793f88335fa4d2e2c37c0ec60f8140e875bfe1fb40f77266b121335c24e4ef257  makefile.patch
+be6d503defc03bb1f39dbeeba793ed552243630403def629b35ced46b0441ffa34455ee942ca018c8ec33ca4661901b569eed8dc52e96951312814e492e94eb3  config"

@@ -3,43 +3,36 @@
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=perl-mojolicious
 _pkgreal=Mojolicious
-pkgver=7.45
+pkgver=8.27
 pkgrel=0
 pkgdesc="Real-time web framework"
-url="http://search.cpan.org/dist/Mojolicious/"
+url="https://metacpan.org/release/Mojolicious"
 arch="noarch"
-license="Artistic-2"
-cpandepends=""
-cpanmakedepends="   "
-depends="$cpandepends"
-makedepends="perl-dev $cpanmakedepends"
+license="Artistic-2.0"
+depends="perl"
+makedepends="perl-dev"
 subpackages="$pkgname-doc"
-source="http://search.cpan.org/CPAN/authors/id/S/SR/SRI/$_pkgreal-$pkgver.tar.gz"
+source="https://cpan.metacpan.org/authors/id/S/SR/SRI/Mojolicious-$pkgver.tar.gz"
 builddir="$srcdir/$_pkgreal-$pkgver"
 
 check() {
-	cd "$builddir"
 	make test
 }
 
-
 prepare() {
 	default_prepare
-	cd "$builddir"
 	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
 	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
 }
 
 build() {
-	cd "$builddir"
 	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
 	make
 }
 
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir" install
 	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 
-sha512sums="56893bb45deb6eb61eabfd8f95784c1fcffb73eee15c4c4c53a2b0569f4cdc19c89aafc1fca4fe4f82a4259a0bb42951fe2bc1868e81cba270dde2c36e8e699a  Mojolicious-7.45.tar.gz"
+sha512sums="3faa2ed12bf21353ff8faa6905b896e27e18b1591a1a9a197c416d9e53d36f29d59c6adffba35396affe661194bb7258e7a91f9ac42ba362690bfe508be89041  Mojolicious-8.27.tar.gz"

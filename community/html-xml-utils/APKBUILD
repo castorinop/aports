@@ -1,7 +1,7 @@
 # Contributor: Francesco Colista <fcolista@alpinelinux.org>
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=html-xml-utils
-pkgver=7.1
+pkgver=7.8
 pkgrel=0
 pkgdesc="A number of simple utilities for manipulating HTML and XML files."
 url="https://www.w3.org/Tools/HTML-XML-utils/"
@@ -9,43 +9,37 @@ arch="all"
 license="Custom"
 subpackages="$pkgname-doc"
 source="$url/$pkgname-$pkgver.tar.gz
-	getopt-musl-fix.patch"
+	getopt-musl-fix.patch
+	last-test.patch"
 
 builddir="$srcdir"/$pkgname-$pkgver
 
 prepare() {
-	default_prepare || return 1
-	sed \
-	    -e "/doc_DATA = COPYING/d" \
-	    -i Makefile.in \
-		|| return 1
+	default_prepare
+	sed -e "/doc_DATA = COPYING/d" \
+	-i Makefile.in
 }
 
 build() {
 	cd "$builddir"
 	./configure \
-	            --prefix=/usr \
-	            --disable-dependency-tracking \
-		|| return 1
+		--prefix=/usr \
+		--disable-dependency-tracking
+	make
+}
 
-	make \
-		|| return 1
+check() {
+	cd "$builddir"
+	make check
 }
 
 package() {
 	cd "$builddir"
-	make install \
-	     DESTDIR="$pkgdir" \
-		|| return 1
-	install -D -m 644 \
-	        COPYING \
-	        "$pkgdir"/usr/share/licenses/$pkgname/COPYING \
-		|| return 1
+	make install DESTDIR="$pkgdir"
+	install -D -m 644 COPYING \
+		"$pkgdir"/usr/share/licenses/$pkgname/COPYING
 }
 
-md5sums="3b30e2074de8665c82f4e503178c3efd  html-xml-utils-7.1.tar.gz
-06e2741e3277a4329e8e312236340fba  getopt-musl-fix.patch"
-sha256sums="ec0efd2263b864bb7e0ae5c59f02c43c5d8aebd0e1c0d2bfce391e665766d56e  html-xml-utils-7.1.tar.gz
-a30b4f34c4f2fc3b5ad6606c3e1d6d0f6a08ff1553113d85caee85b7bc336a05  getopt-musl-fix.patch"
-sha512sums="a17328500552ad28136a08d0c7dd992d53afbc853ffd8930b516b3218915f4f159234f27af66d135a51dc25eb6c35e6f14d6f0006bdfc2abf351ac8298334d48  html-xml-utils-7.1.tar.gz
-7b6d03798e634a72402916cdfaf69668bf19d0dc6d629860c798a6468f8077906e3ada6d1ff390cebba505ccd118cfa7f7b2e23301ac72573bde4b4eb14c94ce  getopt-musl-fix.patch"
+sha512sums="8d3a242203de099b36ca78a8d84571ecc5d8673855ee613f98edc48d388230367f40b87006f7b429e2927026300626bed7ff7f146df317d078e332091d290930  html-xml-utils-7.8.tar.gz
+7b6d03798e634a72402916cdfaf69668bf19d0dc6d629860c798a6468f8077906e3ada6d1ff390cebba505ccd118cfa7f7b2e23301ac72573bde4b4eb14c94ce  getopt-musl-fix.patch
+fdfaa8ff145beaf98203f834ef51763d14f5eeb1ba366578a645bfc3a0d811c2615354bea987554d6a8b131504298512238af550646e2826e00329aceee365ed  last-test.patch"

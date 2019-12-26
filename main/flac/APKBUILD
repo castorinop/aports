@@ -1,30 +1,30 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=flac
-pkgver=1.3.2
+pkgver=1.3.3
 pkgrel=0
 pkgdesc="Free Lossless Audio Codec"
-url="http://flac.sourceforge.net/"
+url="https://xiph.org/flac/"
 arch="all"
 license="custom:Xiph LGPL GPL FDL"
+options="!checkroot !check" # Tests are infinite
 subpackages="$pkgname-dev $pkgname-doc"
-depends=
 makedepends="libogg-dev !libiconv"
-source="http://downloads.xiph.org/releases/flac/flac-${pkgver}.tar.xz
-	"
+source="http://downloads.xiph.org/releases/flac/flac-$pkgver.tar.xz"
 
-builddir="$srcdir/$pkgname-$pkgver"
+# secfixes:
+#   1.3.2-r2:
+#     - CVE-2017-6888
 
-prepare() {
+
+build() {
 	cd "$builddir"
-	for i in $source; do
-		case $i in
-		*.patch) msg $i; patch -p1 -i "$srcdir"/$i || return 1;;
-		esac
-	done
-}
 
-build () {
-	cd "$builddir"
+	local _arch_conf
+	case "${CARCH}" in
+		ppc*)	_arch_conf="--enable-altivec" ;;
+		x86_64)	_arch_conf="--enable-sse" ;;
+		x86)	_arch_conf="--disable-sse" ;;
+	esac
 
 	./configure \
 		--build=$CBUILD \
@@ -33,20 +33,22 @@ build () {
 		--mandir=/usr/share/man \
 		--enable-shared \
 		--enable-ogg \
-		--disable-sse \
 		--disable-rpath \
 		--with-pic \
-		|| return 1
-	make || return 1
+		$_arch_conf
+	make
+}
+
+check() {
+	cd "$builddir"
+	make check
 }
 
 package() {
 	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 
 	install -Dm0644 COPYING.Xiph \
 		"$pkgdir"/usr/share/licenses/$pkgname/COPYING.Xiph
 }
-md5sums="454f1bfa3f93cc708098d7890d0499bd  flac-1.3.2.tar.xz"
-sha256sums="91cfc3ed61dc40f47f050a109b08610667d73477af6ef36dcad31c31a4a8d53f  flac-1.3.2.tar.xz"
-sha512sums="63910e8ebbe508316d446ffc9eb6d02efbd5f47d29d2ea7864da9371843c8e671854db6e89ba043fe08aef1845b8ece70db80f1cce853f591ca30d56ef7c3a15  flac-1.3.2.tar.xz"
+sha512sums="d6417e14fab0c41b2df369e5e39ce62a5f588e491af4d465b0162f74e171e5549b2f061867f344bfbf8aaccd246bf5f2acd697e532a2c7901c920c69429b1a28  flac-1.3.3.tar.xz"

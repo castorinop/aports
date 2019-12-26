@@ -1,42 +1,34 @@
 # Contributor: ScrumpyJack <scrumpyjack@st.ilet.to>
 # Maintainer: ScrumpyJack <scrumpyjack@st.ilet.to>
 pkgname=termrec
-pkgver=0.17
+pkgver=0.18
 pkgrel=0
-pkgdesc="termrec is a program for recording "videos" of terminal output"
+pkgdesc="termrec is a program for recording videos of terminal output"
 url="http://angband.pl/termrec.html"
 arch="all"
-license="GPL"
-depends=""
-depends_dev=""
-makedepends="zlib-dev"
-install=""
+license="LGPL-3.0-only"
+makedepends="zlib-dev bzip2-dev"
+checkdepends="xz-dev autoconf"
 subpackages="$pkgname-dev $pkgname-doc"
-source="http://prdownloads.sourceforge.net/${pkgname}/${pkgname}-${pkgver}.tar.xz"
+source="https://prdownloads.sourceforge.net/$pkgname/$pkgname-$pkgver.tar.xz
+	disable-fuzz-test.patch"
 options="libtool"
 
-_builddir=${srcdir}/${pkgname}-${pkgver}
-prepare() {
-	local i
-	cd "$_builddir"
-	for i in $source; do
-		case $i in
-		*.patch) msg $i; patch -p1 -i "$srcdir"/$i || return 1;;
-		esac
-	done
+build() {
+	cd "$builddir"
+	./configure --prefix=/usr --disable-static
+	make
 }
 
-build() {
-	cd "$_builddir"
-        ./configure --prefix=/usr
-        make || return 1
-     }
+check() {
+	cd "$builddir"
+	make check
+}
 
 package() {
-	cd "$_builddir"
-         make DESTDIR="$pkgdir/" install
-     }
+	cd "$builddir"
+	make DESTDIR="$pkgdir/" install
+}
 
-md5sums="4d0bc41411196a81157a72b68736a0f4  termrec-0.17.tar.xz"
-sha256sums="62f02c245b36d9059aef91a70fa8daee7cd946f22eac2947a1204d7bf4e63473  termrec-0.17.tar.xz"
-sha512sums="43b9649b9dfff0b01fc545a388b21341f40667b176b585c160a28efa6b2cde1ef1d60770423c5739d790d6ad2e53ee7f81ad0ab28545d595a442f94d10a52e58  termrec-0.17.tar.xz"
+sha512sums="148ef0c267a8010af27b0b9185e3b22985a770386bc96d919c0d5276834f0cc45bd9619a3d6dc7dc974c465d0551c1e434d3fd697b9f0afb45b31dc862507427  termrec-0.18.tar.xz
+d8759cef963c9ab4ed3de4414d16216fc40046b5b33dfcc032ea754482f610259e093e409c5c14fdda503fe397e8758bfb99be46ff80958d63769938946ee182  disable-fuzz-test.patch"

@@ -1,0 +1,40 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=audiocd-kio
+pkgver=19.12.0
+pkgrel=0
+arch="all"
+url="https://www.kde.org/applications/multimedia/"
+pkgdesc="Kioslave for accessing audio CDs"
+license="GPL-2.0-or-later AND GFDL-1.2-only"
+makedepends="extra-cmake-modules qt5-qtbase-dev kconfig-dev ki18n-dev kdoctools-dev kio-dev kcmutils-dev libkcddb-dev libkcompactdisc-dev cdparanoia-dev flac-dev libvorbis-dev"
+source="https://download.kde.org/stable/release-service/$pkgver/src/audiocd-kio-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+options="!check" # No tests
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	cd "$builddir"/build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="dfab78c873f1abec022499a2db6c509f8ba86a643c343297d23c654210c7bf89fca8475538cb9c4f862b144a8f908c40294d4da00e53a31d9b8076bb85b35718  audiocd-kio-19.12.0.tar.xz"

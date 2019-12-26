@@ -1,37 +1,32 @@
 # Maintainer: Leonardo Arena <rnalrd@alpinelinux.org>
 pkgname=pgbadger
-pkgver=9.1
+pkgver=11.1
 pkgrel=0
 pkgdesc="A fast PostgreSQL Log Analyzer"
-url="https://github.com/dalibo/pgbadger"
+url="https://github.com/darold/pgbadger"
 arch="noarch"
 license="Custom"
-makedepends="perl-dev"
+makedepends="perl-dev perl-json-xs coreutils gzip"
 subpackages="$pkgname-doc"
-source="$pkgname-$pkgver.tar.gz::https://github.com/dalibo/pgbadger/archive/v$pkgver.tar.gz"
-builddir="$srcdir/$pkgname-$pkgver"
+source="$pkgname-$pkgver.tar.gz::https://github.com/darold/pgbadger/archive/v$pkgver.tar.gz"
 
 prepare() {
-	cd "$builddir"
-	export CFLAGS=`perl -MConfig -E 'say $Config{ccflags}'`
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
 	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
 }
 
 build() {
-	cd "$builddir"
-	export CFLAGS=`perl -MConfig -E 'say $Config{ccflags}'`
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
 	make
 }
 
 check() {
-	cd "$builddir"
 	make test
 }
 
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir" install
 	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 
-sha512sums="e3841516dd56ea0aeae397c8264302881df3b07a86063f7813f593ba817a4f3417559b88e2b9e23fec811d3dfd716589f56092be106960e88d1800a94d3d83c3  pgbadger-9.1.tar.gz"
+sha512sums="aad3c998fe8b4734cfbfd907a19cde975d2a1f3dd1b6aa26083904ea96e1a38399dbcf2fee2f2bc969037c144ad8ee44a630ce8859fa6e7303d24e6296fc066b  pgbadger-11.1.tar.gz"

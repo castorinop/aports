@@ -1,0 +1,53 @@
+# Contributor: Carlo Landmeter <clandmeter@alpinelinux.org>
+# Maintainer: Carlo Landmeter <clandmeter@alpinelinux.org>
+pkgname=skopeo
+pkgver=0.1.40
+pkgrel=0
+pkgdesc="Work with remote images registries - retrieving information, images, signing content"
+url="https://github.com/containers/skopeo"
+arch="all"
+license="Apache-2.0"
+options="!check" # needs docker
+makedepends="
+	go
+	linux-headers
+	btrfs-progs-dev
+	glib-dev
+	gpgme-dev
+	lvm2-dev
+	ostree-dev
+	libselinux-dev
+	"
+source="skopeo-$pkgver.tar.gz::https://github.com/containers/skopeo/archive/v$pkgver.tar.gz"
+builddir="$srcdir/src/github.com/containers/$pkgname"
+
+prepare() {
+	mkdir -p ${builddir%/*}
+	mv "$srcdir"/$pkgname-$pkgver "$builddir"/
+	default_prepare
+}
+
+build() {
+	export GOPATH="$srcdir"
+	go build -o bin/$pkgname ./cmd/$pkgname
+}
+
+check() {
+	make check
+}
+
+package() {
+	mkdir -p "$pkgdir"/var/lib/atomic/sigstore
+	install -Dm755 bin/$pkgname "$pkgdir"/usr/bin/$pkgname
+	install -Dm644 "$builddir"/default-policy.json \
+		"$pkgdir"/etc/containers/policy.json
+	install -Dm644 "$builddir"/default.yaml \
+		"$pkgdir"/etc/containers/registries.d/default.yaml
+}
+
+cleanup_srcdir() {
+	go clean -modcache
+	default_cleanup_srcdir
+}
+
+sha512sums="161edb8afa961e48e314cf70a4fcebd971a45a50fc11eab6ec751ba4eb05a8be011d16b83c4ed1fa9d6336846da5f518da006d4476ee4e29a160c629820773d3  skopeo-0.1.40.tar.gz"

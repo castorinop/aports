@@ -1,29 +1,18 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=dpkg
-pkgver=1.18.24
-pkgrel=0
+pkgver=1.19.7
+pkgrel=1
 pkgdesc="The Debian Package Manager"
-url="http://packages.debian.org/dpkg"
+url="https://packages.debian.org/dpkg"
 arch="all"
-license="GPL"
-depends="xz"
-makedepends="bzip2-dev zlib-dev perl linux-headers"
+license="GPL-2.0-or-later BSD-2-Clause"
+depends="tar"
+options="!check"
+makedepends="bzip2-dev linux-headers perl zlib-dev"
 subpackages="$pkgname-doc $pkgname-dev"
-source="http://ftp.de.debian.org/debian/pool/main/d/$pkgname/${pkgname}_$pkgver.tar.xz
-	"
-
-builddir="$srcdir"/$pkgname-$pkgver
-prepare() {
-	cd "$builddir"
-	default_prepare || return 1
-
-	sed -i "s|<ncursesw/curses.h>|<curses.h>|g" dselect/dselect.h \
-		dselect/Makefile.in || return 1
-	sed -i "s|<ncursesw/term.h>|<term.h>|g" dselect/main.cc || return 1
-}
+source="https://deb.debian.org/debian/pool/main/d/dpkg/dpkg_$pkgver.tar.xz"
 
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -36,13 +25,18 @@ build() {
 		--disable-dselect \
 		--disable-start-stop-daemon \
 		--disable-nls \
-		|| return 1
-	make || return 1
+		--disable-static
+	make
 }
 
 package() {
-	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
+
+	# Add missing dir & files
+	install -d "$pkgdir/var/$pkgname"/updates/
+
+	touch "$pkgdir/var/lib/$pkgname"/status
+	touch "$pkgdir/var/lib/$pkgname"/available
 }
 
 dev() {
@@ -59,15 +53,17 @@ dev() {
 		"$pkgdir"/usr/bin/dpkg-genchanges \
 		"$pkgdir"/usr/bin/dpkg-gencontrol \
 		"$pkgdir"/usr/bin/dpkg-gensymbols \
+		"$pkgdir"/usr/bin/dpkg-mergechangelogs \
 		"$pkgdir"/usr/bin/dpkg-name \
+		"$pkgdir"/usr/bin/dpkg-parsechangelog \
 		"$pkgdir"/usr/bin/dpkg-scanpackages \
 		"$pkgdir"/usr/bin/dpkg-scansources \
 		"$pkgdir"/usr/bin/dpkg-shlibdeps \
 		"$pkgdir"/usr/bin/dpkg-source \
 		"$pkgdir"/usr/bin/dpkg-vendor \
-		"$subpkgdir"/usr/bin/ || return 1
+		"$subpkgdir"/usr/bin/
 
 	mv "$pkgdir"/usr/share/perl* "$subpkgdir"/usr/share/
 }
 
-sha512sums="74df36a49a1b6b2243db14bd7ee0b69e50c2f0e79fc87e86e9b3cba2261fb717e421f7190a3ba54b4680a2f83855e5857dcb2625aa56847133258567392f1d42  dpkg_1.18.24.tar.xz"
+sha512sums="9ca441dc265baf5359c71617aef1c57504a7097c26ea57108b88dadc511bfa9918fcc765d8c67cec9def9916c5df92d6cabe508446dbc7223a29b45260445e81  dpkg_1.19.7.tar.xz"

@@ -1,19 +1,20 @@
 # Contributor: Stuart Cardall <developer@it-offshore.co.uk>
 # Maintainer: Stuart Cardall <developer@it-offshore.co.uk>
 pkgname=firejail
-pkgver=0.9.50
+pkgver=0.9.60
+_extraver=
 pkgrel=0
 pkgdesc="Linux namespaces and seccomp-bpf sandbox"
 url="https://firejail.wordpress.com/"
 arch="all"
-license="GPL2"
+license="GPL-2.0"
 depends="bash"
 makedepends="linux-headers"
 checkdepends="expect"
 options="suid"
 subpackages="$pkgname-doc $pkgname-bash-completion:bashcomp:noarch"
-source="$pkgname-$pkgver.tar.gz::https://github.com/netblue30/$pkgname/archive/$pkgver.tar.gz"
-builddir="$srcdir/$pkgname-$pkgver"
+source="$pkgname-$pkgver$_extraver.tar.gz::https://github.com/netblue30/$pkgname/archive/$pkgver$_extraver.tar.gz"
+builddir="$srcdir/$pkgname-$pkgver$_extraver"
 
 prepare() {
 	default_prepare
@@ -24,7 +25,6 @@ prepare() {
 }
 
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -46,13 +46,11 @@ bashcomp() {
 }
 
 check() {
-	cd "$builddir"
 	make test
 }
 
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="350e32cf4766dbf42eea6639f895c6b9d0a7cafd3cbd4311f1faa0f56d7be8af30b93befdf0909c34e468bebe4fc5cc9f2023640bab062d6aa33e41446701d2f  firejail-0.9.50.tar.gz"
+sha512sums="cb3eeff2f77801b4593a719a6b63da09cdc6c7f96f8ea8ea1aaa7e8538b080421a284441c6e43ce036fdf8510e08a73816c58d22f0af048344b8752f4a02759a  firejail-0.9.60.tar.gz"

@@ -1,15 +1,15 @@
-# Maintainer: William Pitcock <nenolod@dereferenced.org>
+# Maintainer: 
 pkgname=jwhois
 pkgver=4.0
 pkgrel=4
 pkgdesc="WHOIS/RWHOIS client"
-url="http://www.gnu.org/software/jwhois/"
+url="https://www.gnu.org/software/jwhois/"
 license="GPL"
 depends=
 makedepends="autoconf automake libtool gdbm-dev"
 install=
 subpackages="$pkgname-doc"
-source="http://ftp.gnu.org/gnu/$pkgname/$pkgname-$pkgver.tar.gz
+source="https://ftp.gnu.org/gnu/$pkgname/$pkgname-$pkgver.tar.gz
 	automake.patch
 	jwhois-libiconv.patch
 	no-gnulib.patch"

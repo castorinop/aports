@@ -6,13 +6,13 @@ pkgrel=0
 pkgdesc="Database independent abstraction layer for C"
 url="http://libdbi.sourceforge.net/"
 arch="all"
-license="LGPL2+"
+license="LGPL-2.0-or-later"
 depends=""
 depends_dev=""
 makedepends="$depends_dev"
 install=""
 subpackages="$pkgname-doc $pkgname-dev"
-source="http://downloads.sourceforge.net/project/${pkgname}/${pkgname}/${pkgname}-${pkgver}/${pkgname}-${pkgver}.tar.gz"
+source="https://downloads.sourceforge.net/project/${pkgname}/${pkgname}/${pkgname}-${pkgver}/${pkgname}-${pkgver}.tar.gz"
 options=libtool
 
 builddir=${srcdir}/${pkgname}-${pkgver}

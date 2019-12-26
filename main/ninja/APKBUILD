@@ -1,48 +1,70 @@
 # Contributor: k0r10n <k0r10n.dev@gmail.com>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=ninja
-pkgver=1.7.2
-pkgrel=0
+pkgver=1.9.0
+pkgrel=3
 pkgdesc="Small build system with a focus on speed"
 url="https://ninja-build.org/"
 arch="all"
-license="Apache"
-depends=""
-depends_dev=""
-makedepends="$depends_dev asciidoc python2 re2c gtest"
-install=""
-subpackages="$pkgname-doc"
-source="$pkgname-$pkgver.tar.gz::https://github.com/martine/ninja/archive/v$pkgver.tar.gz"
+license="Apache-2.0"
+checkdepends="gtest"
+makedepends="asciidoctor python3 re2c"
+subpackages="
+	$pkgname-doc
+	$pkgname-bash-completion:bashcomp:noarch
+	$pkgname-zsh-completion:zshcomp:noarch
+	"
+source="
+	$pkgname-$pkgver.tar.gz::https://github.com/martine/ninja/archive/v$pkgver.tar.gz
+	fix-musl.patch
+	"
 
-builddir="$srcdir"/${pkgname}-${pkgver}
-prepare() {
-	local i
-	cd "$builddir"
-	for i in $source; do
-		case $i in
-		*.patch) msg $i; patch -p1 -i "$srcdir"/$i || return 1;;
-		esac
-	done
+_py3_sitelib() {
+	python3 -c 'import sysconfig; print(sysconfig.get_path("platlib"))'
 }
 
 build() {
 	cd "$builddir"
-	python2 ./configure.py --bootstrap || return 1
-	asciidoc doc/manual.asciidoc || return 1
+	python3 ./configure.py --bootstrap
+	asciidoctor doc/manual.asciidoc
+}
+
+check() {
+	cd "$builddir"
+
+	./ninja ninja_test
+	./ninja_test --gtest_filter=-SubprocessTest.SetWithLots
 }
 
 package() {
 	cd "$builddir"
-	install -m755 -D ninja "$pkgdir/usr/bin/ninja" || return 1
+	install -m755 -D ninja "$pkgdir/usr/bin/ninja"
 	install -m644 -D doc/manual.asciidoc \
-		"$pkgdir/usr/share/doc/ninja/manual.asciidoc" || return 1
+		"$pkgdir/usr/share/doc/ninja/manual.asciidoc"
 	install -m644 -D doc/manual.html \
-		"$pkgdir/usr/share/doc/ninja/manual.html" || return 1
+		"$pkgdir/usr/share/doc/ninja/manual.html"
 
-	install -m644 -D misc/bash-completion \
-		"$pkgdir/usr/share/bash-completion/completions/ninja" || return 1
+	install -m644 -D misc/ninja_syntax.py \
+		"${pkgdir}$(_py3_sitelib)/ninja_syntax.py"
 }
 
-md5sums="7b482218757acbaeac4d4d54a3cd94e1  ninja-1.7.2.tar.gz"
-sha256sums="2edda0a5421ace3cf428309211270772dd35a91af60c96f93f90df6bc41b16d9  ninja-1.7.2.tar.gz"
-sha512sums="29900d07364d87ad8b9614b82bc1b0afda5ca6522563ab73fb228f206ed6b29b70cf034a3caf5a9b2c0b105d1e076c6b425d93b5d14aa3ca3730d75611212a64  ninja-1.7.2.tar.gz"
+bashcomp() {
+	depends=""
+	pkgdesc="Bash completions for $pkgname"
+	install_if="$pkgname=$pkgver-r$pkgrel bash-completion"
+
+	install -m644 -D "$builddir"/misc/bash-completion \
+		"$subpkgdir"/usr/share/bash-completion/completions/ninja
+}
+
+zshcomp() {
+	depends=""
+	pkgdesc="Zsh compltions for $pkgname"
+	install_if="$pkgname=$pkgver-r$pkgrel zsh"
+
+	install -Dm644 "$builddir"/misc/zsh-completion \
+			"$subpkgdir"/usr/share/zsh/site-functions/_ninja
+}
+
+sha512sums="a8b5ad00b60bddbdb8439a6092c91a65d093f9bcd6241f69088eb35bea2847efe673c3107a130dc754c747c7712b839d8f88e88d8389520cf7143668ee053feb  ninja-1.9.0.tar.gz
+09159f24a0446eff7e1d0b306911fd1a1e96257f02a32d6b241c5d60e3350126a7859f0edf0a2f858214c5c5af23f886289ce2e9c77f0e8e2257fab931933de2  fix-musl.patch"

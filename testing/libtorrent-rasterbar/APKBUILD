@@ -1,38 +1,47 @@
 # Contributor: August Klein <amatcoder@gmail.com>
 # Maintainer: August Klein <amatcoder@gmail.com>
 pkgname=libtorrent-rasterbar
-# Note: version 1.1.0 is not supported by deluge 1.3.12
-pkgver=1.0.11
-_pkgver=${pkgver%.0}
-_pkgver=${_pkgver//./_}
-pkgrel=3
-pkgdesc="A feature complete C++ bittorrent implementation"
-url="http://www.rasterbar.com/products/libtorrent"
+pkgver=1.2.3
+_pkgver=${pkgver//./_}
+pkgrel=0
+pkgdesc="Feature complete C++ bittorrent implementation"
+options="!check" # Tests hang on all arches
+url="https://www.rasterbar.com/products/libtorrent"
 arch="all"
-license="BSD"
-depends=""
-depends_dev="boost-dev libressl-dev python2-dev"
+license="BSD-3-Clause"
+depends_dev="boost-dev openssl-dev python3-dev"
 makedepends="$depends_dev linux-headers"
-subpackages="$pkgname-dev"
-source="https://github.com/arvidn/libtorrent/releases/download/libtorrent-$_pkgver/$pkgname-$pkgver.tar.gz"
-
-builddir="$srcdir"/$pkgname-$pkgver
+subpackages="py3-$pkgname:_py3 $pkgname-static $pkgname-dev"
+source="https://github.com/arvidn/libtorrent/releases/download/libtorrent-$_pkgver/libtorrent-rasterbar-$pkgver.tar.gz"
 
 build() {
-	cd "$builddir"
+	local _py3ver=$(python3 -c 'import sys; print("{}{}".format(sys.version_info.major, sys.version_info.minor))')
+	PYTHON=/usr/bin/python3 \
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
 		--prefix=/usr \
+		--enable-tests \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
 		--enable-python-binding \
-		--with-boost-system=boost_system || return 1
-	make || return 1
-}
-package() {
-	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+		--with-boost-system=boost_python$_py3ver
+	make
 }
 
-md5sums="f49e43286a64e8bbdef9ea59baa78b55  libtorrent-rasterbar-1.0.11.tar.gz"
-sha256sums="828d686770346f6da2c143c5a2844c5f5e407eb4a37982e90022763508abd62f  libtorrent-rasterbar-1.0.11.tar.gz"
-sha512sums="770d16b241174ae4b121af9b2ac7bcde8b14c6ed99352b827b760a3cbdc2c0ebd0d505319762897720c5f72acdff506ee9948ac1140e6d4591805eca5439b184  libtorrent-rasterbar-1.0.11.tar.gz"
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+_py3() {
+	pkgdesc="Python3 bindings for $pkgname"
+	mkdir -p "$subpkgdir"/usr/lib
+	mv "$pkgdir"/usr/lib/python* "$subpkgdir"/usr/lib/
+}
+
+sha512sums="18cffb86c5affcde79860236440eaca492fce71f16c2ccc5e20ec0d9351fbfb6c15d97e203b61c8cf8168f86cf31459ce0b76a4b0559244f9add385434ff4ae6  libtorrent-rasterbar-1.2.3.tar.gz"

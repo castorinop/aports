@@ -1,0 +1,39 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=mutagen
+pkgver=1.43.0
+pkgrel=0
+pkgdesc="Audio tagger implemented in Python"
+url="https://github.com/quodlibet/mutagen"
+arch="noarch"
+license="GPL-2.0-or-later"
+depends="py3-mutagen"
+makedepends="py3-setuptools"
+checkdepends="py3-pytest py3-flake8 py3-hypothesis"
+subpackages="$pkgname-doc py3-$pkgname:py3"
+source="mutagen-$pkgver.tar.gz::https://github.com/quodlibet/mutagen/archive/release-$pkgver.tar.gz"
+
+builddir="$srcdir/$pkgname-release-$pkgver"
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	python3 setup.py test
+}
+
+package() {
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
+}
+
+py3() {
+	pkgdesc="Python3 library for $pkgname"
+	replaces="py-mutagen" # for backwards compatibility
+	provides="py-mutagen=$pkgver-r$pkgrel" # for backwards compatibility
+
+	depends="python3"
+	mkdir -p "$subpkgdir"/usr/lib
+	mv "$pkgdir"/usr/lib/python* "$subpkgdir"/usr/lib/
+}
+
+sha512sums="7d0bf0156b9b33951f6f3c640c3b1b5df28f378c046f49bf466f5d809bd1b4ae2ce2b3ff3293b2c5a82f4ba3bec1eea4a7a595c5011eb37f092b8d7551cc1d6e  mutagen-1.43.0.tar.gz"

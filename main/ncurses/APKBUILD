@@ -1,23 +1,26 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=ncurses
-pkgver=6.0_p20170701
-_ver=${pkgver%_p*}-${pkgver#*_p}
-pkgrel=1
+pkgver=6.1_p20191221
+_ver=${pkgver/_p/-}
+pkgrel=0
 pkgdesc="Console display library"
-url="http://www.gnu.org/software/ncurses/"
+url="https://invisible-island.net/ncurses/"
 arch="all"
-license=MIT
-depends=
+options="!check" # "tests" are actual demo programs, not a test suite.
+license="MIT"
 makedepends_build="ncurses"
-source="http://invisible-mirror.net/archives/ncurses/current/ncurses-$_ver.tgz"
-subpackages="$pkgname-static $pkgname-dev $pkgname-doc
-	$pkgname-terminfo-base:base $pkgname-terminfo $pkgname-libs"
-
+subpackages="$pkgname-static $pkgname-dev $pkgname-doc $pkgname-libs
+	$pkgname-terminfo-base:base:noarch $pkgname-terminfo:terminfo:noarch"
+source="https://invisible-mirror.net/archives/ncurses/current/ncurses-$_ver.tgz"
 builddir="$srcdir"/ncurses-$_ver
 
 # secfixes:
+#   6.1_p20180414-r0:
+#     - CVE-2018-10754
+#   6.0_p20171125-r0:
+#     - CVE-2017-16879
 #   6.0_p20170701-r0:
-#   - CVE-2017-10684
+#     - CVE-2017-10684
 
 build() {
 	cd "$builddir"
@@ -27,27 +30,28 @@ build() {
 		--host=$CHOST \
 		--mandir=/usr/share/man \
 		--without-ada \
+		--without-tests \
 		--disable-termcap \
 		--disable-rpath-hack \
+		--disable-stripping \
 		--with-pkg-config-libdir=/usr/lib/pkgconfig \
 		--without-cxx-binding \
-		--with-terminfo-dirs="/etc/terminfo:/usr/share/terminfo" \
+		--with-terminfo-dirs="/etc/terminfo:/usr/share/terminfo:/lib/terminfo:/usr/lib/terminfo" \
 		--enable-pc-files \
 		--with-shared \
-		--enable-widec \
-		|| return 1
-	make || return 1
+		--enable-widec
+	make
 }
 
 package() {
 	cd "$builddir"
-	make -j1 DESTDIR="$pkgdir" install || return 1
+	make -j1 DESTDIR="$pkgdir" install
 
 	# Install basic terms in /etc/terminfo
 	for i in ansi console dumb linux rxvt screen sun vt52 vt100 vt102 \
 			vt200 vt220 xterm xterm-color xterm-xfree86; do
 		local termfile=$(find "$pkgdir"/usr/share/terminfo/ -name "$i" 2>/dev/null) || true
-		local basedir=$(basename $(dirname "$termfile"))
+		local basedir=$(basename "$(dirname "$termfile")")
 
 		[ -z "$termfile" ] && continue
 
@@ -62,8 +66,8 @@ dev() {
 	default_dev
 	# force link against *w.so
 	for lib in ncurses ncurses++ form panel menu; do
-		echo "INPUT(-l${lib}w)" > "$subpkgdir"/usr/lib/lib${lib}.so
-		ln -s ${lib}w.pc "$subpkgdir"/usr/lib/pkgconfig/${lib}.pc
+		echo "INPUT(-l${lib}w)" > "$subpkgdir"/usr/lib/lib$lib.so
+		ln -s ${lib}w.pc "$subpkgdir"/usr/lib/pkgconfig/$lib.pc
 	done
 	# link curses -> ncurses
 	echo "INPUT(-lncursesw)" > "$subpkgdir"/usr/lib/libcursesw.so
@@ -71,6 +75,7 @@ dev() {
 }
 
 terminfo() {
+	pkgdesc="$pkgdesc (other terminfo files)"
 	depends="$pkgname-terminfo-base"
 	rm -rf $subpkgdir
 	mkdir -p $subpkgdir/usr/share
@@ -98,4 +103,4 @@ static() {
 	mv "$pkgdir"/usr/lib/*.a "$subpkgdir"/usr/lib/
 }
 
-sha512sums="01a30d217a6328db197b68385cd7a16ed45f42589b7fd49271c30c475300ae97cc377811df3dd95fe7d1855c0978291a7ae0c2f5ee9a14a96cc2a6b8972b4ddc  ncurses-6.0-20170701.tgz"
+sha512sums="949077cf18c06754feab8cbe49e4418370888e1095b6627c66c833ae43dfd9aa57d26cb9a8fa88737aa0ab5aed7751c3f54e74b03b4aa75cb5d3c66dd104aa03  ncurses-6.1-20191221.tgz"

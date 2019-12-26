@@ -1,55 +1,175 @@
 # Contributor: Carlo Landmeter <clandmeter@gmail.com>
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=lxd
-pkgver=2.17
-pkgrel=0
+pkgver=3.18
+pkgrel=2
 pkgdesc="a container hypervisor and a new user experience for LXC"
 url="https://linuxcontainers.org/lxd/"
-arch="all"
+arch="all !aarch64"
 license="Apache-2.0"
-depends="acl xz netcat-openbsd cgmanager squashfs-tools rsync shadow-uidmap lxc ip6tables dnsmasq ca-certificates"
-makedepends="lxc-dev protobuf-dev rsync go gettext-dev linux-headers acl-dev"
+depends="
+	acl
+	netcat-openbsd
+	cgmanager
+	squashfs-tools
+	rsync
+	shadow-uidmap
+	lxc
+	ip6tables
+	dnsmasq
+	ca-certificates
+	tar
+	iproute2
+	xz
+	"
+makedepends="
+	lxc-dev
+	gettext-dev
+	acl-dev
+	tcl-dev
+	libuv-dev
+	libcap-dev
+	linux-headers
+
+	rsync
+	go
+	intltool
+
+	libtool
+	autoconf
+	automake
+	patchelf
+	"
+subpackages="
+	$pkgname-scripts:scripts
+	$pkgname-bash-completion:bashcomp:noarch
+	$pkgname-openrc
+	$pkgname-libs
+	"
 install="$pkgname.pre-install"
 options="!check"
 source="https://linuxcontainers.org/downloads/$pkgname/$pkgname-$pkgver.tar.gz
-	lxd-dont-go-get.patch
 	$pkgname.confd
-	$pkgname.initd"
+	$pkgname.initd
+	lxd-dont-go-get.patch
+	add-missing-includes.patch
+	"
+# avoid conflict with system libsqlite3.so.0 by adding a soname prefix.
+# this makes lxd-libs provide so:lxd:libsqlite3.so.0 and lxd depend on
+# so:lxd:libsqlite3.so.0.
+ldpath="/usr/lib/lxd"
+sonameprefix="$pkgname:"
+
 _project="github.com/lxc/lxd"
 
-builddir="$srcdir"/lxd-$pkgver
-
 prepare() {
-	cd "$builddir"
-	# symlink links to a path outside of $GOPATH
-	# copy src to project directory to replace the symlink
-	rm -f dist/src/"$_project"
-	rsync -a . --exclude="dist" dist/src/"$_project"
+	export GOPATH="$builddir/_dist"
 	default_prepare
+	#update_config_guess
+	for p in raft sqlite dqlite; do
+		cd "$GOPATH"/deps/$p
+		autoreconf -i
+	done
 }
 
 build() {
+	export GOPATH="$builddir/_dist"
+	export CGO_CFLAGS="-I${GOPATH}/deps/sqlite/ -I${GOPATH}/deps/libco/ -I${GOPATH}/deps/raft/include/ -I${GOPATH}/deps/dqlite/include/"
+	export CGO_LDFLAGS="$CGO_LDFLAGS -L${GOPATH}/deps/sqlite/.libs/ -L${GOPATH}/deps/libco/ -L${GOPATH}/deps/raft/.libs -L${GOPATH}/deps/dqlite/.libs/ -lintl"
+	export LD_LIBRARY_PATH="$ldpath ${GOPATH}/deps/sqlite/.libs/:${GOPATH}/deps/libco/:${GOPATH}/deps/raft/.libs/:${GOPATH}/deps/dqlite/.libs/"
+
+	cd "$GOPATH"/deps/raft
+	PKG_CONFIG_PATH="${GOPATH}/deps/raft/" ./configure \
+		--prefix=/usr \
+		--libdir=/usr/lib/lxd
+	make
+
+	cd "$GOPATH"/deps/libco
+	make
+	
+	cd "$GOPATH"/deps/sqlite
+	./configure \
+		--prefix=/usr \
+		--enable-replication \
+		--disable-amalgamation \
+		--disable-tcl \
+		--libdir=/usr/lib/lxd
+	make
+
+	cd "$GOPATH"/deps/dqlite
+	PKG_CONFIG_PATH="${GOPATH}/deps/sqlite/:${GOPATH}/deps/libco/:${GOPATH}/deps/raft/" ./configure \
+		--prefix=/usr \
+		--libdir=/usr/lib/lxd
+
+	make CFLAGS="-I${GOPATH}/deps/sqlite/ -I${GOPATH}/deps/libco/ -I${GOPATH}/deps/raft/include/" LDFLAGS="-L${GOPATH}/deps/sqlite/.libs/ -L${GOPATH}/deps/libco/ -L${GOPATH}/deps/raft/.libs/"
+
 	cd "$builddir"
-	export GOPATH="$builddir/dist"
-	#https://github.com/lxc/lxd/issues/496
-	export CGO_LDFLAGS=-lintl
-	make -C dist/src/"$_project"
+	go install -v -x -tags libsqlite3 $_project/lxd
+	for bin in lxc fuidshift lxc-to-lxd lxd-benchmark lxd-p2c; do
+		go install -v -x $_project/$bin
+	done
 }
 
 package() {
-	cd "$builddir"
-	for i in fuidshift lxc ; do
-		install -Dm 755 "dist/bin/$i" \
-			"$pkgdir/usr/bin/$i"
+	for r in sqlite dqlite; do
+		cd "$GOPATH"/deps/$r
+		make DESTDIR="$pkgdir" install
 	done
-	install -Dm755 "dist/bin/lxd" "$pkgdir/usr/sbin/lxd"
+
+	cp ${GOPATH}/deps/libco/libco.so* "$pkgdir"/usr/lib/lxd
+	cp ${GOPATH}/deps/raft/.libs/libraft.so* "$pkgdir"/usr/lib/lxd
+
+	rm $pkgdir/usr/bin/sqlite3
+	rm -r $pkgdir/usr/include
+
+	cd ${GOPATH}
+	install -Dm755 bin/$pkgname "$pkgdir"/usr/sbin/$pkgname
+	install -Dm755 bin/lxc "$pkgdir"/usr/bin/lxc
+	
+	patchelf --set-rpath "/usr/lib/lxd" "${pkgdir}/usr/sbin/lxd"
+	
 	install -Dm755 "$srcdir"/lxd.initd \
 		"$pkgdir"/etc/init.d/lxd
 	install -Dm644 "$srcdir"/lxd.confd \
 		"$pkgdir"/etc/conf.d/lxd
 }
 
-sha512sums="e30b2893e1f581e4774e3055a738d086175c0d3f35038d900daca5b37e7aed75bf33035dfbde58da14d3cc5d7895f5a3748608151ee0f0a14e084b86e5fda34f  lxd-2.17.tar.gz
-e2c0c96d0efc33e459cf14365f01d60b73ed03f028d36ca5ea27cd647f5d2a91ec61bcf2723437f7b930aec6ebabac3697e0e3adc6b2918817833c9f182aab49  lxd-dont-go-get.patch
+bashcomp() {
+	depends="bash"
+	pkgdesc="Bash completions for $pkgname"
+	install_if="$pkgname=$pkgver-r$pkgrel bash-completion"
+
+	cd "$builddir"
+	mkdir -p "$subpkgdir"/usr/share/bash-completion/completions
+	cp scripts/bash/lxd-client "$subpkgdir"/usr/share/bash-completion/completions/lxd-client
+}
+
+scripts() {
+	pkgdesc="LXD scripts"
+	depends="$pkgname py3-lxc"
+
+	export GOPATH="$builddir/_dist"
+	cd $GOPATH
+
+	for tool in fuidshift lxc-to-lxd lxd-benchmark lxd-p2c; do
+		install -Dm755 bin/$tool "$subpkgdir"/usr/bin/$tool
+	done
+	install -Dm755 ../scripts/empty-lxd.sh "$subpkgdir"/usr/bin/empty-lxd.sh
+}
+
+libs() {
+	pkgdesc="LXD bundled libraries"
+	mkdir -p "$subpkgdir"/usr
+	mv "$pkgdir"/usr/lib "$subpkgdir"/usr/
+	patchelf --set-rpath "/usr/lib/lxd" "${subpkgdir}/usr/lib/lxd/libdqlite.so"
+	patchelf --set-rpath "/usr/lib/lxd" "${subpkgdir}/usr/lib/lxd/libsqlite3.so"
+	rm -rf "$subpkgdir"/usr/lib/lxd/pkgconfig \
+		"$subpkgdir"/usr/lib/lxd/*.a
+	rm -r "$pkgdir"/etc
+}
+
+sha512sums="bc9a061569b7ec1997f634fa2b9fee95b47384357eb5f19e528e831e3bfc11363054b169e4f3ebc0141e493f6999b276eb9f3e424a7a6b4c0f5b2701ee91fa51  lxd-3.18.tar.gz
 bc32c71f2ce10f508433e1e4651c08c18e8a17e9419a7ce391c0f127fc7cf378c665178926b35eae8813e290d9c5eab3ceb605679fd32efdf2cf98a57cee4127  lxd.confd
-94de0c0d5ab63463a929a4151359950b1117d0ada5ccf0944311cc70c6b6d4c437ccb4158734ab35db67bfb4abc437074c3f3515be4531f63adc74da21fefb5b  lxd.initd"
+94de0c0d5ab63463a929a4151359950b1117d0ada5ccf0944311cc70c6b6d4c437ccb4158734ab35db67bfb4abc437074c3f3515be4531f63adc74da21fefb5b  lxd.initd
+7453a02f003b2b3ccc2695649ca6b39157f1bd30070815e6addaacb280ea935d79bc5d265925aeec379a16f0235387d8333c3f25519c959b980fe15ad2d5728c  lxd-dont-go-get.patch
+c9291e7df7e7d62324d6f31460268b138eaeb7928b2aceb9e1763bc123c4410557a887847e441c03efb92642a6c39c8db6557e2af6a738ac46a9df93b5ac1d3b  add-missing-includes.patch"

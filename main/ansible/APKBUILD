@@ -1,37 +1,58 @@
 # Contributor: Łukasz Jendrysik <scadu@yandex.com>
 # Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
+# Contributor: Takuya Noguchi <takninnovationresearch@gmail.com>
 # Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
 pkgname=ansible
-pkgver=2.3.1.0
+pkgver=2.9.2
 pkgrel=0
 pkgdesc="A configuration-management, deployment, task-execution, and multinode orchestration framework"
-url="http://ansible.com"
+url="https://ansible.com/"
 arch="noarch"
-license="GPL3+"
-_py=py2
-depends="python2 $_py-yaml $_py-paramiko $_py-jinja2 $_py-markupsafe $_py-crypto"
-makedepends="python2-dev py-setuptools"
+license="GPL-3.0-or-later"
+depends="python3 py3-yaml py3-paramiko py3-jinja2 py3-markupsafe py3-crypto"
+makedepends="python3-dev py3-setuptools"
 subpackages="$pkgname-doc"
-source="$pkgname-$pkgver.tar.gz::http://releases.ansible.com/ansible/$pkgname-$pkgver.tar.gz"
-builddir="$srcdir/$pkgname-$pkgver"
+source="$pkgname-$pkgver.tar.gz::https://releases.ansible.com/ansible/ansible-$pkgver.tar.gz
+	add-lxc-container_shell-option.patch
+	0001-new-module-lbu.patch
+	"
+
+# secfixes:
+#   2.8.6-r0:
+#     - CVE-2019-14846
+#     - CVE-2019-14856
+#     - CVE-2019-14858
+#   2.8.4-r0:
+#     - CVE-2019-10206
+#     - CVE-2019-10217
+#   2.8.2-r0:
+#     - CVE-2019-10156
+#   2.7.9-r0:
+#     - CVE-2018-16876
+#   2.6.3-r0:
+#     - CVE-2018-10875
 
 build() {
-	cd "$builddir"
-	python2 setup.py build
+	python3 setup.py build
+}
+
+check() {
+	python3 setup.py check
 }
 
 package() {
-	cd "$builddir"
-	python2 setup.py install --prefix=/usr --root="$pkgdir"
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
 
 	mkdir -p "$pkgdir"/usr/share/man/man1
 	install -Dm644 "$builddir"/docs/man/man1/*.1 \
 		"$pkgdir"/usr/share/man/man1/
 
 	mkdir -p "$pkgdir"/usr/share/doc/$pkgname/examples/
-	install -m644 examples/* \
+	cp -r examples/* \
 		"$pkgdir"/usr/share/doc/$pkgname/examples/
-	install -m644 README.md "$pkgdir"/usr/share/doc/$pkgname
+	install -m644 README.rst "$pkgdir"/usr/share/doc/$pkgname
 }
 
-sha512sums="7b4b33c56a15c41d756f095944d7a0dbf894557350879430df21061b717b9574aae624a276bf7e1a13d043b718aeaccac1ce510a3cb085983311ddf06fa832bc  ansible-2.3.1.0.tar.gz"
+sha512sums="522dd84af9493ceafd95ff0fc806a671f3d1f10d0ca074ef41875eb966d39e64b834e0b98a35d81d9d9d96efef8069db604c8080ce8cbb1ce2e8b13bf5c30a6a  ansible-2.9.2.tar.gz
+f44f1492495abe092cd9f91669ccfee65748f43663571361de97c3b1c5c1219d355aa7236179decb73446376018fa81aace7eaeb8c10a83d3cf4e006508533dd  add-lxc-container_shell-option.patch
+d6aa6827acee61d857444a00364f9b057a216a0a6f5217f353e8b8e0118db7aee54b7578a3fb31cb43bfa8e0709db8d43dcdb819eb28a457a692359887dad115  0001-new-module-lbu.patch"

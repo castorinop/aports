@@ -2,16 +2,16 @@
 # Contributor: Jakub Jirutka <jakub@jirutka.cz>
 # Maintainer: Timo Teras <timo.teras@iki.fi>
 pkgname=openjdk8
-_icedteaver=3.5.0
+_icedteaver=3.14.0
 # pkgver is <JDK version>.<JDK update>.<JDK build>
-# Check http://icedtea.classpath.org/wiki/Main_Page when updating!
-pkgver=8.141.15
+# Check https://icedtea.classpath.org/wiki/Main_Page when updating!
+pkgver=8.232.09
 pkgrel=0
 pkgdesc="OpenJDK 8 provided by IcedTea"
-url="http://icedtea.classpath.org/"
+url="https://icedtea.classpath.org/"
 arch="all"
 license="custom"
-depends="$pkgname-jre java-cacerts"
+depends="$pkgname-jre java-cacerts nss"
 options="sover-namecheck"
 makedepends="bash findutils tar zip file paxmark gawk util-linux libxslt
 	autoconf automake linux-headers sed xz coreutils
@@ -42,9 +42,9 @@ subpackages="$pkgname-dbg $pkgname-jre-lib:jrelib:noarch $pkgname-jre $pkgname-j
 	$pkgname-doc $pkgname-demos"
 
 _dropsver=$_icedteaver
-_dropsurl="http://icedtea.classpath.org/download/drops/icedtea8/$_dropsver"
+_dropsurl="https://icedtea.classpath.org/download/drops/icedtea8/$_dropsver"
 
-source="http://icedtea.classpath.org/download/source/icedtea-$_icedteaver.tar.gz
+source="https://icedtea.classpath.org/download/source/icedtea-$_icedteaver.tar.xz
 	openjdk-$_dropsver.tar.xz::$_dropsurl/openjdk.tar.xz
 	corba-$_dropsver.tar.xz::$_dropsurl/corba.tar.xz
 	jaxp-$_dropsver.tar.xz::$_dropsurl/jaxp.tar.xz
@@ -65,25 +65,77 @@ source="http://icedtea.classpath.org/download/source/icedtea-$_icedteaver.tar.gz
 	icedtea-jdk-includes.patch
 	icedtea-jdk-getmntent-buffer.patch
 	icedtea-autoconf-config.patch
-	icedtea-jdk-tls-nist-curves.patch
 	"
 builddir="$srcdir/icedtea-$_icedteaver"
 
+# secfixes:
+#   8.232.09-r0:
+#     - CVE-2019-2933
+#     - CVE-2019-2945
+#     - CVE-2019-2949
+#     - CVE-2019-2958
+#     - CVE-2019-2964
+#     - CVE-2019-2962
+#     - CVE-2019-2973
+#     - CVE-2019-2975
+#     - CVE-2019-2978
+#     - CVE-2019-2981
+#     - CVE-2019-2983
+#     - CVE-2019-2987
+#     - CVE-2019-2988
+#     - CVE-2019-2989
+#     - CVE-2019-2992
+#     - CVE-2019-2999
+#     - CVE-2019-2894
+#   8.222.10-r0:
+#     - CVE-2019-2745
+#     - CVE-2019-2762
+#     - CVE-2019-2766
+#     - CVE-2019-2769
+#     - CVE-2019-2786
+#     - CVE-2019-2816
+#     - CVE-2019-2842
+#     - CVE-2019-7317
+#   8.212.04-r0:
+#     - CVE-2019-2602
+#     - CVE-2019-2684
+#     - CVE-2019-2698
+#   8.201.08-r0:
+#     - CVE-2019-2422
+#     - CVE-2019-2426
+#     - CVE-2018-11212
+#   8.191.12-r0:
+#     - CVE-2018-3136
+#     - CVE-2018-3139
+#     - CVE-2018-3149
+#     - CVE-2018-3169
+#     - CVE-2018-3180
+#     - CVE-2018-3183
+#     - CVE-2018-3214
+#     - CVE-2018-13785
+#     - CVE-2018-16435
+#   8.181.13-r0:
+#     - CVE-2018-2938
+#     - CVE-2018-2940
+#     - CVE-2018-2952
+#     - CVE-2018-2973
+#     - CVE-2018-3639
+
 unpack() {
 	if [ -z "$force" ]; then
-		verify || return 1
-		initdcheck || return 1
+		verify
+		initdcheck
 	fi
 	mkdir -p "$srcdir"
 	msg "Unpacking sources..."
-	tar -C "$srcdir" -zxf icedtea-$_icedteaver.tar.gz || return 1
+	tar -C "$srcdir" -Jxf icedtea-$_icedteaver.tar.xz
 }
 
 prepare() {
 	cd "$builddir"
 
-	local ver_u=$(sed -En 's/^JDK_UPDATE_VERSION\s*=\s*(\S+).*/\1/p' Makefile.am)
-	local ver_b=$(sed -En 's/^BUILD_VERSION\s*=\s*b(\S+).*/\1/p' Makefile.am)
+	local ver_u=$(sed -En 's/^\s*JDK_UPDATE_VERSION\s*=\s*(\S+).*/\1/p' acinclude.m4)
+	local ver_b=$(sed -En 's/^\s*BUILD_VERSION\s*=\s*b(\S+).*/\1/p' acinclude.m4)
 	[ "${pkgver#*.}" = "$ver_u.$ver_b" ] \
 		|| die "Version mismatch, source is 8.$ver_u.$ver_b, but abuild defines $pkgver!"
 
@@ -97,7 +149,7 @@ prepare() {
 			;;
 		*.patch)
 			msg "Applying patch $patch"
-			patch -p1 -i "$srcdir"/$patch || return 1
+			patch -p1 -i "$srcdir"/$patch
 			;;
 		esac
 	done
@@ -125,7 +177,7 @@ build() {
 	echo "icedtea patches: $DISTRIBUTION_PATCHES"
 
 	cd "$builddir"
-	./configure \
+	bash ./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
 		--prefix="$_java_home" \
@@ -151,9 +203,8 @@ build() {
 		--with-pkgversion="Alpine ${pkgver}-r${pkgrel}" \
 		--enable-nss \
 		--enable-sunec \
-		--enable-non-nss-curves \
-		|| return 1
-	make || return 1
+		--enable-non-nss-curves
+	make
 }
 
 # TODO: Run tests or at least try to compile and run hello world.
@@ -168,7 +219,7 @@ package() {
 
 	mkdir -p "$pkgdir"/$_java_home
 
-	cp -a openjdk.build/images/j2sdk-image/* "$pkgdir"/$_java_home/ || return 1
+	cp -a openjdk.build/images/j2sdk-image/* "$pkgdir"/$_java_home/
 	rm "$pkgdir"/$_java_home/src.zip
 
 	# This archive contains absolute paths from the build environment,
@@ -177,7 +228,7 @@ package() {
 	rm -f "$pkgdir"/$_jrelib/server/classes.jsa
 
 	# pax mark again (due to fakeroot xattr handling bug)
-	./pax-mark-vm "$pkgdir"/$_java_home true || return 1
+	./pax-mark-vm "$pkgdir"/$_java_home true
 
 	# symlink to shared java cacerts store
 	rm -f "$pkgdir"/$_java_home/jre/lib/security/cacerts
@@ -201,7 +252,7 @@ jrelib() {
 
 		dir=${file%/*}
 		mkdir -p "$subpkgdir"/$_java_home/$dir
-		mv "$pkgdir"/$_java_home/$file "$subpkgdir"/$_java_home/$dir || return 1
+		mv "$pkgdir"/$_java_home/$file "$subpkgdir"/$_java_home/$dir
 	done
 }
 
@@ -221,37 +272,37 @@ jre() {
 
 		dir=${file%/*}
 		mkdir -p "$subpkgdir"/$_java_home/$dir
-		mv "$pkgdir"/$_java_home/$file "$subpkgdir"/$_java_home/$dir || return 1
+		mv "$pkgdir"/$_java_home/$file "$subpkgdir"/$_java_home/$dir
 	done
 
 	# Pax mark again (due to fakeroot xattr handling bug).
-	"$builddir"/pax-mark-vm "$subpkgdir"/$_java_home true || return 1
+	"$builddir"/pax-mark-vm "$subpkgdir"/$_java_home true
 }
 
 jrebase() {
 	pkgdesc="OpenJDK 8 Java Runtime (no GUI support)"
-	depends="$pkgname-jre-lib java-common java-cacerts"
+	depends="$pkgname-jre-lib java-common java-cacerts nss"
 
 	mkdir -p "$subpkgdir"/$_java_home/bin \
 		"$subpkgdir"/$_java_home/lib/$_jarch
 
 	mv "$pkgdir"/$_java_home/lib/$_jarch/jli \
-		"$subpkgdir"/$_java_home/lib/$_jarch/ || return 1
+		"$subpkgdir"/$_java_home/lib/$_jarch/
 
 	local file; for file in java orbd rmid servertool unpack200 keytool \
 			pack200 rmiregistry tnameserv; do
-		mv "$pkgdir"/$_java_home/bin/$file "$subpkgdir"/$_java_home/bin/ || return 1
+		mv "$pkgdir"/$_java_home/bin/$file "$subpkgdir"/$_java_home/bin/
 	done
 
 	# Rest of the jre subdir (which were not taken by -jre subpkg).
-	mv "$pkgdir"/$_java_home/jre "$subpkgdir"/$_java_home/ || return 1
+	mv "$pkgdir"/$_java_home/jre "$subpkgdir"/$_java_home/
 
 	# Pax mark again (due to fakeroot xattr handling bug).
-	"$builddir"/pax-mark-vm "$subpkgdir"/$_java_home true || return 1
+	"$builddir"/pax-mark-vm "$subpkgdir"/$_java_home true
 }
 
 doc() {
-	default_doc || return 1
+	default_doc
 
 	mkdir -p "$subpkgdir"/$_java_home/
 	mv "$pkgdir"/$_java_home/man "$subpkgdir"/$_java_home/
@@ -266,24 +317,23 @@ demos() {
 		"$subpkgdir"/$_java_home/
 }
 
-sha512sums="0fc51b7e8b39670b1439cdfb947e215d6c92e64950002aa7b63a7051a27f60335aa477f166e0ee43b70faf19bb1c67678b458e0cec4333b20d76484ebcb5c476  icedtea-3.5.0.tar.gz
-88f6dabebe20f9feedf1de69c486fb8d1d4239b25f845c998c64cf6f1f783cf86cc98feb87f50a5256a2a340e23d2d3452827c39a65e371e54477479ee2b7be4  openjdk-3.5.0.tar.xz
-37d42af8663ac0af58c494406360e421dd1f707d98b9a00bb0149a51ccdee809524bc1f307d207360e7bc3f1c0d6a585c085ad0395075a54553226b9fb1874a4  corba-3.5.0.tar.xz
-70f9c3c8beb119760356c46c64cc382c783d4aa4f940627169541ea98c07b32af1c67f266a24c6f211e9eb4c37e25a8d124868abfbe7538787a17e66a731f93f  jaxp-3.5.0.tar.xz
-ff10229eeefc1cc08f6f7216b985f092b0bdcc10a33c1c9a962120e93e7ad3d15672b22ac73f3218a59334bf585d8116203d87883f07a5a2a1c2403007fd6720  jaxws-3.5.0.tar.xz
-caeafb2efdfb6cacedab1fe13f23822baf5dcd599403a4cc057e6814d224cdf2ec5cdfb8c55ab8a5efb1e0f68b2d784226431a54e3711aa99dbee4ac20ef60fa  jdk-3.5.0.tar.xz
-8260e326b3aa42f8ec9de18a7b8eeaa52b2610f63426d7a1a143a7f27b849c60a9a47397de565bc3fb0e9761178e2cb68af15c996d848e20f5016111dd22a4cd  langtools-3.5.0.tar.xz
-098251daba090465cffebc7fe8486140709726607b93aacd9052a85903fb252aef689611f85deb5324a99e037256cef18a8035fc3d47c8a38b2b47f0e7d1c70d  hotspot-3.5.0.tar.xz
-ac0c7adce68d3e85bd708b055b8a1661ac9a24301a10c009f030be947d194cf8f7cf856923ddfc29b6c2d61ea62d7fdfc260abc4664fb0f3bdaf1e9ecdc767d7  nashorn-3.5.0.tar.xz
+sha512sums="6cd366a1adde12b5cc2c0c64c0c353ebf9ad5b0ad79b77c5cca3acc93219752110eb222b74bd62180fe0bf5b063db12df6316c334d5940d1636c9d10824085ed  icedtea-3.14.0.tar.xz
+1e8009155a9ad39405e11704bb1f8b4c51ae0f64563baa7a7ce29a79613339e82b8776193a0076b993f8839b1c5959edff18cdadaa7f2f163fa5d3b7f7d60396  openjdk-3.14.0.tar.xz
+5aedab2cff0dd8b4cb98121643009593d10da9abd150ab938cf45f5b8f18cae5f31dcc31c30090b736cf52413a290b6b11e6fc42b3575ea50e213bf334a07159  corba-3.14.0.tar.xz
+16a34a65b20650f66eece6e33e82aefaf46bbf46c8332bac8c266405839168b924235395cbf7d6c5210d35b416ee0ab2ed0bd09c3f1c90195bff35d3db4b596d  jaxp-3.14.0.tar.xz
+706b9ce4d32c92adca44d9643e44ebe757e8503798e2b24b2591660774f4a4719f2015d3edb02f3374ec4b88c5b2f0b5578369345a9db4c5def1ff37f630bb5d  jaxws-3.14.0.tar.xz
+2e44c646bcbf56ce7e91be0fdb46db9887cfe7f538f866e61d757e657a4a3726caca50bd885355a85675451ea8ff9810bccb7ea026239219373688455dcc8476  jdk-3.14.0.tar.xz
+ceef08eb53e895156afd0ec342a045c3aa29551a7939803cd821121286ec05fb3538d3b46a44c99f1a2805163b6e7351ec42b1486aaf6a8ecb7fdccc526c410d  langtools-3.14.0.tar.xz
+258cca176c6f930268f189f77dd4e6bd683fb90fbd7866870d22ca42105292cedeca7d274b70979e59af15229ebba22da64444ef14c641066e10688286ec302d  hotspot-3.14.0.tar.xz
+59af524388b501c63c567dd36abbe29b3254b3f05191730740aec84e73f93cf77850ab36d9972528781bbf47a6541a75d7e80e26c4c425d6cbb6460e2b4bdbda  nashorn-3.14.0.tar.xz
 1f470432275d5beaa8b4e4352a2f24a4a00593546dc4f3bd857794c89e521e8e6d6abc540762bbd769be3e1e3da058e134dc5dc066d12b9b8a1f0656040a795c  fix-paxmark.patch
-bfa16565d71453a0ba4204cb7ee0f8cb8c9a272c4d71d1357af4425183e64ef8df77ae1df1bbb0f984cf2d6d04a49124a6ef50f09dfee80c5b5734596e0b2a8e  icedtea-hotspot-musl.patch
+28709285390a997adbd56ebda42ef718fbc08daf572b8568f484436d255514f9d25f033e3333dff8aa352fc9846057ac5bb42fa955d3e5e44eddc96dc273c07c  icedtea-hotspot-musl.patch
 e5cf4d70f96fc1e72ae8b97a887adb96092ff36584711cbb8de9d9fa9e859cb8731d638838de0d9591239fc44ffe5c74422d1842bd9f10a0c00dff1627bdeeef  icedtea-hotspot-musl-ppc.patch
-3c592a14f1806a431290a96a8c1413ca1cc621e73a87ed778fa98878c82809bd924072210d4e4127a6c0c32ff557d749f6c9b3ce31cbca083b013240b618b224  icedtea-hotspot-noagent-musl.patch
+19459dbb922f5a71cd15b53199481498626a783c24f91d2544d55b7dddd2cdb34a64bbf0226b99548612dd1743af01b3f9ff32c30abbbc90ce727ca2dbbbd1f9  icedtea-hotspot-noagent-musl.patch
 f6365cfafafa008bd6c1bf0ccec01a63f8a39bd1a8bc87baa492a27234d47793ba02d455e5667a873ef50148df3baaf6a8421e2da0b15faac675867da714dd5f  icedtea-jdk-execinfo.patch
 48533f87fc2cf29d26b259be0df51087d2fe5b252e72d00c6ea2f4add7b0fb113141718c116279c5905e03f64a1118082e719393786811367cf4d472b5d36774  icedtea-jdk-fix-ipv6-init.patch
 b135991c76b0db8fa7c363e0903624668e11eda7b54a943035c214aa4d7fc8c3e8110ed200edcec82792f3c9393150a9bd628625ddf7f3e55720ff163fbbb471  icedtea-jdk-fix-libjvm-load.patch
-cdebe2c59657e7fd317a4841b2fbe95d9e8d7ee9d1593edf352ed7f49a92a42cbce82cbaa404d3f02c6d273eae03222a79559c09bf6cf439396c5ec5434f5458  icedtea-jdk-musl.patch
+1fbc32ddc528c7c0099dbc1e48f88d29dccf55e7b8997793aa1d3d8408003a1223d898cca4248e1a12d343d3feec5144f875e6cdac8460d763c73ab3ad7e49f9  icedtea-jdk-musl.patch
 e8d9f1b867bf4fc84aa00d1237b264bcf503b1ed5f34735e14b0b747a728953fe0051a5af69ed058d377fbf65d8be1ed9e38fe5fc6edb2d50b31f34bf3ba91dc  icedtea-jdk-includes.patch
 7e6fa46b10c630517bfa46943858aea1d032c12d32ba3fcb7a2143ae1e896c34fa4cb8f925af80cb19f8e29149b835aa054adfd30ebb00539f6c78588d6f5211  icedtea-jdk-getmntent-buffer.patch
-662d662d0a7a84be2978e921317589f212f3ba3b7629527ba0f1140b5ac4c1024893e0ed176211688ed1a4505968c4befc841ed57ffcdbb9d355c2cb0571b167  icedtea-autoconf-config.patch
-313ba3467efad73120d307c16be8e793fa39de92d6c28c2faed11c14dd6f60e0f1a290f330d4dc849ae8f97c7bea84eec2d0be02c70bc9903664e22497dd2d22  icedtea-jdk-tls-nist-curves.patch"
+662d662d0a7a84be2978e921317589f212f3ba3b7629527ba0f1140b5ac4c1024893e0ed176211688ed1a4505968c4befc841ed57ffcdbb9d355c2cb0571b167  icedtea-autoconf-config.patch"

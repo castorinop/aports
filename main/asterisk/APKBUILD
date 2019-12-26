@@ -2,19 +2,20 @@
 # Contributor: Timo Teras <timo.teras@iki.fi>
 # Maintainer: Timo Teras <timo.teras@iki.fi>
 pkgname=asterisk
-pkgver=14.6.1
+pkgver=16.6.2
 pkgrel=0
 pkgdesc="Asterisk: A Module Open Source PBX System"
 pkgusers="asterisk"
 pkggroups="asterisk"
 url="http://www.asterisk.org/"
 arch="all"
-license="GPL2"
+license="GPL-2.0"
 depends=
-makedepends="autoconf automake libtool findutils tar wget bsd-compat-headers
+options="!check"  # Test suite is separate, and require separate build
+makedepends="findutils tar wget bsd-compat-headers libtool
 	ncurses-dev popt-dev newt-dev zlib-dev libedit-dev tiff-dev curl-dev
-	libressl-dev lua-dev libcap-dev jansson-dev util-linux-dev
-	sqlite-dev postgresql-dev unixodbc-dev freetds-dev mariadb-dev
+	openssl-dev lua-dev libcap-dev jansson-dev util-linux-dev
+	sqlite-dev postgresql-dev unixodbc-dev freetds-dev mariadb-connector-c-dev
 	alsa-lib-dev pjproject-dev dahdi-tools-dev libpri-dev libsrtp-dev
 	spandsp-dev libresample speex-dev speexdsp-dev libogg-dev
 	bluez-dev libxml2-dev imap-dev"
@@ -25,12 +26,12 @@ subpackages="$pkgname-dbg $pkgname-dev $pkgname-doc $pkgname-pgsql $pkgname-odbc
 	$pkgname-mobile $pkgname-curl:_curl $pkgname-srtp $pkgname-dahdi
 	$pkgname-speex $pkgname-alsa $pkgname-cdr-mysql:cdr_mysql"
 
-_download="http://downloads.asterisk.org/pub/telephony/asterisk/releases"
+_download="https://downloads.asterisk.org/pub/telephony/asterisk/releases"
 source="$_download/asterisk-$pkgver.tar.gz
-	http://dev.alpinelinux.org/~tteras/asterisk-addon-mp3-r201.patch.gz
-	ASTERISK-24517.patch
+	https://dev.alpinelinux.org/~tteras/asterisk-addon-mp3-r201.patch.gz
 	musl-mutex-init.patch
-	restore-multihomed-module.patch
+	musl-astmm-fix.patch
+	asterisk-mariadb.patch
 
 	asterisk.initd
 	asterisk.confd
@@ -38,17 +39,26 @@ source="$_download/asterisk-$pkgver.tar.gz
 
 builddir="$srcdir/$pkgname-${pkgver/_/-}"
 
+# secfixes:
+#   16.6.2-r0:
+#     - CVE-2019-18610
+#     - CVE-2019-18790
+#   16.5.1-r0:
+#     - CVE-2019-15297
+#     - CVE-2019-15639
+#   16.4.1-r0:
+#     - CVE-2019-12827
+#   16.3.0-r0:
+#     - CVE-2019-7251
+#   15.7.1-r0:
+#     - CVE-2018-19278
+
 prepare() {
-	default_prepare || return 1
+	default_prepare
 
 	# asteriskssl does not have direct references to libssl, but looks up
 	# symbols from it using dlsym(RTLD_NEXT), so use --no-as-needed for it.
 	sed -i -e 's/ASTSSL_LIBS:=$(OPENSSL_LIB)/ASTSSL_LIBS:=-Wl,--no-as-needed $(OPENSSL_LIB) -Wl,--as-needed/g' main/Makefile
-
-	sed -i -e 's:lua5.1/::' pbx/pbx_lua.c
-	sed -i -e 's/int foo = res_ninit(NULL);/res_ninit_is_not_really_here();/g' configure.ac
-
-	./bootstrap.sh
 }
 
 build() {
@@ -63,6 +73,7 @@ build() {
 		--libdir=/usr/lib \
 		--localstatedir=/var \
 		--disable-xmldoc \
+		--enable-permanent-dlopen \
 		--with-gsm=internal \
 		--with-popt \
 		--with-z \
@@ -78,13 +89,13 @@ build() {
 		--with-speex \
 		--with-asound \
 		--without-x11 \
+		--without-pjproject-bundled \
 		--with-spandsp \
 		--with-bluetooth \
 		--with-libcurl \
 		--with-libedit \
 		--with-srtp \
-		--with-imap=system \
-		|| return 1
+		--with-imap=system
 
 	# get default modules to build
 	rm -f menuselect.makeopts
@@ -100,12 +111,12 @@ build() {
 		menuselect.makeopts
 
 	# build
-	make ASTCFLAGS="$CFLAGS" ASTLDFLAGS="$LDFLAGS" LDCONFIG= || return 1
+	make ASTCFLAGS="$CFLAGS" ASTLDFLAGS="$LDFLAGS" LDCONFIG=
 }
 
 package() {
 	cd "$builddir"
-	make -j1 DESTDIR="$pkgdir" LDCONFIG_FLAGS="-n" install || return 1
+	make -j1 DESTDIR="$pkgdir" LDCONFIG_FLAGS="-n" install
 
 	install -d "$pkgdir"/var/run/asterisk
 	install -d "$pkgdir"/var/lib/asterisk
@@ -132,7 +143,7 @@ _move_dir() {
 
 _find_and_move() {
 	local pattern="$1"
-	cd "$pkgdir" || return 1
+	cd "$pkgdir"
 	find . -name "$pattern" -type f | while read f; do
 		local dest="$subpkgdir/${f%/*}"
 		mkdir -p "$dest"
@@ -150,7 +161,7 @@ dev() {
 
 	# move back the /usr/lib/libasteriskssl.so symlink, asterisk needs it
 	# see http://bugs.alpinelinux.org/issues/6393
-	mv "$subpkgdir"/usr/lib/libasteriskssl.so "$pkgdir"/usr/lib/libasteriskssl.so || return 1
+	mv "$subpkgdir"/usr/lib/libasteriskssl.so "$pkgdir"/usr/lib/libasteriskssl.so
 }
 
 pgsql() {
@@ -227,11 +238,11 @@ sound_en() {
 	chown -R asterisk:asterisk "$subpkgdir"/var/*/asterisk
 }
 
-sha512sums="8f503dba1b97eb4c9777a7d1a21cf3bd6771bf2334ea6dd55e718a30f0570f661d682556b1121960f8f8bcf988092ddeee05665161e97a904f414cbf3f4a3492  asterisk-14.6.1.tar.gz
+sha512sums="7a0ed63b2eb359c04819ac4488e73610395831686a0bbd81b19808c77da51949c0689fc74198c4e18902f52cf4c40a52a66de18e6293135bb423382e8664aee4  asterisk-16.6.2.tar.gz
 aacef3f4796fb1abd33266998b53909cb4b36e7cc5ad2f7bac68bdc43e9a9072d9a4e2e7e681bddfa31f3d04575eb248afe6ea95da780c67e4829c1e22adfe1b  asterisk-addon-mp3-r201.patch.gz
-9230141ea4690db30cc1825d67f495a7357f13ee11da7e5a7c6696f3ae9edd599214c2d6915f6ad64f2bc68c754cda140db3f570ba051399ff894ab26b5db31c  ASTERISK-24517.patch
 f72c2e04de80d3ed9ce841308101383a1655e6da7a3c888ad31fffe63d1280993e08aefcf8e638316d439c68b38ee05362c87503fca1f36343976a01af9d6eb1  musl-mutex-init.patch
-935c25c7b1cdbd376056e20232a0e8c38dd32c344f50306d99930bf7cb37685c31329ead273b08ac9ab76daa9386adfb05b57440e46a39cb80e5542d65e8e3ed  restore-multihomed-module.patch
+fdac3868ed2ba566397e3a71314568787e4a84d37738f210a6e288c4285215879756c576e2fd064be9cf5169a7e08dbbfd341f50a87e4e6dbfae20e19bcc4d71  musl-astmm-fix.patch
+c76a882588194372d0c45a2bd1a9a946543f2dc07fde9240b3e600682e9737337c7602da35bfaeddb4d9fe568daa668016237c6f7986e7c44cf5a8dbba291e1f  asterisk-mariadb.patch
 0044c5db468ec8f2385d18d476f89976f6d036448583a4ef8017ce7a6f8f72105337e6b20037ffe47f561d2877fc9c86720aef23ab037df89b36dc140a5924c4  asterisk.initd
 ab6b6f08ff43268cbb1abb7ed7d678949991ba495682a644bbaeb017d6adbff0a43297905fd73ae8db1786a28d5b5904f1bc253209a0e388c8a27f26c6ce14ed  asterisk.confd
 7591d2faf539d05d9ee4e431c78a5e20686721fd79221ad94dffeeaff9282220b09cb9aec214bd7a8d12affaec0276c9c91e6e21af8b6712c0a9502b60b02f2b  asterisk.logrotate"

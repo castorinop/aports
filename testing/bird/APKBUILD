@@ -2,69 +2,37 @@
 # Contributor: Katie Holly <holly@fuslvz.ws>
 # Maintainer: Francesco Zanini <francesco@zanini.me>
 pkgname=bird
-pkgver=1.6.3
+pkgver=2.0.7
 pkgrel=0
 pkgdesc="BIRD Internet Routing Daemon"
-url="http://bird.network.cz/"
-arch="all"
-license="GPLv2+"
-depends=""
+url="https://bird.network.cz/"
+arch="all !s390x"
+license="GPL-2.0-or-later"
 makedepends="bison flex ncurses-dev readline-dev linux-headers"
-install=""
-subpackages="bird6"
+subpackages="$pkgname-openrc"
 source="
 	ftp://bird.network.cz/pub/bird/bird-$pkgver.tar.gz
+	bird-make-test-bsprintf.patch
 	bird.initd
 	"
-builddir="$srcdir"/bird-$pkgver
 
-prepare() {
-	cd "$builddir"
-	default_prepare
-	update_config_guess
-	# generate bird6.initd
-	cd "$srcdir"
-	sed -e 's/^name=.*/name=bird6/' bird.initd > bird6.initd
-}
-
-_build() {
-	../configure --prefix=/usr \
+build() {
+	./configure --prefix=/usr \
 		--sysconfdir=/etc \
 		--mandir=/usr/share/man \
-		--localstatedir=/var \
-		"$@"
+		--localstatedir=/var
 	make
 }
 
-build() {
-	cd "$builddir"
-	mkdir -p ipv6 ipv4
-	cd "$builddir"/ipv6
-	_build --enable-ipv6
-	cd "$builddir"/ipv4
-	_build
+check() {
+	make test
 }
 
 package() {
-	cd "$builddir"/ipv4
 	make DESTDIR="$pkgdir" install
-	cd "$builddir"/ipv6
-	make DESTDIR="$pkgdir" install
-	for i in bird bird6; do
-		install -Dm755 "$srcdir"/$i.initd "$pkgdir"/etc/init.d/$i
-	done
+	install -Dm755 "$srcdir"/bird.initd "$pkgdir"/etc/init.d/bird
 }
 
-bird6() {
-	pkgdesc="BIRD Internet Routing Daemon for IPv6"
-	mkdir -p "$subpkgdir"/etc \
-		"$subpkgdir"/etc/init.d \
-		"$subpkgdir"/usr/sbin
-	mv "$pkgdir"/etc/*6.conf "$subpkgdir"/etc/
-	for i in etc/init.d usr/sbin; do
-		mv "$pkgdir"/$i/*6 "$subpkgdir"/$i/
-	done
-}
-
-sha512sums="d0f044cbbb3e5fe0624ad8ae58f5fa352ff41a9cd73f37d803431d9d148927bce52d8f2b82e31dd65c753c55b1034aaf8e15739a511e42cd2dd122b5cd1e15df  bird-1.6.3.tar.gz
-59245af3fd514421d0babcefed556597022a36d14615d596bb5c08c7dd0a6ed4519928e35a0b7ff14fe27ecfa50fa8011283c92bfc9b8355b15b3263df189d5d  bird.initd"
+sha512sums="48ca63be923285dd282e80d7e2b240256953fd7ad4f6eaa5dcba2648f3f148be20198bc8c6e7e888aac1588ecb005a4f4c03e979853e76ea6f8680643a874b35  bird-2.0.7.tar.gz
+e0a9bab1bb84ab4efbf51c4c015bf35196d146560f737979d3a17c44dc2397d9578e61a3bba0c58f3cdbb108074f17288bf536db5d8d4dce87c91f1be3dc6282  bird-make-test-bsprintf.patch
+da2fd6eaf5e468eed1054c23299ae899d5b1152c94a500db2242c63cdd543a32218e45373470ff367d5736022ced18e6a427f6b98e69a34ae2d3bf811550d828  bird.initd"

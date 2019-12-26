@@ -1,27 +1,27 @@
 # Contributor: Natanael Copa <ncopa@alpinelinux.org>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=spice
-pkgver=0.12.8
-pkgrel=4
+pkgver=0.14.2
+pkgrel=1
 pkgdesc="Implements the SPICE protocol"
 url="http://www.spice-space.org/"
 arch="all"
-license="LGPLv2+"
-depends=""
-depends_dev="spice-protocol pixman-dev celt051-dev libressl-dev libxinerama-dev"
-makedepends="$depends_dev alsa-lib-dev libjpeg-turbo-dev libxrandr-dev
-	cyrus-sasl-dev libxfixes-dev python2-dev bash cegui06-dev py-parsing
-	py-six glib-dev opus-dev"
+license="LGPL-2.0-or-later"
+depends_dev="spice-protocol pixman-dev libxinerama-dev"
+makedepends="$depends_dev alsa-lib-dev libjpeg-turbo-dev libxrandr-dev lz4-dev
+	cyrus-sasl-dev libxfixes-dev python3-dev bash cegui06-dev py3-parsing
+	py3-six glib-dev opus-dev openssl-dev gstreamer-dev gst-plugins-base-dev
+	automake autoconf libtool"
 subpackages="$pkgname-dev $pkgname-server"
-source="http://www.spice-space.org/download/releases/$pkgname-$pkgver.tar.bz2
-	CVE-2016-9577.patch
-	CVE-2016-9578-1.patch
-	CVE-2016-9578-2.patch
-	CVE-2017-7506.patch
+source="https://www.spice-space.org/download/releases/spice-server/spice-$pkgver.tar.bz2
+	0001-Disable-failing-tests-on-some-arches.patch
 	"
-builddir="$srcdir/$pkgname-$pkgver"
 
 # secfixes:
+#   0.14.1-r4:
+#     - CVE-2019-3813
+#   0.14.1-r0:
+#     - CVE-2018-10873
 #   0.12.8-r4:
 #     - CVE-2017-7506
 #   0.12.8-r3:
@@ -29,6 +29,7 @@ builddir="$srcdir/$pkgname-$pkgver"
 #     - CVE-2016-9578
 
 build() {
+	autoreconf -vif
 	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
@@ -41,8 +42,10 @@ build() {
 		--enable-gui \
 		--enable-client \
 		--disable-smartcard \
-		--enable-opus
-	make -C spice-common WARN_CFLAGS=''
+		--disable-celt051 \
+		--enable-lz4 \
+		--enable-opus \
+		--enable-gstreamer=1.0
 	make WARN_CFLAGS=''
 }
 
@@ -62,8 +65,5 @@ server() {
 	mv "$pkgdir"/usr/lib/*server.so.* "$subpkgdir"/usr/lib/
 }
 
-sha512sums="6485d3522af1cde93d2c0abad7f7ef9f2e4d3e5049314fb93b6dd4b86e33d67d353a3ff42a355c8fd991bad447bbde1e6320c083bbc6f02b576bd9cebe7269ed  spice-0.12.8.tar.bz2
-51c38766c9582376c95e63515d0c009f8c3e95cc03a1751c01974cab9295159eb74d35a08157e1eaa44e99a7bb5b2fdad83d9a8c7e38850741d9b5d534133bc7  CVE-2016-9577.patch
-ffae544784bd98da10cd86db3f5c5753c4833aee6b16e4e671160e92103d84a3dbc4da9f132f35e3b3b71a515e09b68b689c49e5f4265363b9eef39c42d70719  CVE-2016-9578-1.patch
-62ba3844fa11c65eba7d013c209962e39af051885bdf55943410f9122d99135ce30495263f34580ce959355eb60a6026125b181f6b10f0bfab19bbd4ff54f92b  CVE-2016-9578-2.patch
-8a7387fd297aa3d59e38af650f3f12d9b89e46283e2ceaf53ca6e01db6db3c2ac0df164fde05decc4a0d8a05296d3f31195e86e383029804e91b23c84e1292a2  CVE-2017-7506.patch"
+sha512sums="1093b618ea4a7ff31944429ce2903abecfc8d20c35f2d9c8c837a6e053ee429c0115e40665542637a717869209523ac05d15cdb5e77563102d5d3915e4aaaf76  spice-0.14.2.tar.bz2
+0ce5c4077a436a8895452557529d4ad118a578b8e6d157e1d8453105b7456496a0f85da0821afafbae7359a3fd6fe46d47de3bf639fa9bdb9a535ce68ab17dfa  0001-Disable-failing-tests-on-some-arches.patch"

@@ -1,20 +1,16 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=dtc
-pkgver=1.4.4
+pkgver=1.5.1
 pkgrel=0
 pkgdesc="Device Tree Compiler"
-url="http://devicetree.org/Device_Tree_Compiler"
+url="https://git.kernel.org/pub/scm/utils/dtc/dtc.git/"
 arch="all"
-license="GPLv2+"
-depends=""
-depends_dev=""
+license="GPL-2.0-or-later"
 makedepends="$depends_dev bison flex"
-install=""
+checkdepends="coreutils"
 subpackages="$pkgname-dev libfdt"
 source="https://kernel.org/pub/software/utils/dtc/dtc-$pkgver.tar.xz
-	use-tx-as-the-type-specifier-instead-of-zx.patch
 	"
-builddir="$srcdir/dtc-$pkgver"
 
 prepare() {
 	default_prepare
@@ -23,12 +19,18 @@ prepare() {
 
 build() {
 	cd "$builddir"
-	make || return 1
+	make
+}
+
+check() {
+	cd "$builddir"
+	make check
 }
 
 package() {
 	cd "$builddir"
-	make DESTDIR="$pkgdir" PREFIX=/usr install || return 1
+	make -j1 DESTDIR="$pkgdir" PREFIX=/usr install
+	rm -f "$pkgdir"/usr/lib/*.a
 }
 
 libfdt() {
@@ -37,5 +39,4 @@ libfdt() {
 	mv "$pkgdir"/usr/lib/libfdt* "$subpkgdir"/usr/lib/
 }
 
-sha512sums="20689f7b0489fa945c4df4e27084dfd46fd5512a8dff9b28d60e0cd0e9e79bbd9944e4d70a1aba86a026481b35bb5441ed6b63d306a4a8f7581517f7359fa9bf  dtc-1.4.4.tar.xz
-b58959a60468a7b35e007ac13f8b9fb622d28175315b89122ba21a5f100440c55b431b9699e3441754e9cbe63f13d4c75ad4a1df9f66db6abb399fff03891041  use-tx-as-the-type-specifier-instead-of-zx.patch"
+sha512sums="9e17103d791c71f1ad5d86ab6ac629d523d9add684c9cccb1624214d6c65e5c29776c23a2ad70597420b043bb5dfd412bf4beafd74729f02309d399d9639da83  dtc-1.5.1.tar.xz"

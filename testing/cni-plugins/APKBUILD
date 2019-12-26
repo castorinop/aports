@@ -1,0 +1,27 @@
+# Contributor: Francesco Colista <fcolista@alpinelinux.org>
+# Maintainer: Francesco Colista <fcolista@alpinelinux.org>
+pkgname=cni-plugins
+pkgver=0.8.3
+pkgrel=0
+pkgdesc="Some standard networking plugins, maintained by the CNI team"
+options="!check"
+url="https://github.com/containernetworking/cni"
+arch="all"
+license="Apache-2.0"
+makedepends="go bash linux-headers"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/containernetworking/plugins/archive/v$pkgver.tar.gz"
+builddir="$srcdir/plugins-$pkgver"
+
+build() {
+	bash ./build_linux.sh
+}
+
+package() {
+	mkdir -p "$pkgdir/usr/share/$pkgname/"
+	cp -ar bin "$pkgdir/usr/share/$pkgname/"
+	mkdir -p $pkgdir/usr/share/licenses/$pkgname
+	install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+}
+
+sha512sums="054479a73ddbfbdb2986ac202ae2da7a69ae7bb693a250885f950a26973c60be3053d4e95ca24cf5eb67c104b9af8231f859e22c01a066ce3a206a186fc55a6d  cni-plugins-0.8.3.tar.gz"

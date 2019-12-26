@@ -1,30 +1,27 @@
 # Contributor: Olivier Mauras <olivier@mauras.ch>
-# Maintainer: Olivier Mauras <olivier@mauras.ch>
+# Maintainer: Jakub Jirutka <jakub@jirutka.cz>
 pkgname=borgbackup
-pkgver=1.0.10
-pkgrel=0
+pkgver=1.1.10
+pkgrel=2
 pkgdesc="Deduplicating backup program"
 url="https://borgbackup.readthedocs.io/"
-arch="all"
-license="BSD"
-depends="python3 py3-msgpack"
-depends_dev=""
-makedepends="python3-dev lz4-dev acl-dev attr-dev libressl-dev"
-install=""
-subpackages=""
+arch="all !s390x" # limited by py3-zmq
+license="BSD-3-Clause"
+depends="python3 py3-pyzmq"
+makedepends="python3-dev lz4-dev acl-dev attr-dev openssl-dev linux-headers
+	py3-setuptools"
 source="https://github.com/$pkgname/borg/releases/download/$pkgver/$pkgname-$pkgver.tar.gz"
 
-builddir="$srcdir"/$pkgname-$pkgver
 build() {
-        cd "$builddir"
-        python3 setup.py build || return 1
+	python3 setup.py build
 }
 
 package() {
-        cd "$builddir"
-        python3 setup.py install --prefix=/usr --root="$pkgdir" || return 1
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
+
+	# Clean some useless files.
+	cd "$pkgdir"/usr/lib/python*/site-packages/borg
+	find . -name '*.h' -delete -o -name '*.c' -delete -o -name '*.pyx' -delete
 }
 
-md5sums="210cebe28da0cdce23a49a4f2102d9be  borgbackup-1.0.10.tar.gz"
-sha256sums="978f28f144924005219da989b1b436a32b2735a34c6d0dc15bb0a1ccffad59e9  borgbackup-1.0.10.tar.gz"
-sha512sums="db0d315b8381f853c192e0b6672bac8275ef2046dc307f88bbd9641f941feedb91bdfdb074b2b33141a6b94db204588fb87b6ea1b746648d20f30f1268055d7a  borgbackup-1.0.10.tar.gz"
+sha512sums="9315335208f10427e3105e10819817d15fd05171479252903bd51eaacb016bc3ff792d505b9203ce0b9b41ec350472bdb9a23b0128e7fe156aaa47c1608451c0  borgbackup-1.1.10.tar.gz"

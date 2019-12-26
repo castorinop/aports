@@ -4,14 +4,14 @@ pkgname=acf-db
 pkgver=0.2.1
 pkgrel=2
 pkgdesc="A web-based system administration interface for databases"
-url="http://git.alpinelinux.org/cgit/acf/acf-db"
+url="https://git.alpinelinux.org/cgit/acf/acf-db"
 arch="noarch"
-license="GPL2"
+license="GPL-2.0"
 depends="acf-core acf-db-lib"
 makedepends=""
 install=
 subpackages="$pkgname-lib"
-source="http://dev.alpinelinux.org/archive/$pkgname/$pkgname-$pkgver.tar.xz"
+source="https://dev.alpinelinux.org/archive/$pkgname/$pkgname-$pkgver.tar.xz"
 
 package() {
 	cd "$srcdir/$pkgname-$pkgver"

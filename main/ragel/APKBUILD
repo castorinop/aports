@@ -6,13 +6,13 @@ pkgrel=0
 pkgdesc="Finite state machine compiler"
 url="http://www.complang.org/ragel/"
 arch="all"
-license="GPLv2+"
+license="GPL-2.0-or-later"
 depends=""
 depends_dev=""
 makedepends="$depends_dev"
 install=""
 subpackages="$pkgname-doc"
-source="http://www.colm.net/files/ragel/ragel-$pkgver.tar.gz"
+source="https://www.colm.net/files/ragel/ragel-$pkgver.tar.gz"
 
 _builddir="$srcdir"/ragel-$pkgver
 prepare() {

@@ -2,35 +2,29 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=graphite2
 _realname=${pkgname/2/}
-pkgver=1.3.10
-pkgrel=0
+pkgver=1.3.13
+pkgrel=1
 pkgdesc="reimplementation of the SIL Graphite text processing engine"
 url="http://graphite.sil.org/"
 arch="all"
-license="LGPL"
-depends=""
+options="!check"  # Test suite requires Graphite 1 and py2-fonttools
+license="LGPL-2.1-or-later OR MPL-2.0 OR GPL-2.0-or-later"
 depends_dev="freetype-dev"
-makedepends="$depends_dev python2 cmake"
-install=""
-subpackages="$pkgname-dev"
+makedepends="$depends_dev cmake"
+subpackages="$pkgname-static $pkgname-dev"
 source="$pkgname-$pkgver.tar.gz::https://github.com/silnrsi/$_realname/archive/$pkgver.tar.gz
 	cmake.patch
-	graphite2-1.2.0-cmakepath.patch
 	"
 
-_builddir="$srcdir"/$_realname-$pkgver
-prepare() {
-	local i
-	cd "$_builddir"
-	for i in $source; do
-		case $i in
-		*.patch) msg $i; patch -p1 -i "$srcdir"/$i || return 1;;
-		esac
-	done
-}
+builddir="$srcdir"/$_realname-$pkgver
 
 build() {
-	cd "$_builddir"
+	cd "$builddir"
+
+	# static and shared version needs to be build in separated dirs
+	# See https://github.com/silnrsi/graphite/pull/12#issuecomment-311756732
+
+	# shared
 	mkdir build && cd build
 	cmake -G "Unix Makefiles" .. \
 		-DCMAKE_C_FLAGS:STRING="${CFLAGS}" \
@@ -38,18 +32,33 @@ build() {
 		-DCMAKE_BUILD_TYPE:STRING=Release \
 		-DGRAPHITE2_COMPARE_RENDERER=OFF \
 		-DGRAPHITE2_NFILEFACE=ON \
-		-DGRAPHITE2_NSEGCACHE=ON || return 1
 
-	# fix unwanted -O3 cflag (taken form Debian)
-	find . -type f ! -name "rules" ! -name "changelog" -exec sed -i -e 's/\-O3//g' {} \;
-	make || return 1
+	make
+
+	# static
+	cd ..
+	mkdir build-static && cd build-static
+	cmake -G "Unix Makefiles" .. \
+		-DCMAKE_C_FLAGS:STRING="${CFLAGS}" \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_BUILD_TYPE:STRING=Release \
+		-DGRAPHITE2_COMPARE_RENDERER=OFF \
+		-DGRAPHITE2_NFILEFACE=ON \
+		-DBUILD_SHARED_LIBS=OFF
+
+	make
+}
+
+static() {
+	pkgdesc="$pkgname static libraries"
+	mkdir -p "$subpkgdir"/usr/lib
+	mv "$builddir"/build-static/src/libgraphite2.a "$subpkgdir"/usr/lib/
 }
 
 package() {
-	cd "$_builddir"/build
+	cd "$builddir"/build
 	make DESTDIR="$pkgdir/" install
 }
 
-sha512sums="9a6ff2ad88f04e55a6da862e6eefcf2d87c562bb9feedddc4532b66f7938b9ade4a12c8a4b19ab7b08ec3e34a96b97331621a7465b672407ab4d1af756df04c1  graphite2-1.3.10.tar.gz
-44dcff1e6c8c5e3df92eae8cab501c9605a1cd3e16b6cdce2e376d78fd08b26b7f6e037b7e5878099ba426a93572114169b5f64c4d2ae0bcbe223f1d28b00eb5  cmake.patch
-4ef5414e6d554bb8d6ead435e38d061a073f350c313b7141158bb68332f5f57ca5250385875a387b828bb657964588e974143b96b5e11c2cd314871e7baddb88  graphite2-1.2.0-cmakepath.patch"
+sha512sums="8e2c6047a66b4d8873842de6b9b1909d326512b47a04f483b3a6113b97fd0d47e0da7cf9ecf96e060ca06e5288b49f1300e2fd7165d2d82d6a8eb8cb7d53d33f  graphite2-1.3.13.tar.gz
+729fb5ce0b012dca27cda10ec2b8cdf90029394915072f3a11ee4a3ec1b62aa5d810ca118a428419ac88d0dd316b07de557601d1ce079d3f96bfff4be271addb  cmake.patch"

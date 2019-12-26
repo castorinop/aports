@@ -1,16 +1,15 @@
 # Maintainer: Danilo Bürger <danilo@feastr.de>
-
 pkgname=tini
-pkgver=0.15.0
+pkgver=0.18.0
 pkgrel=0
 pkgdesc="A tiny but valid init for containers"
 url="https://github.com/krallin/tini"
 arch="all"
 license="MIT"
+options="!check" # Test suite depends on Docker
 makedepends="cmake"
 subpackages="$pkgname-static"
 source="$pkgname-$pkgver.tar.gz::https://github.com/krallin/tini/archive/v$pkgver.tar.gz"
-builddir="$srcdir"/$pkgname-$pkgver
 
 build() {
 	cd "$builddir"
@@ -31,4 +30,4 @@ static() {
 	install -D -m755 tini-static "$subpkgdir"/sbin/tini-static
 }
 
-sha512sums="774addddeb2bcefd1db2e4bff7c55bba6c3f4adc41e0b2a647059eef8cc5cc9d4a47b68cb4b89aa4e9e52b85916fe2680dad2a414c82b3c276beea89e3689481  tini-0.15.0.tar.gz"
+sha512sums="83279180b6a875aaff9b6b7446ee7e71fd05357279744afcb4db67c76572dc871acfba86c035857009b5dd88ca75d9f2e815d6a925563cdb3e6e771eb83be9b1  tini-0.18.0.tar.gz"

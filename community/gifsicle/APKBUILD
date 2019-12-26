@@ -1,20 +1,18 @@
 # Contributor: Isaac Dunham <ibid.ag@gmail.com>
 # Maintainer: Isaac Dunham <ibid.ag@gmail.com>
 pkgname=gifsicle
-pkgver=1.89
+pkgver=1.92
 pkgrel=0
-pkgdesc="Command-line tool for making, editing, and getting information about GIF animations"
+pkgdesc="Command-line tool for making, editing and getting information about GIF animations"
 url="http://www.lcdf.org/gifsicle/"
 arch="all"
-license="GPL2"
+license="GPL-2.0-only"
 makedepends="libx11-dev libice-dev libsm-dev"
+checkdepends="perl"
 subpackages="$pkgname-doc"
 source="http://www.lcdf.org/gifsicle/gifsicle-$pkgver.tar.gz"
 
-builddir="$srcdir"/gifsicle-$pkgver
-
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -26,9 +24,12 @@ build() {
 	make
 }
 
+check() {
+	make check
+}
+
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="517a82b7553ce2860894828fd3961368d5275119fc282d0f7a73ce2d07795c91a4bf440c4633c5d4bd66ea695ee8cc873c844c499167e286ad09cd7a830e804e  gifsicle-1.89.tar.gz"
+sha512sums="5d9539eb5a6a8b87aed49ff3ca3d62e337845edbd05459b002369d571f74878c99740c34f50b4c86e5b8787ff189d4c21230e4f9019cd96a09db603afd7563dc  gifsicle-1.92.tar.gz"

@@ -1,37 +1,32 @@
 # Contributor: Natanael Copa <ncopa@alpinelinux.org>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=spice-protocol
-pkgver=0.12.12
+pkgver=0.14.0
 pkgrel=0
 pkgdesc="Spice protocol header files"
 url="http://www.spice-space.org/"
 arch="noarch"
-license="BSD and LGPLv2+"
-depends=""
-depends_dev=""
-makedepends="$depends_dev"
-install=""
-subpackages=""
-source="http://www.spice-space.org/download/releases/$pkgname-$pkgver.tar.bz2
-	"
-
+license="BSD-3-Clause LGPL-2.1-or-later"
+options="!check" # No test suite
+makedepends="meson"
+source="https://www.spice-space.org/download/releases/$pkgname-$pkgver.tar.bz2"
 builddir="$srcdir"/$pkgname-$pkgver
+
 build() {
 	cd "$builddir"
-	./configure \
-		--build=$CBUILD \
-		--host=$CHOST \
+
+	meson build/ \
+		--buildtype=release \
 		--prefix=/usr \
-		|| return 1
-	make || return 1
+		--datadir=lib
+
+	ninja -C build/
 }
 
 package() {
 	cd "$builddir"
-	make pkgconfigdir=/usr/lib/pkgconfig DESTDIR="$pkgdir" install \
-		|| return 1
+
+	DESTDIR="$pkgdir" ninja -C build/ install
 }
 
-md5sums="3b2886cceaefc228b7afa12300462abd  spice-protocol-0.12.12.tar.bz2"
-sha256sums="17abdc2743b5d44b0f4423b61c44aafe9f2078c27218aeea78c2d02a5c409d03  spice-protocol-0.12.12.tar.bz2"
-sha512sums="66e7a902b3c4a5a778cb91ffd9d324b12d414184146ac834dfb3bd81b4b6b1bb56258d3e1ce240b6f8747e1960fce8f0f6b0ada3617e9f9819be7118195fce6b  spice-protocol-0.12.12.tar.bz2"
+sha512sums="797df5f529731e9fd395b5946af2490ecf02c26982cc4a0aef24c1766887a35222f68525a996f8bc7459c2c4a25fde0c9a10c489ee6cab6eed7a68a9b5d90f76  spice-protocol-0.14.0.tar.bz2"

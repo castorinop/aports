@@ -2,39 +2,44 @@
 # Maintainer:  Leonardo Arena <rnalrd@alpinelinux.org>
 pkgname=perl-libwww
 _realname=libwww-perl
-pkgver=6.26
+pkgver=6.43
 pkgrel=0
 pkgdesc="Perl module - World Wide Web library"
-url="http://search.cpan.org/~mschilli"
+url="https://metacpan.org/author/MSCHILLI"
 arch="noarch"
-license="GPL PerlArtistic"
+license="GPL-1.0-or-later OR Artistic-1.0-Perl"
 depends="perl-http-date perl-http-cookies perl-net-http perl-http-daemon
 	perl-html-parser perl-file-listing perl-www-robotrules
 	perl-http-negotiate perl-uri perl-http-message
 	perl-lwp-mediatypes perl-encode-locale perl-try-tiny"
 makedepends="perl-dev perl-test-fatal perl-test-requiresinternet"
-install=
+checkdepends="perl-test-needs perl-test-leaktrace"
 subpackages="$pkgname-doc"
-source="$pkgname-$pkgver.tar.gz::https://github.com/libwww-perl/libwww-perl/archive/v$pkgver.tar.gz"
-
+source="https://cpan.metacpan.org/authors/id/O/OA/OALDERS/libwww-perl-$pkgver.tar.gz"
 builddir="$srcdir/$_realname-$pkgver"
 
+prepare() {
+	default_prepare
+
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
+	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
+	rm -v t/base/protocols/nntp.t
+}
+
+
 build() {
-	cd $builddir
-	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor || return 1
-	make || return 1
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
+	make
 }
 
 check() {
-	cd $builddir
-	make test || return 1
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
+	make test
 }
 
 package() {
-	cd $builddir
 	make DESTDIR="$pkgdir" install
-	# creates file collision among perl modules
-	find "$pkgdir" -name perllocal.pod -delete
+	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 
-sha512sums="1d22f0234e410d2131b9926a3c5d52e991015401aecbbc990a56c9d793bafcbb40c7d1b22009254e5652be995a316e2df1ae2a2eaedd44cd79353a881c3d2210  perl-libwww-6.26.tar.gz"
+sha512sums="789d43f4f3481fa4aca5bf6468318989074e3301053ac66482a40f4fa2730f280b2c71518ebacc652243b35e86ab00e6313613033d35f5ef0e223ebee977c11e  libwww-perl-6.43.tar.gz"

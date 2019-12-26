@@ -2,18 +2,18 @@
 # Contributor: Jose-Luis Rivas <ghostbar@riseup.net>
 # Maintainer: Carlo Landmeter <clandmeter@gmail.com>
 pkgname=libzip
-pkgver=1.3.0
+pkgver=1.5.2
 pkgrel=0
-pkgdesc="A C library for reading, creating, and modifying zip archives"
+pkgdesc="C library for manipulating zip archives"
 url="http://www.nih.at/libzip/index.html"
 arch="all"
-license="BSD"
-depends=
+license="BSD-3-Clause"
 depends_dev="zlib-dev"
-makedepends="$depends_dev perl"
+makedepends="$depends_dev cmake openssl-dev perl"
 subpackages="$pkgname-dev $pkgname-doc $pkgname-tools"
-source="http://www.nih.at/libzip/$pkgname-$pkgver.tar.gz"
-
+source="https://www.nih.at/libzip/$pkgname-$pkgver.tar.xz
+	build-static-and-dynamic.patch
+	"
 builddir="$srcdir/$pkgname-$pkgver"
 
 # secfixes:
@@ -22,28 +22,30 @@ builddir="$srcdir/$pkgname-$pkgver"
 
 build() {
 	cd "$builddir"
-	./configure \
-		--build=$CBUILD \
-		--host=$CHOST \
-		--prefix=/usr \
-		--sysconfdir=/etc \
-		--mandir=/usr/share/man \
-		--localstatedir=/var \
-		|| return 1
-	make || return 1
+	cmake \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DCMAKE_CXX_FLAGS="$CXXFLAGS" \
+		-DCMAKE_C_FLAGS="$CFLAGS"
+	make
+}
+
+check() {
+	cd "$builddir"
+	make check
 }
 
 package() {
 	cd "$builddir"
-	make DESTDIR="$pkgdir" -j1 install install-man || return 1
-	mv "$pkgdir"/usr/lib/libzip/include/* "$pkgdir"/usr/include || return 1
-	rm -fr "$pkgdir"/usr/lib/libzip
+	make DESTDIR="$pkgdir" -j1 install
 }
 
 tools() {
 	pkgdesc="$pkgname cmp and merge tools"
 	install -d "$subpkgdir"/usr
-	mv "$pkgdir"/usr/bin "$subpkgdir"/usr || return 1
+	mv "$pkgdir"/usr/bin "$subpkgdir"/usr
 }
 
-sha512sums="8cffbcd27b9e6c9676c5224c5784190bff881ac690ce0f58702b17c99ee6d1c14eda266298841f896a02233d2eb5f4147d5c8b4ad55d36c384eaa560fd96ff89  libzip-1.3.0.tar.gz"
+sha512sums="1e6d48ddbac4d270f70b314f6ada3c93a3196a8cc3b8d17c6cf5ea8409ff29f36ac351206675f9d81351fcf633b0c15d7b0b5530c30c4140e4fe55e64c602643  libzip-1.5.2.tar.xz
+09b31e42e732b3d0e7705c90fa0b3afa5a2d2eaa8dfde4ab24d728158d805dc4e8c803f184b6eb69711f4975a220528578a4d78d88713b4ce405d3892be11fa9  build-static-and-dynamic.patch"

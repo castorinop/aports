@@ -1,0 +1,46 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=konsole
+pkgver=19.12.0
+pkgrel=0
+arch="all"
+url="https://kde.org/applications/system/konsole"
+pkgdesc="KDE's terminal emulator"
+license="GPL-2.0-only AND LGPL-2.1-or-later AND Unicode-DFS-2016"
+makedepends="extra-cmake-modules qt5-qtbase-dev kbookmarks-dev kcompletion-dev
+	kconfig-dev kconfigwidgets-dev kcoreaddons-dev kcrash-dev kguiaddons-dev
+	kdbusaddons-dev ki18n-dev kiconthemes-dev kinit-dev kio-dev knewstuff-dev
+	knotifications-dev knotifyconfig-dev kparts-dev kpty-dev kservice-dev
+	ktextwidgets-dev kwidgetsaddons-dev kwindowsystem-dev kxmlgui-dev
+	kdbusaddons-dev kglobalaccel-dev kdoctools-dev"
+checkdepends="xvfb-run"
+source="https://download.kde.org/stable/release-service/$pkgver/src/konsole-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	cd "$builddir"/build
+	# DBusTest requires running DBus
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest -E "DBusTest"
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="3a9bcbc9c07eafe178406d4ea5eab06c24ede5fcb7ad43dc8b0a46776cdd64ce6d2033ea1083f648370cdb50eda4e93ec1cdd76e318a2d7ec44f46b4be75e89d  konsole-19.12.0.tar.xz"

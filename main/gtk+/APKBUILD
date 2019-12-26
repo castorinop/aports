@@ -1,17 +1,15 @@
-# Contributor: William Pitcock <nenolod@dereferenced.org>
+# Contributor:
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=gtk+
-pkgver=2.24
+pkgver=2.24.31
 pkgrel=1
 pkgdesc="metapackage for GTK+ runtime and development"
-url=""
+url="https://www.gtk.org/"
 arch="all"
-license="LGPL"
+license="LGPL-2.0-or-later"
+options="!check"
 depends="gtk+2.0>=$pkgver"
-makedepends="$depends_dev"
-install=""
 subpackages="$pkgname-dev"
-url="http://www.gtk.org/"
 
 dev() {
 	depends="gtk+2.0-dev"

@@ -1,0 +1,47 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kcoreaddons
+pkgver=5.65.0
+pkgrel=0
+pkgdesc="Addons to QtCore"
+arch="all"
+url="https://community.kde.org/Frameworks"
+license="LGPL-2.0-or-later AND (LGPL-2.1-only OR LGPL-3.0-only)"
+depends_dev="qt5-qtbase-dev"
+makedepends="$depends_dev extra-cmake-modules qt5-qttools-dev doxygen shared-mime-info"
+source="https://download.kde.org/stable/frameworks/${pkgver%.*}/kcoreaddons-$pkgver.tar.xz"
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib \
+		-DBUILD_QCH=ON
+	make
+}
+
+check() {
+	cd "$builddir"/build
+
+	local disabled_tests="klistopenfilesjobtest_unix|kdirwatch_qfswatch_unittest|kdirwatch_stat_unittest"
+	case "$CARCH" in
+		s390x) disabled_tests="$disabled_tests|kdirwatch_inotify_unittest";;
+	esac
+
+	# klistopenfilesjobtest_unix requires >8000 open files
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest -E "($disabled_tests)"
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+sha512sums="2b2d1bf85e3f0a2e226c678107653dd347bf7d8a0d23cab2759057eb6ba74dc45fd1bfcf6da1c176c2ee60bbb0e05d43a85bec1a9955bfedc79aca62f4d8aae8  kcoreaddons-5.65.0.tar.xz"

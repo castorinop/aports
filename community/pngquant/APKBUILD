@@ -1,26 +1,27 @@
 # Contributor: Carlo Landmeter <clandmeter@gmail.com>
 # Maintainer: André Klitzing <aklitzing@gmail.com>
 pkgname=pngquant
-pkgver=2.10.1
+pkgver=2.12.5
 pkgrel=0
 pkgdesc="Lossy PNG compressor"
-url="https://pngquant.org/"
+url="https://pngquant.org"
 arch="all"
-license="GPL"
+license="GPL-3.0-or-later"
 makedepends="libpng-dev lcms2-dev bash"
 subpackages="$pkgname-doc"
-source="http://pngquant.org/$pkgname-$pkgver-src.tar.gz"
-builddir="$srcdir"/$pkgname-$pkgver
+source="https://pngquant.org/$pkgname-$pkgver-src.tar.gz"
 
 build() {
-	cd "$builddir"
 	./configure --prefix=/usr
 	make
 }
 
+check() {
+	./pngquant --help > /dev/null
+}
+
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="5e239f63a6f858bb8116a884526b9441f0c9c9ecf38f4081ec0c666f1756ef955f98c7c62652fff9b2ac3761c7023633193bc68de555738e0bc054b9068f09a2  pngquant-2.10.1-src.tar.gz"
+sha512sums="54e624d68934036815faa11b6e6da8559b7e7e3b4b7933b61bd98758ddfc2c3b70b1642aafd75fe40121fd3c88edaeef3bbe9549661e13b689fb1ecc29e5c5af  pngquant-2.12.5-src.tar.gz"

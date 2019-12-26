@@ -1,0 +1,36 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Rasmus Thomsen <oss@cogitri.dev>
+pkgname=gjs
+pkgver=1.58.3
+pkgrel=0
+pkgdesc="GNOME javascript library"
+url="https://wiki.gnome.org/Projects/Gjs"
+arch="all !s390x"
+license="MIT LGPL-2.0-or-later"
+makedepends="$depends_dev dbus gobject-introspection-dev mozjs60-dev mozjs60
+	gtk+3.0-dev cairo-dev"
+options="!check" # needs DISPLAY
+subpackages="$pkgname-dev"
+source="https://download.gnome.org/sources/gjs/${pkgver%.*}/gjs-$pkgver.tar.xz"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--disable-profiler
+	make
+}
+
+check() {
+	make check
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="f75b0ca6809636026e3f533a18c7599caf377cf6380f40cf39b2c24608cbd2959094d9395494fefce6764ab9ba2ee152809a748a124e4f8b7e9ffa6d136a0260  gjs-1.58.3.tar.xz"

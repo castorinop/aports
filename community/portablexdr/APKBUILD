@@ -5,13 +5,13 @@ pkgrel=1
 pkgdesc="external data representation (XDR) library"
 url="http://people.redhat.com/~rjones/portablexdr/"
 arch="all"
-license="GPLv2+"
+license="GPL-2.0-or-later"
 depends=""
 depends_dev=""
 makedepends="$depends_dev libtool"
 install=""
 subpackages="$pkgname-dev $pkgname-rpcgen"
-source="http://people.redhat.com/~rjones/portablexdr/files/portablexdr-$pkgver.tar.gz
+source="https://people.redhat.com/~rjones/portablexdr/files/portablexdr-$pkgver.tar.gz
 	portablexdr-4.9.1-no-config-h.patch
 	portablexdr-build-use-intptr_t-and-uintptr_t-to-cast-ptr-to-int.patch
 	quad-types.patch

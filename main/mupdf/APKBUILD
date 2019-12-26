@@ -2,25 +2,45 @@
 # Contributor: Michael Zhou <zhoumichaely@gmail.com>
 # Maintainer: Daniel Sabogal <dsabogalcc@gmail.com>
 pkgname=mupdf
-pkgver=1.11
+pkgver=1.16.1
 pkgrel=1
-pkgdesc="A lightweight PDF and XPS viewer"
-url="http://mupdf.com"
+pkgdesc="Lightweight PDF and XPS viewer"
+url="https://mupdf.com"
 arch="all"
-license="AGPL3+"
-depends=""
-makedepends="freetype-dev jpeg-dev jbig2dec-dev libx11-dev libxext-dev
-	openjpeg-dev harfbuzz-dev glfw-dev"
+license="AGPL-3.0-or-later"
+makedepends="freetype-dev
+	harfbuzz-dev
+	jbig2dec-dev
+	jpeg-dev
+	openjpeg-dev
+	readline-dev
+	freeglut-dev
+	zlib-dev
+	libx11-dev
+	libxext-dev
+	libxrandr-dev
+	libxi-dev
+	mesa-dev
+	glu-dev"
+
 subpackages="$pkgname-doc $pkgname-dev $pkgname-x11:_x11
 	$pkgname-gl:_gl $pkgname-tools:_tools"
 options="!check"
-source="http://mupdf.com/downloads/archive/$pkgname-$pkgver-source.tar.gz
+source="https://mupdf.com/downloads/archive/mupdf-$pkgver-source.tar.xz
 	shared-lib.patch
-	openjpeg-2.1.patch
-	CVE-2017-6060.patch
+	fix-big-endian.patch
 	"
 
+# FIXME: shared linking of /usr/lib/libmupdf.so.0
+
 # secfixes:
+#   1.13-r0:
+#   - CVE-2018-1000051
+#   - CVE-2018-6544
+#   - CVE-2018-6192
+#   - CVE-2018-6187
+#   - CVE-2018-5686
+#   - CVE-2017-17858
 #   1.11-r1:
 #   - CVE-2017-6060
 #   1.10a-r2:
@@ -30,48 +50,45 @@ source="http://mupdf.com/downloads/archive/$pkgname-$pkgver-source.tar.gz
 
 builddir="$srcdir/$pkgname-$pkgver-source"
 prepare() {
-	default_prepare || return 1
-
-	cd "$builddir"
-	for file in thirdparty/*; do
-		[ "${file##*/}" != "mujs" ] && rm -rf "$file"
-	done
-
-	sed '/^JBIG2DEC_CFLAGS :=/s|$| -I./include/mupdf|' \
-		-i Makethird || return 1
+	default_prepare
+	rm -rf thirdparty/{curl,freeglut,freetype,harfbuzz,jbig2dec,libjpeg,openjpeg,zlib}
 }
 
 build() {
-	make HAVE_GLFW=yes SYS_GLFW_LIBS="$(pkgconf --libs glfw3 gl)" \
-		prefix=/usr -C "$builddir" || return 1
+	cd "$builddir"
+	make USE_SYSTEM_LIBS=yes prefix=/usr CURL_LIBS='-lcurl -lpthread' build=release libs apps
 }
 
 package() {
-	make HAVE_GLFW=yes \
-		prefix=/usr DESTDIR="$pkgdir" \
-		-C "$builddir" install || return 1
+	cd "$builddir"
+	make USE_SYSTEM_LIBS=yes prefix=/usr DESTDIR="$pkgdir" install
+
+	cd build/release
+	local app; for app in muraster; do
+		install -Dm755 $app "$pkgdir"/usr/bin/$app
+	done
 
 	ln -s libmupdf.so.0 "$pkgdir"/usr/lib/libmupdf.so
 	ln -s libmupdfthird.so.0 "$pkgdir"/usr/lib/libmupdfthird.so
 }
 
 _x11() {
-	pkgdesc="A lightweight PDF and XPS viewer with X11 backend"
+	pkgdesc="$pkgdesc with X11 backend"
 	depends=""
 
 	mkdir -p "$subpkgdir"/usr/bin
 	mv "$pkgdir"/usr/bin/mupdf-x11 \
-		"$subpkgdir"/usr/bin/ || return 1
+		"$subpkgdir"/usr/bin/
 	ln -s /usr/bin/mupdf-x11 "$subpkgdir"/usr/bin/mupdf
 }
 
 _gl() {
-	pkgdesc="A lightweight PDF and XPS viewer with OpenGL backend"
+	pkgdesc="$pkgdesc with OpenGL backend"
 	depends=""
 
 	mkdir -p "$subpkgdir"/usr/bin
 	mv "$pkgdir"/usr/bin/mupdf-gl \
-		"$subpkgdir"/usr/bin/ || return 1
+		"$subpkgdir"/usr/bin/
 }
 
 _tools() {
@@ -80,12 +97,10 @@ _tools() {
 
 	mkdir -p "$subpkgdir"/usr/bin
 	mv "$pkgdir"/usr/bin/mutool \
-		"$pkgdir"/usr/bin/mujstest \
 		"$pkgdir"/usr/bin/muraster \
-		"$subpkgdir"/usr/bin/ || return 1
+		"$subpkgdir"/usr/bin/
 }
 
-sha512sums="501670f540e298a8126806ebbd9db8b29866f663b7bbf26c9ade1933e42f0c00ad410b9d93f3ddbfb3e45c38722869095de28d832fe3fb3703c55cc9a01dbf63  mupdf-1.11-source.tar.gz
-b3ddbc22da894a8b9a0fa0c93711e2052b5d2ca29497473b6e15ffbae52faaafff9238619680de474c455ebd073c2d29ead4ff5d962fddb99f7ced27057fa77f  shared-lib.patch
-f8283db9a510527e84afeeb6eea89948161899c149a559c4a699c533445b42f30e5bf520616ca69d7feb554529ad494a60c276a1eecc915723ec0f264bbc0ed0  openjpeg-2.1.patch
-3e3f34e448967acb7772365065234c313cb014ebe6e3c3b3bcdbed2242b32ee5589ecd749d06fb4cd5f406eb37ca431e369c96b9adb3b5367d2e5296f1ca983e  CVE-2017-6060.patch"
+sha512sums="fa657e6b9251aff91c25e91b335ea829b797dd91a759505bfd7259f8236613f590a044bc741e9b0587da55817a1ab8c1499c067d65d683d099259d06d91a8f50  mupdf-1.16.1-source.tar.xz
+5f1448005c2126c16f9e05a77486d63991110d343a4094e92d6877b11babb30b2a4c3a07580658e1e6caa805a53caf31595309c9f5203ed0a269e4d9e38af3d1  shared-lib.patch
+486d09df319050ddb33dbd1e2e0638a7bc6a3e188032a35b81119c45b0de911629b827b21aa47cde6669b66d73fb22cff54d190a8449151fdc27eace71beefbd  fix-big-endian.patch"

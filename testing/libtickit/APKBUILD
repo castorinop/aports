@@ -1,0 +1,39 @@
+# Contributor: Roberto Oliveira <robertoguimaraes8@gmail.com>
+# Maintainer: Roberto Oliveira <robertoguimaraes8@gmail.com>
+pkgname=libtickit
+pkgver=0.3.2
+pkgrel=0
+pkgdesc="A library that provides an abstracted mechanism for building interactive full-screen terminal programs"
+url="http://www.leonerd.org.uk/code/libtickit/"
+arch="all !x86 !x86_64" # disable x86* due to testsuite failure
+license="MIT"
+makedepends="libtermkey-dev"
+checkdepends="perl-test-harness-utils"
+subpackages="$pkgname-static $pkgname-dev $pkgname-doc"
+source="http://www.leonerd.org.uk/code/$pkgname/$pkgname-$pkgver.tar.gz"
+
+prepare() {
+	default_prepare
+	sed -i -e "s/PREFIX=\/usr\/local/PREFIX=\/usr/g" Makefile
+}
+
+build() {
+	make PREFIX=/usr
+}
+
+check() {
+	TERM=linux make test
+}
+
+package() {
+	make install DESTDIR="$pkgdir"
+}
+
+static() {
+	depends=""
+	pkgdesc="$pkgdesc (static library)"
+	mkdir -p "$subpkgdir"/usr/lib
+	mv "$pkgdir"/usr/lib/*.a "$subpkgdir"/usr/lib
+}
+
+sha512sums="94d1da49783a4215617d129f07e2729282fabebf9555a70f565c59b26bf5ca5a1e0e7643ead3e25398238af2818edfe9bd56d41986ddf93b087ea1eeaea503a9  libtickit-0.3.2.tar.gz"

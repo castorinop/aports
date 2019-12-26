@@ -1,5 +1,4 @@
-# Contributor: Marian <m.buschsieweke@uni-muenster.de>
-# Maintainer: Marian <m.buschsieweke@uni-muenster.de>
+# Maintainer: Marian Buschsieweke <marian.buschsieweke@ovgu.de>
 pkgname=tinyscheme
 pkgver=1.41
 pkgrel=0
@@ -9,7 +8,7 @@ arch="all"
 license="BSD"
 makedepends=""
 subpackages=""
-source="http://downloads.sourceforge.net/$pkgname/$pkgname-$pkgver.tar.gz"
+source="https://downloads.sourceforge.net/$pkgname/$pkgname-$pkgver.tar.gz"
 builddir="$srcdir/$pkgname-$pkgver"
 
 build() {

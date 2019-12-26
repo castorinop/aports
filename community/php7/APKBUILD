@@ -4,33 +4,40 @@
 
 # Bundled libraries
 #
-# Name      | License | Location               | State
-# ----------+---------+------------------------+---------
-# bcmath    | LGPL2   | ext/bcmath/libbcmath   | used
-# date      | MIT     | ext/date/lib           | used
-# gd        | BSD     | ext/gd/libgd           | used
-# file      | BSD     | ext/fileinfo/libmagic  | used
-# libmbfl   | LGPLv2  | ext/mbstring/libmbfl   | used
-# oniguruma | BSD     | ext/mbstring/oniguruma | used
-# pcre      | BSD     | ext/pcre/pcrelib       | not used
-# sqlite3   | Public  | ext/sqlite3/libsqlite  | not used
-# libzip    | BSD     | ext/zip/lib            | not used
-# libXMLRPC | BSD     | ext/xmlrpc/libxmlrpc   | used
+# Name      | License             | Location               | State
+# ----------+---------------------+------------------------+---------
+# bcmath    | LGPL-2.1-or-later   | ext/bcmath/libbcmath   | used
+# date      | MIT                 | ext/date/lib           | used
+# fileinfo  | BSD-2-Clause        | ext/fileinfo/libmagic  | used
+# gd        | BSD                 | ext/gd/libgd           | used
+# hash      | CC0-1.0             | ext/hash/sha3          | used
+# libmbfl   | LGPL-2.1-only       | ext/mbstring/libmbfl   | used
+# oniguruma | BSD-2-Clause        | ext/mbstring/oniguruma | used
+# pcre      | BSD-3-Clause        | ext/pcre/pcrelib       | not used
+# sqlite3   | Public              | ext/sqlite3/libsqlite  | not used
+# libXMLRPC | BSD-3-Clause        | ext/xmlrpc/libxmlrpc   | used
+# libzip    | BSD-3-Clause        | ext/zip/lib            | not used
+
+# Static extensions
+#
+# Name      | Reason
+# ----------+--------------------------------------------
+# zlib      | https://bugs.alpinelinux.org/issues/8299
 
 pkgname=php7
 _pkgreal=php
-pkgver=7.1.9
+pkgver=7.3.13
 pkgrel=0
-_apiver=20160303
+_apiver=20180731
 _suffix=${pkgname#php}
 # Is this package the default (latest) PHP version?
 _default_php="yes"
 pkgdesc="The PHP$_suffix language runtime engine"
-url="http://www.php.net/"
+url="https://secure.php.net"
 arch="all"
-license="PHP-3 BSD LGPL2 MIT Zend"
+license="PHP-3.01 BSD LGPL-2.0-or-later MIT Zend-2.0"
 depends="$pkgname-common"
-depends_dev="$pkgname=$pkgver-r$pkgrel autoconf pcre-dev"
+depends_dev="$pkgname=$pkgver-r$pkgrel autoconf pcre2-dev"
 # Most dependencies between extensions is auto-discovered (see _extension()).
 _depends_mysqlnd="$pkgname-openssl"
 _depends_pdo_mysql="$pkgname-pdo $pkgname-mysqlnd"
@@ -39,8 +46,9 @@ _depends_phar="$pkgname"
 # load index based on number of dependencies.
 _depends_mysqli="$pkgname-mysqlnd $pkgname-openssl"
 makedepends="
-	autoconf
+	$depends_dev
 	apache2-dev
+	argon2-dev
 	aspell-dev
 	bison
 	bzip2-dev
@@ -58,9 +66,9 @@ makedepends="
 	libedit-dev
 	libical-dev
 	libjpeg-turbo-dev
-	libmcrypt-dev
 	libpng-dev
-	libressl-dev
+	openssl-dev
+	libsodium-dev
 	libwebp-dev
 	libxml2-dev
 	libxpm-dev
@@ -68,7 +76,6 @@ makedepends="
 	libzip-dev
 	net-snmp-dev
 	openldap-dev
-	pcre-dev
 	postgresql-dev
 	re2c
 	recode-dev
@@ -77,19 +84,21 @@ makedepends="
 	unixodbc-dev
 	zlib-dev
 	"
-provides="$pkgname-cli"  # for backward compatibility
-subpackages="$pkgname-dev $pkgname-doc $pkgname-apache2 $pkgname-phpdbg
+provides="$pkgname-cli php-cli php"  # for backward compatibility
+provider_priority=100
+subpackages="$pkgname-static $pkgname-dev $pkgname-dbg $pkgname-doc
+	$pkgname-phpdbg $pkgname-apache2
 	$pkgname-embed $pkgname-litespeed $pkgname-cgi $pkgname-fpm
 	$pkgname-pear::noarch
 	"
-source="http://php.net/distributions/$_pkgreal-$pkgver.tar.bz2
+source="https://php.net/distributions/$_pkgreal-$pkgver.tar.bz2
 	$pkgname-fpm.initd
 	$pkgname-fpm.logrotate
 	$pkgname-module.conf
 	disabled-tests.list
 	install-pear.patch
 	includedir.patch
-	fix-asm-constraints-in-aarch64-multiply-macro.patch
+	sharedir.patch
 	php7-fpm-version-suffix.patch
 	allow-build-recode-and-imap-together.patch
 	fix-tests-devserver.patch
@@ -121,7 +130,6 @@ _extensions="
 	json
 	ldap
 	mbstring
-	mcrypt
 	mysqli
 	mysqlnd
 	odbc
@@ -144,6 +152,7 @@ _extensions="
 	simplexml
 	snmp
 	soap
+	sodium
 	sockets
 	sqlite3
 	sysvmsg
@@ -158,7 +167,6 @@ _extensions="
 	xmlwriter
 	xsl
 	zip
-	zlib
 	"
 for _ext in $_extensions; do
 	case "$_ext" in
@@ -168,18 +176,57 @@ for _ext in $_extensions; do
 done
 subpackages="$subpackages $pkgname-common::noarch"
 
+# FIXME: tests fails on s390x and x86_64
 case "$CARCH" in
-x86_64) options="$options !check";;
-s390x) options="$options !check";;
+	x86_64) options="$options !check";;
+	s390x) options="$options !check";;
 esac
 
 # secfixes:
-#   7.1.7.-r0:
-#     - CVE-2017-9224
-#     - CVE-2017-9226
-#     - CVE-2017-9227
-#     - CVE-2017-9228
-#     - CVE-2017-9229
+#   7.3.13-r0:
+#     - CVE-2019-11045
+#     - CVE-2019-11047
+#     - CVE-2019-11050
+#   7.3.11-r0:
+#     - CVE-2019-11043
+#   7.3.9-r0:
+#     - CVE-2019-13224
+#   7.3.8-r0:
+#     - CVE-2019-11041
+#     - CVE-2019-11042
+#   7.2.19-r0:
+#     - CVE-2019-11039
+#     - CVE-2019-11040
+#   7.2.18-r0:
+#     - CVE-2019-11036
+#   7.2.17-r0:
+#     - CVE-2019-11034
+#     - CVE-2019-11035
+#   7.2.16-r0:
+#     - CVE-2019-9641
+#     - CVE-2019-9640
+#     - CVE-2019-9639
+#     - CVE-2019-9638
+#     - CVE-2019-9637
+#   7.2.14-r0:
+#     - CVE-2019-9024
+#     - CVE-2019-9023
+#     - CVE-2019-9022
+#     - CVE-2019-9021
+#     - CVE-2019-9020
+#   7.2.13-r0:
+#     - CVE-2018-20783
+#   7.2.8-r0:
+#     - CVE-2015-9253
+#     - CVE-2018-12882
+#     - CVE-2018-12883
+#     - CVE-2018-14851
+#   7.2.5-r0:
+#     - CVE-2018-5712
+#     - CVE-2018-10546
+#     - CVE-2018-10547
+#     - CVE-2018-10548
+#     - CVE-2018-10549
 
 prepare() {
 	cd "$builddir"
@@ -189,7 +236,7 @@ prepare() {
 
 	local vapi=$(sed -n '/#define PHP_API_VERSION/{s/.* //;p}' main/php.h)
 	if [ "$vapi" != "$_apiver" ]; then
-		error "Upstreram API version is now $vapi. Expecting $_apiver"
+		error "Upstream API version is now $vapi. Expecting $_apiver"
 		error "After updating _apiver, all 3rd-party extensions must be rebuilt."
 		return 1
 	fi
@@ -201,9 +248,7 @@ prepare() {
 		TSRM/tsrm_config.w32.h \
 		Zend/zend_config.w32.h \
 		ext/mysqlnd/config-win.h \
-		ext/standard/winver.h \
-		main/win32_internal_function_disabled.h \
-		main/win95nt.h
+		ext/standard/winver.h
 
 	# Fix some bogus permissions.
 	find . -name \*.[ch] -exec chmod 644 {} \;
@@ -258,7 +303,6 @@ _build() {
 		--with-gd=shared \
 			--with-freetype-dir=/usr \
 			--disable-gd-jis-conv \
-			--enable-gd-native-ttf \
 			--with-jpeg-dir=/usr \
 			--with-png-dir=/usr \
 			--with-webp-dir=/usr \
@@ -276,15 +320,15 @@ _build() {
 			--with-ldap-sasl \
 		--with-libedit \
 		--enable-libxml \
-		--with-libxml-dir=/usr \
+			--with-libxml-dir=/usr \
 		--enable-mbstring=shared \
-		--with-mcrypt=shared \
 		--with-mysqli=shared,mysqlnd \
 			--with-mysql-sock=/run/mysqld/mysqld.sock \
 		--enable-mysqlnd=shared \
 		--enable-opcache=shared \
 		--with-openssl=shared  \
 			--with-system-ciphers \
+		--with-password-argon2 \
 		--enable-pcntl=shared \
 		--with-pcre-regex=/usr \
 			$without_pcre_jit \
@@ -305,6 +349,7 @@ _build() {
 		--enable-simplexml=shared \
 		--with-snmp=shared \
 		--enable-soap=shared \
+		--with-sodium=shared \
 		--enable-sockets=shared \
 		--with-sqlite3=shared,/usr \
 		--enable-sysvmsg=shared \
@@ -321,8 +366,8 @@ _build() {
 		--with-xsl=shared \
 		--enable-zip=shared \
 			--with-libzip=/usr \
-		--with-zlib=shared \
-		--with-zlib-dir=/usr \
+		--with-zlib \
+			--with-zlib-dir=/usr \
 		$@
 	make
 }
@@ -367,7 +412,7 @@ check() {
 	# Ignore it for now and continue build even on test failures.
 	local allow_fail='no'
 	case "$CARCH" in
-		x86 | armhf | aarch64) allow_fail='yes'
+		x86 | arm* | aarch64 | ppc64le | mips*) allow_fail='yes'
 	esac
 
 	NO_INTERACTION=1 REPORT_EXIT_STATUS=1 \
@@ -402,6 +447,7 @@ package() {
 dev() {
 	default_dev
 	replaces="php-dev"
+	depends="$depends $pkgname-static"
 
 	cd "$pkgdir"
 
@@ -431,6 +477,7 @@ doc() {
 apache2() {
 	pkgdesc="PHP$_suffix Module for Apache2"
 	depends="$depends apache2"
+	provides="php-apache2"
 
 	install -D -m 755 "$builddir"/sapi/apache2handler/mod_php$_suffix.so \
 		"$subpkgdir"/usr/lib/apache2/mod_php$_suffix.so
@@ -441,6 +488,7 @@ apache2() {
 
 phpdbg() {
 	pkgdesc="Interactive PHP$_suffix debugger"
+	provides="php-phpdbg"
 
 	install -Dm755 "$builddir"/sapi/phpdbg/phpdbg \
 		"$subpkgdir"/usr/bin/phpdbg$_suffix
@@ -452,15 +500,17 @@ phpdbg() {
 
 embed() {
 	pkgdesc="PHP$_suffix Embedded Library"
+	provides="php-embed"
 
 	_mv "$pkgdir"/usr/lib/libphp*.so "$subpkgdir"/usr/lib/
 }
 
 litespeed() {
 	pkgdesc="PHP$_suffix LiteSpeed SAPI"
+	provides="php-lightspeed"
 
 	mkdir -p "$subpkgdir"/usr/bin
-	mv "$pkgdir"/usr/bin/lsphp "$subpkgdir"/usr/bin/lsphp$_suffix
+	mv "$pkgdir"/usr/bin/lsphp$_suffix "$subpkgdir"/usr/bin
 
 	if [ "$_default_php" = yes ]; then
 		ln -s lsphp$_suffix "$subpkgdir"/usr/bin/lsphp
@@ -469,6 +519,7 @@ litespeed() {
 
 cgi() {
 	pkgdesc="PHP$_suffix Common Gateway Interface"
+	provides="php-cgi"
 
 	_mv "$pkgdir"/usr/bin/php-cgi$_suffix "$subpkgdir"/usr/bin/
 
@@ -479,6 +530,7 @@ cgi() {
 
 fpm() {
 	pkgdesc="PHP$_suffix FastCGI Process Manager"
+	provides="php-fpm"
 
 	cd "$pkgdir"
 
@@ -504,12 +556,9 @@ fpm() {
 pear() {
 	pkgdesc="PHP$_suffix Extension and Application Repository"
 	depends="$pkgname $pkgname-xml"
+	provides="php-pear"
 
 	cd "$pkgdir"
-
-	# pecl needs xml extension and since we build it as shared, it must be
-	# explicitly declared to be loaded.
-	sed -i 's/\$INCARG/& -d extension=xml.so/' usr/bin/pecl
 
 	mkdir -p "$subpkgdir"/usr/bin
 	local file; for file in pecl pear peardev; do
@@ -525,6 +574,7 @@ pear() {
 
 common() {
 	pkgdesc="$pkgdesc (common config)"
+	provides="php-common $pkgname-zlib php-zlib"  # for backward compatibility
 	depends=""
 
 	cd "$pkgdir"
@@ -556,6 +606,7 @@ _extension() {
 	local extdepends="$(eval "echo \$_depends_$extname")"
 	local extdesc="$(head -n1 "$builddir"/ext/$extname/CREDITS 2>/dev/null ||:)"
 	pkgdesc="PHP$_suffix extension: ${extdesc:-$extname}"
+	provides="php-$extname"
 
 	: ${extdepends:=$(_resolve_extension_deps "$extname")}
 	depends="$depends $extdepends"
@@ -626,14 +677,14 @@ _mv() {
 	mv $@
 }
 
-sha512sums="6b7ad28868af904f24f68a062670561841399a2213ff5ad0408bf49ac08cdfe7aa0e5e250815a875ec558dc619c452247d731f48570ce6a8b1bb9fa4082aabff  php-7.1.9.tar.bz2
+sha512sums="9891f8ac809b12389a22233fc98f1aecb6e38e53152688ca9d8d0c785effb5e03d3527b1258e8ad35c1ed730bf8310b13cfaaae961e75d7b962685c083add0e7  php-7.3.13.tar.bz2
 1c708de82d1086f272f484faf6cf6d087af7c31750cc2550b0b94ed723961b363f28a947b015b2dfc0765caea185a75f5d2c2f2b099c948b65c290924f606e4f  php7-fpm.initd
 cacce7bf789467ff40647b7319e3760c6c587218720538516e8d400baa75651f72165c4e28056cd0c1dc89efecb4d00d0d7823bed80b29136262c825ce816691  php7-fpm.logrotate
 274bd7b0b2b7002fa84c779640af37b59258bb37b05cb7dd5c89452977d71807f628d91b523b5039608376d1f760f3425d165242ca75ee5129b2730e71c4e198  php7-module.conf
-62f60a1965d8b06eb7f76622cf13b3d91a501bf71acfa08ba13c9558d2205452871c9fc6768d211c22b4e3f2e11aa14e51f63ace628ddfd16008f2fc32e91b68  disabled-tests.list
+6593accfe1ef0d9d28d257b2825823afdbfaa72bbf2e09e4ed689b644571a0d085cd4d6c92ffdff6ca9d0bb6d31cf84e5db5c4a4d88f192bba3f95a0c9b1dfd7  disabled-tests.list
 f1177cbf6b1f44402f421c3d317aab1a2a40d0b1209c11519c1158df337c8945f3a313d689c939768584f3e4edbe52e8bd6103fb6777462326a9d94e8ab1f505  install-pear.patch
-199aecdbd3b4035aabf5379c215f82412d3c98b79a1ee186944e7fe1f0ed6f40789ea30e2355149491de6be34fc66c5e486e2a79a7e41ab2ae18706ef3ffe79b  includedir.patch
-d93d3fc015580cf5f75c6cbca4cd980e054b61e1068495da81a7e61f1af2c9ae14f09964c04928ad338142de78e4844aed885b1ad1865282072999fb045c8ad7  fix-asm-constraints-in-aarch64-multiply-macro.patch
-a4c35446745ab0ac806de801f0651fc5d2c98cf60063c3c2d3963a84f1c71ef78e09b7650c08e7231be0fdb93c0c255de38894d7f0e4f4c5a190d17f1a6bc476  php7-fpm-version-suffix.patch
-f8ecae241a90cbc3e98aa4deb3d5d35ef555f51380e29f4e182a8060dffeb84be74f030a14c6b452668471030d78964f52795ca74275db05543ccad20ef1f2cc  allow-build-recode-and-imap-together.patch
-01c3c65f153ea92192f2b2694d93a086ffa67c282fe046f877842942692c25666e4154a09aba6c2161f7f2a3b6595f4d79573e9ee74aec774a95f2f9725846f9  fix-tests-devserver.patch"
+ebf571c5e595221b9944d7e840807ebb68c1be38bf117186e19a3bd1070310ece5918bcaa5f941679f3371a2108ad57bf179c3f90e612a5a2b982db941172859  includedir.patch
+2128eb8e7e44e4f45909f2aa83c071bf7677f5c96e29a0182ac59d5850c7b3437e4b1b67c1a20f14d65f4b370985f838ea061541690ebcfbc9cb21d64744bc7a  sharedir.patch
+fc680157c9bfaa600a82da0b2b8b96c9515eda653479bc9a9424e96683ea7c983190af0e54dcaf34256646069924df55f3f2d9a97fb11e971463a60f6df0e90f  php7-fpm-version-suffix.patch
+a07f6f54a298be6f10caa0ce68cebdf1c7cd1404ddb6a0f2c3a77fb7af3c4172bc4474ffc784f3dc92514e4da2639e558aca6dc1cffcc2e55af0743eaad7de47  allow-build-recode-and-imap-together.patch
+695ce980ea659575ba26b8443051620e83dc806e04b3bbace791f14af5c581ae4329e2c6326b554c60dab1a13f6b7c3fde49f20032540e53f80ecfade88c5b94  fix-tests-devserver.patch"

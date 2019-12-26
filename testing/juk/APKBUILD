@@ -1,0 +1,30 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=juk
+pkgver=19.12.0
+pkgrel=0
+arch="all"
+url="https://juk.kde.org/"
+pkgdesc="A jukebox, tagger and music collection manager"
+license="GPL-2.0-or-later"
+makedepends="extra-cmake-modules qt5-qtbase-dev qt5-qtsvg-dev kcoreaddons-dev kcompletion-dev kconfig-dev kcrash-dev kglobalaccel-dev ki18n-dev kiconthemes-dev kdoctools-dev kio-dev kjobwidgets-dev knotifications-dev ktextwidgets-dev kxmlgui-dev kwallet-dev kwidgetsaddons-dev kwindowsystem-dev phonon-dev taglib-dev"
+source="https://download.kde.org/stable/release-service/$pkgver/src/$pkgname-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+
+build() {
+	cmake \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="0ca5d4114fcbc70f16ee2eda5ffbd384d75d6a055eeb30b33b42d743fbb19d325d8abce4bf257d769bf2f34b805edc03f0e504a12fd3aa19aafa93f62fe62bf4  juk-19.12.0.tar.xz"

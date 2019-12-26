@@ -1,27 +1,26 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=remmina
-pkgver=1.2.0
-_hash=b3e339ea5478c0941a6dfa0bf8fed9e7a1c70e0b
-pkgrel=2
+pkgver=1.3.9
+pkgrel=0
 pkgdesc="Remmina is a remote desktop client written in GTK+"
-url="http://www.remmina.org/wp/"
+url="https://www.remmina.org/"
 arch="all"
-license="GPL"
-depends=""
+license="GPL-2.0-or-later"
 makedepends="gtk+3.0-dev intltool zlib-dev libjpeg-turbo-dev gnutls-dev
 	vte3-dev libgcrypt-dev libssh-dev libxkbfile-dev freerdp-dev
-	avahi-ui-dev libvncserver-dev cmake"
+	avahi-ui-dev libvncserver-dev cmake json-glib-dev libsoup-dev
+	openssl-dev libsodium-dev libsecret-dev"
 replaces="remmina-plugins"
-subpackages="$pkgname-dev $pkgname-lang"
-source="$pkgname-$pkgver.tar.gz::https://github.com/FreeRDP/Remmina/archive/$_hash.tar.gz
-	no-gnome-keyring.patch
+subpackages="$pkgname-dev $pkgname-lang $pkgname-doc"
+source="https://gitlab.com/Remmina/Remmina/-/archive/v$pkgver/Remmina-v$pkgver.tar.gz
 	remmina-1.0.0-dsofix.patch
 	libintl-underlink.patch
 	"
+options="!check" # No test suite available
+builddir="$srcdir"/Remmina-v$pkgver
 
-builddir="$srcdir"/Remmina-$_hash
 build() {
-	cd "$builddir"
+	LDFLAGS="$LDFLAGS -lintl" \
 	cmake -DCMAKE_BUILD_TYPE=Release \
 		-DCMAKE_INSTALL_PREFIX=/usr \
 		-DCMAKE_INSTALL_LIBDIR=lib \
@@ -33,16 +32,17 @@ build() {
 		-DWITH_PTHREAD=ON \
 		-DWITH_TELEPATHY=OFF \
 		-DWITH_VTE=ON \
-		-DWITH_ZLIB=ON
+		-DWITH_ZLIB=ON \
+		-DWITH_KF5WALLET=ON \
+		-DWITH_CUPS=OFF \
+		-DWITH_LIBSECRET=ON
 	make
 }
 
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="a323ed705a6f7e84488971eff00612807ae7c49fd547a7058ed4ac463d8ffecdb974e12e438c02fd45f25740431f32ba4733483ba9afac90f3fcab07834f2060  remmina-1.2.0.tar.gz
-5e0d26e799c9b85ae0c5bd7b9e6f07fd4a2da15c12b2a649098603c84d7dda6bfa518b0295edecc7522ab06c1a84d444083634d9fedb7d44b65b86dfc2eef65b  no-gnome-keyring.patch
-4b8299c65b9a1bc529fd44fdb05033d5dfd7e5589daea7056d275011a6f01f4154141ae9b787581de646019c9f15b0493da39484850b2df052df33824c67dd91  remmina-1.0.0-dsofix.patch
-43fa8caf186bac447921aa13c89ebf378f72d00a2d9c6bc76b4408c70fea3205e450e8cc7b145f4d5b3c6719e667be983d6e9f5b52fda00e10ecf7a48696c88b  libintl-underlink.patch"
+sha512sums="f87d30d30d6d9692f60cd27336ac0059a4374125b231cdf1e3710785b08fc77722112ea48e5717958b03fc5784abb9fcd86aa5a427c4d634cb3f2be1aac41945  Remmina-v1.3.9.tar.gz
+8c06cfb4cd7eb74f641d6524c2fb5c941022df1d3f428c9f57a88b9714ec602b0baf962a9947aa83de3ccfaed237956743b4eb0083c4dde0cc9740b958bba007  remmina-1.0.0-dsofix.patch
+1921b13bd3871e602690b795fb2864eef0326ecee2df021a2f190131efb2b882ecf14428d2faadd4896a215112fd775b94eba6338164c079c4355748a74146f8  libintl-underlink.patch"

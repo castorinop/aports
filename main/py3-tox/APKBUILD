@@ -1,0 +1,40 @@
+# Contributor: Stuart Cardall <developer@it-offshore.co.uk>
+# Maintainer: Stuart Cardall <developer@it-offshore.co.uk>
+pkgname=py3-tox
+_pkgname=${pkgname#py3-*}
+pkgver=3.14.2
+pkgrel=0
+pkgdesc="virtualenv management and test command line tool"
+options="!check" # Requires unpackaged py3-pytest extensions
+url="https://tox.readthedocs.org/"
+arch="noarch"
+license="MIT"
+depends="
+	py3-packaging
+	py3-pluggy
+	py3-py
+	py3-six
+	py3-virtualenv
+	py3-toml
+	py3-filelock
+	"
+checkdepends="py3-pytest"
+source="https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+replaces="py-tox" # Backwards compatibility
+provides="py-tox=$pkgver-r$pkgrel" # Backwards compatibility
+
+build() {
+	python3 setup.py build
+}
+
+package() {
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
+}
+
+check() {
+	python3 setup.py test
+}
+
+sha512sums="6589597e29719cbeec0b10a8c13f668491916b770dc311622e3881d874c2c0fa2d1b58a531d810bb9054b0f87de40dc1adfb67359ff1e9bd81650edd7959a569  tox-3.14.2.tar.gz"

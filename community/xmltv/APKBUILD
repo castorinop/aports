@@ -1,43 +1,39 @@
-# Con://github.com/saltstack/salttributor: Carlo Landmeter <clandmeter@gmail.com>
+# Contributor: Carlo Landmeter <clandmeter@gmail.com>
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=xmltv
-pkgver=0.5.69
-pkgrel=0
+pkgver=0.6.1
+pkgrel=1
 pkgdesc="Set of utilities to download tv listings and format them in xml"
 url="http://xmltv.org/wiki"
 arch="noarch"
-license="GPL2"
+license="GPL-2.0"
 depends="perl-libwww perl-xml-parser perl-xml-twig perl-date-manip perl-xml-writer
 	perl-timedate perl-unicode-string perl-term-readkey perl-file-slurp perl-xml-libxml
 	perl-lingua-en-numbers-ordinate perl-lingua-preferred perl-compress-raw-zlib perl-io-gzip
 	perl-io-compress perl-term-progressbar perl-xml-treepp"
-depends_dev=""
-makedepends="$depends_dev perl-dev"
-install=""
+makedepends="perl-dev"
 subpackages="$pkgname-doc"
-source="http://downloads.sourceforge.net/xmltv/xmltv-$pkgver.tar.bz2"
-
-_builddir="$srcdir"/xmltv-$pkgver
-prepare() {
-	local i
-	cd "$_builddir"
-	for i in $source; do
-		case $i in
-		*.patch) msg $i; patch -p1 -i "$srcdir"/$i || return 1;;
-		esac
-	done
-}
+source="$pkgname-$pkgver.tar.gz::https://github.com/XMLTV/$pkgname/archive/v$pkgver.tar.gz
+	test_tv_imdb.t.patch
+	"
+builddir="$srcdir"/xmltv-$pkgver
 
 build() {
-	cd "$_builddir"
-	PERL_MM_USE_DEFAULT=1 yes | perl Makefile.PL INSTALLDIRS=vendor || return 1
-	make || return 1
+	cd "$builddir"
+	PERL_MM_USE_DEFAULT=1 yes | perl Makefile.PL INSTALLDIRS=vendor
+	make
+}
+
+check() {
+	cd "$builddir"
+	make test
 }
 
 package() {
-	cd "$_builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	cd "$builddir"
+	make DESTDIR="$pkgdir" install
 	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 
-sha512sums="b76991bdcf2803f67c0c24b52d44b62ebfc37f177dbfb31a781fefe420ee5a575b522ed6a6669fa9f0462ac866abd382a1b3fe2cf91d3bfab1758f95facd333c  xmltv-0.5.69.tar.bz2"
+sha512sums="137dad875c6f7f77fb986b4662b411766424676df0a2422f3dc123c8cec4e1dff123ea68577add65c0e5bcf2d0bdf89d7fba0ed423502ec27e2aa82ec6b10bc2  xmltv-0.6.1.tar.gz
+f41ffef7c3ca5a6b316855607d4fbc41913e4503eaac34590fa4048b528ed0ee0595a364d192cc7e5c2edaaa79e910f77c66bac727c8b1edf8043428318764bc  test_tv_imdb.t.patch"

@@ -1,31 +1,32 @@
 # Contributor: Nathan Caldwell <saintdev@gmail.com>
 # Maintainer: Nathan Caldwell <saintdev@gmail.com>
+# NOTE: For now we must use vendored libfuse, see the URL below for details.
+#       https://github.com/trapexit/mergerfs/blob/2.27.0/README.md#why-was-libfuse-embedded-into-mergerfs
 pkgname=mergerfs
-pkgver=2.20.0
+pkgver=2.28.3
 pkgrel=0
 pkgdesc="A FUSE based union filesystem"
 url="https://github.com/trapexit/mergerfs"
 arch="all"
 license="ISC"
 depends="libattr fuse"
-depends_dev="attr-dev fuse-dev linux-headers"
-makedepends="$depends_dev"
-install=""
+makedepends="autoconf automake libtool gettext-dev attr-dev linux-headers"
+options="!check" # No test suite
 subpackages="$pkgname-doc"
-source="$pkgname-$pkgver.tar.gz::https://github.com/trapexit/$pkgname/archive/$pkgver.tar.gz"
+source="$pkgname-$pkgver.tar.gz::https://github.com/trapexit/mergerfs/archive/$pkgver.tar.gz"
 
-builddir="$srcdir"/$pkgname-$pkgver
+prepare() {
+	default_prepare
+	echo "$pkgver" > "$builddir"/VERSION
+}
 
 build() {
-	cd "$builddir"
-	make OPTS="$CXXFLAGS" || return 1
+	export GIT_CEILING_DIRECTORIES="$srcdir"
+	make OPTS="$CXXFLAGS"
 }
 
 package() {
-	cd "$builddir"
-	make PREFIX="/usr" DESTDIR="$pkgdir" install || return 1
+	make PREFIX="/usr" DESTDIR="$pkgdir" install
 }
 
-md5sums="b7e2daa29018ffcbb2aa07b30c74e909  mergerfs-2.20.0.tar.gz"
-sha256sums="240c3dbbeb8b40494db9c345afe3410a6e4450ca4048c7d8f8c65eb333761b2a  mergerfs-2.20.0.tar.gz"
-sha512sums="fe8826868fb407a9aaf89eebe9119caeb98b0c5fe15d26075fbe2ab07a018bc9e31bf8ac6366f3be531095477de6596a6e4b90a8952e37bf608e70f11c2d1fb4  mergerfs-2.20.0.tar.gz"
+sha512sums="5469b3515464680aa72fc393c218fb038bed31194a933e6736eec478d87a110979323308b642d7f100a5c506534ca75badf4a87a050007cdc77cd2a641217929  mergerfs-2.28.3.tar.gz"

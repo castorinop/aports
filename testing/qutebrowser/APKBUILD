@@ -1,0 +1,35 @@
+# Maintainer: Drew DeVault <sir@cmpwn.com>
+pkgname=qutebrowser
+pkgver=1.8.3
+pkgrel=0
+pkgdesc="A keyboard-driven, vim-like browser based on PyQT5"
+url="https://qutebrowser.org/"
+arch="noarch !s390x !ppc64le !x86" # limited by qt5-qtwebengine
+license="GPL-3.0-only"
+depends="
+	py3-attrs py3-jinja2 py3-pygments py3-pypeg2 py3-qt5 py3-yaml qt5-qtbase
+	qt5-qtwebengine qt5-qtbase-sqlite py3-qtwebengine py3-setuptools
+	py3-sip-pyqt5
+"
+makedepends="asciidoc"
+checkdepends="py3-pytest py3-hypothesis"
+subpackages="$pkgname-doc"
+source="
+	https://github.com/qutebrowser/qutebrowser/releases/download/v$pkgver/qutebrowser-$pkgver.tar.gz
+"
+options="!check" # https://github.com/qutebrowser/qutebrowser/issues/5081
+
+build() {
+	a2x -f manpage doc/qutebrowser.1.asciidoc
+	python3 setup.py build
+}
+
+check() {
+	pytest-3
+}
+
+package() {
+	make -f misc/Makefile DESTDIR="$pkgdir" PREFIX=/usr install
+}
+
+sha512sums="9a3dc3040d1236c81933263e031db4d44c86be206c54f0787a73b2dd7d32d6e742f9ac80626163515e917fbc9fa1588f76afcb21f4b3d31f47ba386d06c3c6e7  qutebrowser-1.8.3.tar.gz"

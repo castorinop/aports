@@ -1,14 +1,14 @@
 # Contributor: Łukasz Jendrysik <scadu@yandex.com>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=xorg-server
-pkgver=1.19.3
+pkgver=1.20.6
 pkgrel=2
 pkgdesc="X.Org X servers"
-url="http://xorg.freedesktop.org"
+url="https://www.x.org/wiki"
 arch="all"
 license="MIT"
 options="suid"
-subpackages="$pkgname-dbg $pkgname-dev $pkgname-doc xfbdev xvfb $pkgname-xephyr
+subpackages="$pkgname-dbg $pkgname-dev $pkgname-doc xvfb $pkgname-xephyr
 	$pkgname-xnest $pkgname-xwayland"
 # the modesetting driver is now shipped with xorg server
 replaces="xf86-video-modesetting"
@@ -20,32 +20,9 @@ depends="
 	xinit
 	"
 depends_dev="
-	bigreqsproto
-	compositeproto
-	damageproto
-	dri2proto
-	fixesproto
-	fontsproto
-	glproto
-	inputproto
-	kbproto
 	libepoxy-dev
-	libpciaccess-dev
 	libxfont2-dev
 	mesa-dev
-	pixman-dev
-	presentproto
-	randrproto
-	recordproto
-	renderproto
-	resourceproto
-	scrnsaverproto
-	videoproto
-	xcmiscproto
-	xextproto
-	xf86driproto
-	xineramaproto
-	xproto
 	"
 makedepends="
 	$depends_dev
@@ -53,8 +30,8 @@ makedepends="
 	automake
 	eudev-dev
 	libdrm-dev
-	libepoxy-dev
-	libressl-dev
+	libpciaccess-dev
+	openssl-dev
 	libtool
 	libx11-dev
 	libxdamage-dev
@@ -65,6 +42,7 @@ makedepends="
 	libxxf86dga-dev
 	libxxf86misc-dev
 	perl
+	pixman-dev
 	util-macros
 	wayland-dev
 	wayland-protocols
@@ -73,35 +51,46 @@ makedepends="
 	xcb-util-keysyms-dev
 	xcb-util-renderutil-dev
 	xcb-util-wm-dev
+	xorgproto
 	xtrans
 	zlib-dev
 	"
-
-source="http://www.x.org/releases/individual/xserver/$pkgname-$pkgver.tar.bz2
+source="https://www.x.org/releases/individual/xserver/$pkgname-$pkgver.tar.bz2
 	autoconfig-nvidia.patch
 	autoconfig-sis.patch
-	fix-musl-arm.patch
-	modesetting-Set-correct-DRM-event-context-version.patch
-	20-modules.conf
 	"
 
-_builddir="$srcdir"/$pkgname-$pkgver
-prepare() {
-	cd "$_builddir"
-	default_prepare
+# secfixes:
+#   1.20.3-r0:
+#     - CVE-2018-14665
+#   1.19.5-r0:
+#     - CVE-2017-12176
+#     - CVE-2017-12177
+#     - CVE-2017-12178
+#     - CVE-2017-12179
+#     - CVE-2017-12180
+#     - CVE-2017-12181
+#     - CVE-2017-12182
+#     - CVE-2017-12183
+#     - CVE-2017-12184
+#     - CVE-2017-12185
+#     - CVE-2017-12186
+#     - CVE-2017-12187
+#     - CVE-2017-13721
+#     - CVE-2017-13723
 
+prepare() {
+	default_prepare
 	# Fix dbus config path
-	sed -i -e 's/\$(sysconfdir)/\/etc/' config/Makefile.*  || return 1
-	sed -i -e 's/termio.h/termios.h/' hw/xfree86/os-support/xf86_OSlib.h || return 1
+	sed -i -e 's/\$(sysconfdir)/\/etc/' config/Makefile.*
+	sed -i -e 's/termio.h/termios.h/' hw/xfree86/os-support/xf86_OSlib.h
 }
 
 build() {
-	cd "$_builddir"
 	# xorg modules does not work with the -z now and it seems like we
 	# cannot pass over the linker flag to .so files. so we tweak the
 	# gcc specs.
-	export CFLAGS="$CFLAGS -D_GNU_SOURCE"
-	[ "$CLIBC" == musl ] && export CFLAGS="$CFLAGS -D__gid_t=gid_t -D__uid_t=uid_t"
+	export CFLAGS="$CFLAGS -D_GNU_SOURCE -D__gid_t=gid_t -D__uid_t=uid_t"
 	export LDFLAGS="$LDFLAGS -Wl,-z,lazy"
 	_fontroot="/usr/share/fonts"
 
@@ -116,19 +105,17 @@ build() {
 		--with-xkb-path=/usr/share/X11/xkb \
 		--with-xkb-output=/var/lib/xkb \
 		--without-systemd-daemon \
-		--enable-aiglx \
 		--enable-composite \
 		--enable-config-udev \
 		--enable-dri \
 		--enable-dri2 \
+		--enable-dri3 \
 		--enable-glamor \
-		--enable-glx-tls \
 		--enable-ipv6 \
 		--enable-kdrive \
 		--enable-xace \
 		--enable-xcsecurity \
 		--enable-xephyr \
-		--enable-xfbdev \
 		--enable-xnest \
 		--enable-xorg \
 		--enable-xres \
@@ -136,33 +123,23 @@ build() {
 		--enable-xwayland \
 		--disable-config-hal \
 		--disable-dmx \
-		--disable-tslib \
 		--disable-systemd-logind \
-		|| return 1
+		--with-os-vendor="${DISTRO_NAME:-Alpine Linux}"
+	make
+}
 
-	make || return 1
+check() {
+	make check
 }
 
 package() {
-	cd "$_builddir"
-	make -j1 DESTDIR="$pkgdir" install || return 1
+	make -j1 DESTDIR="$pkgdir" install
 	chmod u+s "$pkgdir"/usr/bin/Xorg
 
 	# Don't conflict with xf86-input-evdev
-	rm -f "$pkgdir"/usr/share/X11/xorg.conf.d/10-evdev.conf || return 1
+	rm -f "$pkgdir"/usr/share/X11/xorg.conf.d/10-evdev.conf
 
-	install -m755 -d "$pkgdir"/etc/X11/xorg.conf.d || return 1
-	install -m644 "$srcdir"/20-modules.conf "$pkgdir"/etc/X11/xorg.conf.d/ \
-		|| return 1
-	install -m755 -d "$pkgdir"/var/lib/xkb || return 1
-	install -m644 -D COPYING "$pkgdir"/usr/share/licenses/$pkgname/COPYING
-}
-
-xfbdev() {
-	pkgdesc="X.org server for framebuffer"
-	depends=
-	mkdir -p "$subpkgdir"/usr/bin
-	mv "$pkgdir"/usr/bin/Xfbdev "$subpkgdir"/usr/bin/
+	install -m755 -d "$pkgdir"/var/lib/xkb
 }
 
 xvfb() {
@@ -173,14 +150,12 @@ xvfb() {
 
 xephyr() {
 	pkgdesc="kdrive based X Server which targets a window on a host X Server as its framebuffer"
-	depends=
 	mkdir -p "$subpkgdir"/usr/bin
 	mv "$pkgdir"/usr/bin/Xephyr "$subpkgdir"/usr/bin/
 }
 
 xnest() {
 	pkgdesc="A nested Xorg server"
-	depends=
 	mkdir -p "$subpkgdir"/usr/bin
 	mv "$pkgdir"/usr/bin/Xnest "$subpkgdir"/usr/bin/
 }
@@ -191,9 +166,6 @@ xwayland() {
 	mv "$pkgdir"/usr/bin/Xwayland "$subpkgdir"/usr/bin/
 }
 
-sha512sums="b988897418399e1361fdcca9465a781f55f8f6fbfdc5a59edfaee9046a0c6ad7a76f348d88b6004ce3d3fb3966b4c5af0b854f6549c32b2b8d7a43758809f669  xorg-server-1.19.3.tar.bz2
-4dcaa60fbfc61636e7220a24a72bba19984a6dc752061cb40b1bd566c0e614d08927b6c223ffaaaa05636765fddacdc3113fde55d25fd09cd0c786ff44f51447  autoconfig-nvidia.patch
-30a78f4278edd535c45ee3f80933427cb029a13abaa4b041f816515fdd8f64f00b9c6aef50d4eba2aaf0d4f333e730399864fd97fa18891273601c77a6637200  autoconfig-sis.patch
-b799e757a22a61ac283adbd7a8df1ad4eccce0bb6cac38a0c962ba8438bba3cf6637a65bb64859e7b32399fca672283a49960207e186c271ba574580de360d09  fix-musl-arm.patch
-f66f11255aa8a98c89763cb213f08628c937cb13e7ab4bd399a246e0b630316343f35e191d92e55b0fa68e601c243220a3258bbfc5d50e74ccadfe6cb27310f5  modesetting-Set-correct-DRM-event-context-version.patch
-95036f2452732cc31f6b646da9f46b7be30f4c9392724386b02f67fece1f506b00e15d14cbd8cf0ce75ca1fd144b4bea7e59288d4aaf4d6c1e06e5168931eb67  20-modules.conf"
+sha512sums="9aa0ba4aee92fe628f2b8c41e4fe0134dc86154bb8787f907884ef2fd970e18e68e72ea8a1beb706d11ecf155b2abc9731f1abadff251ed592f8cca3b1240dd6  xorg-server-1.20.6.tar.bz2
+016d10e59681d36be19aacc1505103bd340a5e81855e551997b42f8b54796be46fb2d91be8d1aa3bebb10d34e51258be9de1299c2e351b840450de38ff103df0  autoconfig-nvidia.patch
+30a78f4278edd535c45ee3f80933427cb029a13abaa4b041f816515fdd8f64f00b9c6aef50d4eba2aaf0d4f333e730399864fd97fa18891273601c77a6637200  autoconfig-sis.patch"

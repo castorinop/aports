@@ -2,113 +2,182 @@
 # Contributor: Łukasz Jendrysik <scadu@yandex.com>
 # Contributor: Cameron Banta <cbanta@gmail.com>
 # Contributor: Ashley Sommer <ashleysommer@gmail.com>
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
 # Maintainer: Cameron Banta <cbanta@gmail.com>
 pkgname=rsyslog
-pkgver=8.27.0
-pkgrel=0
+pkgver=8.1911.0
+pkgrel=1
 pkgdesc="Enhanced multi-threaded syslogd with database support and more."
-url="http://www.rsyslog.com/"
-arch="all"
-license="GPLv3 LGPL3"
-depends=""
-makedepends="zlib-dev gnutls-dev mariadb-dev postgresql-dev net-snmp-dev
-	libnet-dev libgcrypt-dev libee-dev libestr-dev liblogging-dev
-	libfastjson-dev util-linux-dev py-docutils hiredis-dev"
-subpackages="$pkgname-doc $pkgname-mysql $pkgname-pgsql $pkgname-tls
-	$pkgname-snmp $pkgname-hiredis $pkgname-dbg"
-source="http://www.rsyslog.com/files/download/$pkgname/$pkgname-$pkgver.tar.gz
+url="https://www.rsyslog.com/"
+arch="all !s390x" # limited by czmq
+license="Apache-2.0 GPL-3.0-or-later LGPL-3.0-or-later"
+options="!check"
+makedepends="
+	curl-dev
+	czmq-dev
+	gnutls-dev
+	hiredis-dev
+	krb5-dev
+	libdbi-dev
+	libestr-dev
+	libfastjson-dev
+	libgcrypt-dev
+	liblogging-dev
+	liblognorm-dev
+	libmaxminddb-dev
+	libnet-dev
+	linux-headers
+	librelp-dev
+	mariadb-connector-c-dev
+	net-snmp-dev
+	postgresql-dev
+	py3-docutils
+	rabbitmq-c-dev
+	util-linux-dev
+	zlib-dev
+	"
+install="$pkgname.post-upgrade"
+subpackages="$pkgname-doc $pkgname-dbg $pkgname-openrc"
+source="https://www.rsyslog.com/files/download/rsyslog/rsyslog-$pkgver.tar.gz
 	$pkgname.initd
-	$pkgname.confd
 	$pkgname.logrotate
 	$pkgname.conf
 	musl-fix.patch
 	queue.patch
 	"
-builddir="$srcdir/$pkgname-$pkgver"
+
+# <subpackage>[:<module>...]
+_plugins="
+	crypto:lmcry_gcry
+	elasticsearch:omelasticsearch
+	gssapi:lmgssutil:imgssapi:omgssapi
+	hiredis:omhiredis
+	http:omhttp:fmhttp
+	libdbi:omlibdbi
+	mmanon
+	mmaudit
+	mmcount
+	mmdblookup
+	mmfields
+	mmjsonparse
+	mmnormalize
+	mmpstrucdata
+	mmrm1stspace
+	mmsequence
+	mmsnmptrapd
+	mmutf8fix
+	mysql:ommysql
+	pgsql:ompgsql
+	pmaixforwardedfrom
+	pmlastmsg
+	pmsnare
+	rabbitmq:omrabbitmq
+	relp:imrelp:omrelp
+	snmp:omsnmp
+	testing:omtesting
+	tls:lmnsd_gtls
+	udpspoof:omudpspoof
+	uxsock:omuxsock
+	zmq:imczmq:omczmq
+	imdocker
+	"
+for _i in $_plugins; do
+	subpackages="$subpackages $pkgname-${_i%%:*}:_plugin"
+done
+
+# secfixes:
+#   8.1908.0-r1:
+#     - CVE-2019-17040
+#     - CVE-2019-17041
+#     - CVE-2019-17042
 
 build() {
-	cd "$builddir"
-
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
-		--disable-rfc3195 \
-		--enable-largefile \
-		--enable-imdiag \
-		--enable-imfile \
-		--enable-mail \
-		--enable-omprog \
-		--enable-omstdout \
-		--enable-omudpspoof \
-		--enable-imptcp \
-		--enable-impstats \
-		--enable-mysql \
-		--enable-pgsql \
-		--enable-gnutls \
-		--enable-snmp \
-		--enable-omhiredis \
 		--prefix=/usr \
 		--sysconfdir=/etc \
 		--mandir=/usr/share/man \
-		|| return 1
-	make || return 1
+		\
+		--disable-rfc3195 \
+		--enable-largefile \
+		--enable-gssapi-krb5 \
+		--enable-mysql \
+		--enable-pgsql \
+		--enable-libdbi \
+		--enable-snmp \
+		--enable-elasticsearch \
+		--enable-omhttp \
+		--enable-gnutls \
+		--enable-mail \
+		--enable-imdiag \
+		--enable-mmnormalize \
+		--enable-mmjsonparse \
+		--enable-mmaudit \
+		--enable-mmanon \
+		--enable-mmrm1stspace \
+		--enable-mmutf8fix \
+		--enable-mmcount \
+		--enable-mmsequence \
+		--enable-mmdblookup \
+		--enable-mmfields \
+		--enable-mmpstrucdata \
+		--enable-relp \
+		--enable-imfile \
+		--enable-imptcp \
+		--enable-impstats \
+		--enable-omprog \
+		--enable-omudpspoof \
+		--enable-omstdout \
+		--enable-pmlastmsg \
+		--enable-pmaixforwardedfrom \
+		--enable-pmsnare \
+		--enable-omuxsock \
+		--enable-mmsnmptrapd \
+		--enable-omrabbitmq \
+		--enable-imczmq \
+		--enable-omczmq \
+		--enable-omhiredis \
+		--enable-imdocker
+	make
 }
 
 package() {
-	cd "$builddir"
+	make DESTDIR="$pkgdir" install
 
-	make DESTDIR="$pkgdir" install || return 1
+	# Remove lib that is used only for testing.
+	rm -f "$pkgdir"/usr/lib/rsyslog/imdiag.so
 
 	install -m755 -D "$srcdir"/$pkgname.initd "$pkgdir"/etc/init.d/$pkgname
-	install -m644 -D "$srcdir"/$pkgname.confd "$pkgdir"/etc/conf.d/$pkgname
 	install -m644 -D "$srcdir"/$pkgname.logrotate "$pkgdir"/etc/logrotate.d/$pkgname
 	install -m644 -D "$srcdir"/$pkgname.conf "$pkgdir"/etc/$pkgname.conf
+
+	install -m700 -d "$pkgdir"/var/lib/rsyslog
 }
 
-mysql() {
-	pkgdesc="rsyslog mysql support"
+_plugin() {
+	local name="${subpkgname#$pkgname-}"
+	pkgdesc="$name support for $pkgname"
+	depends="$pkgname=$pkgver-r$pkgrel"
 
-	mkdir -p "$subpkgdir"/usr/lib/rsyslog/
-	mv "$pkgdir"/usr/lib/rsyslog/ommysql.so \
-		"$subpkgdir"/usr/lib/rsyslog/ || return 1
+	local libnames=$(printf '%s\n' $_plugins | grep "^$name:" | cut -d: -f2- | tr : ' ')
+	local libname
+
+	for libname in ${libnames:-$name}; do
+		mkdir -p "$subpkgdir"/usr/lib/rsyslog/
+		mv "$pkgdir"/usr/lib/rsyslog/$libname.so "$subpkgdir"/usr/lib/rsyslog/
+	done
+
+	# Allow people to find plugins by their full name (including prefix;
+	# mm, om, im, ...).
+	for libname in $libnames; do
+		provides="$provides $pkgname-$libname=$pkgver-r$pkgrel"
+	done
 }
 
-hiredis(){
-	pkgdesc="rsyslog hiredis support"
-
-	mkdir -p "$subpkgdir"/usr/lib/rsyslog/
-	mv "$pkgdir"/usr/lib/rsyslog/omhiredis.so \
-		"$subpkgdir"/usr/lib/rsyslog/ || return 1
-}
-
-pgsql() {
-	pkgdesc="rsyslog pgsql support"
-
-	mkdir -p "$subpkgdir"/usr/lib/rsyslog/
-	mv "$pkgdir"/usr/lib/rsyslog/ompgsql.so \
-		"$subpkgdir"/usr/lib/rsyslog/ || return 1
-}
-
-tls() {
-	pkgdesc="rsyslog tls support"
-
-	mkdir -p "$subpkgdir"/usr/lib/rsyslog/
-	mv "$pkgdir"/usr/lib/rsyslog/lmnsd_gtls.so \
-		"$subpkgdir"/usr/lib/rsyslog/ || return 1
-}
-
-snmp() {
-	pkgdesc="rsyslog snmp support"
-
-	mkdir -p "$subpkgdir"/usr/lib/rsyslog/
-	mv "$pkgdir"/usr/lib/rsyslog/omsnmp.so \
-		"$subpkgdir"/usr/lib/rsyslog/ || return 1
-}
-
-sha512sums="dad957c21d9f7ed3a97a1ed87658fe9381dad00365bd2f5af2396dde3dc4a9f96db17c4df9eb9bd02562cc538f99bf8e2ca00229680d6b7892179161265db753  rsyslog-8.27.0.tar.gz
-9a4b184076a82e0899da79ab3749e1c67eac03f36c4460d34ed0385f4a3ffad53681a1cc25dd514e835c9399a9abd01c235743535ad549d5be7f66d9e127b9dc  rsyslog.initd
-a4d969671800227129be870b0318961b79d16365663754111a136734bbf7005abd4da24853dfdc07b3b6691ab5a7b215f0ac6c19022b4c5c8dab06165a42431b  rsyslog.confd
-d54377ddf39197656811a84272568ea761f984e19dd04fc54f372dd04a9244e66d02b26ab33073d0344d054f031660ec611f3c7a18c266e7b68cef5e2c47f06f  rsyslog.logrotate
-3bcd58b222eb7f4d8a42a0643cacb6ab44790f90c9bd550678e002bc19863d5d6a7341e5e5ba0b9292f85c6c04cd5cc42d174acdc63e8ba22022620db10f2b9b  rsyslog.conf
-20967235e8233588210071a7157a81fe02a1e88d7c7f55855fcc2fe34295269a6e3e3bfccb3d4dd83a6a48da28948c92d6ce47a0c5d817f6b6a4030635f4f896  musl-fix.patch
-7be105f9a30d23b48ee46e19d31ba37ec30477935a9f7ba3929666a9abe175313dbb7caf55fbb1c6579dd5d25fe037eea84cae9065fe3f765f23569344bce5d7  queue.patch"
+sha512sums="8414901a5072cb2cc28d35802c9e22d0f9c88f2ae15985a087a86b0e4053471b02d43bcc95d0c466719105e0a5ee683927af3842b9487f27ddddc1ca00ed713a  rsyslog-8.1911.0.tar.gz
+bcd63c8df2ac63b80f3cb51ba7f544988df6cd875f4e81020e762dff30d7537f21b72c95a4b1c08baf15f4ed5f03defbf3f061673aabada5841f45ab9f579374  rsyslog.initd
+b5cbdcfa601ae8e7617289e7805fe71daa17bd03a7a30e1e1aad7a58a4ad4c1d89c9a203228f15816232ab6ab6d7a2752f7bbf4d259bbd5eccbe9728dc7e8aaa  rsyslog.logrotate
+9c9913b3367ac4d0b0f998ffa3aaaf136cf939ed4275f13f79d4c7336d0978007af13cb2c6f35d17ef25a53907fb064705f23c3b3a6a6fcd06ae85c3c51c7e38  rsyslog.conf
+ce686b9529cdc74bd633a6fce169c1fdacf5266b4ca6fc731f8cea08080a1106f93dc048af9966cab09947100890170197c59d3f880992001a8ddfd084ffe2aa  musl-fix.patch
+ef2e000b1c42cb5beffb26393952c2a692791e78972ee4b6f187ca53e338122b2004cc5216381c042195f12cc58f37f186a04e12a65b5bdfdcdf76b73393efb7  queue.patch"

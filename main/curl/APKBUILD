@@ -3,19 +3,51 @@
 # Contributor: Łukasz Jendrysik <scadu@yandex.com>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=curl
-pkgver=7.55.1
+pkgver=7.67.0
 pkgrel=0
-pkgdesc="An URL retrival utility and library"
-url="http://curl.haxx.se"
+pkgdesc="URL retrival utility and library"
+url="https://curl.haxx.se/"
 arch="all"
 license="MIT"
 depends="ca-certificates"
-makedepends="zlib-dev libressl-dev libssh2-dev groff perl"
-source="http://curl.haxx.se/download/$pkgname-$pkgver.tar.bz2
-	"
-subpackages="$pkgname-dbg $pkgname-doc $pkgname-dev libcurl"
+depends_dev="openssl-dev nghttp2-dev zlib-dev"
+checkdepends="python3"
+makedepends="$depends_dev autoconf automake groff libtool perl"
+subpackages="$pkgname-dbg $pkgname-static $pkgname-doc $pkgname-dev libcurl"
+source="https://curl.haxx.se/download/$pkgname-$pkgver.tar.xz"
 
 # secfixes:
+#   7.66.0-r0:
+#     - CVE-2019-5481
+#     - CVE-2019-5482
+#   7.65.0-r0:
+#     - CVE-2019-5435
+#     - CVE-2019-5436
+#   7.64.0-r0:
+#     - CVE-2018-16890
+#     - CVE-2019-3822
+#     - CVE-2019-3823
+#   7.62.0-r0:
+#     - CVE-2018-16839
+#     - CVE-2018-16840
+#     - CVE-2018-16842
+#   7.61.1-r0:
+#     - CVE-2018-14618
+#   7.61.0-r0:
+#     - CVE-2018-0500
+#   7.60.0-r0:
+#     - CVE-2018-1000300
+#     - CVE-2018-1000301
+#   7.59.0-r0:
+#     - CVE-2018-1000120
+#     - CVE-2018-1000121
+#     - CVE-2018-1000122
+#   7.57.0-r0:
+#     - CVE-2017-8816
+#     - CVE-2017-8817
+#     - CVE-2017-8818
+#   7.56.1-r0:
+#     - CVE-2017-1000257
 #   7.55.0-r0:
 #     - CVE-2017-1000099
 #     - CVE-2017-1000100
@@ -52,38 +84,50 @@ subpackages="$pkgname-dbg $pkgname-doc $pkgname-dev libcurl"
 #     - CVE-2014-0138
 #     - CVE-2014-0139
 
-builddir="$srcdir/$pkgname-$pkgver"
+prepare() {
+	default_prepare
+	autoreconf -vfi
+}
 
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
 		--prefix=/usr \
 		--enable-ipv6 \
 		--enable-unix-sockets \
+		--enable-static \
 		--without-libidn \
 		--without-libidn2 \
+		--with-nghttp2 \
 		--disable-ldap \
 		--with-pic \
-		|| return 1
-	make || return 1
+		--without-libssh2 # https://bugs.alpinelinux.org/issues/10222
+	make
 }
 
 check() {
 	cd "$builddir"
-	make check
+	make -C tests nonflaky-test
 }
 
 package() {
-	make DESTDIR="$pkgdir" \
-		-C "$builddir" install || return 1
+	cd "$builddir"
+	make install DESTDIR="$pkgdir"
 }
 
 libcurl() {
 	pkgdesc="The multiprotocol file transfer library"
+
 	mkdir -p "$subpkgdir"/usr
 	mv "$pkgdir"/usr/lib "$subpkgdir"/usr
 }
 
-sha512sums="bfeb39e94b8378519b2efba0a476636b80dbee3434104b98464ee81ce3871eb134e065f52abe8bedb69681b43576cb30655c8be0be6115386859d0cb426d745b  curl-7.55.1.tar.bz2"
+static() {
+	pkgdesc="$pkgdesc (static library)"
+
+	mkdir -p "$subpkgdir"/usr/lib
+	mv "$pkgdir"/usr/lib/*.a "$subpkgdir"/usr/lib
+}
+
+sha512sums="1d5a344be92dd61b1ba5189eff0fe337e492f2e850794943570fe71c985d0af60bd412082be646e07aaa8639908593e1ce4bb2d07db35394ec377e8ce8b9ae29  curl-7.67.0.tar.xz"

@@ -1,38 +1,27 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=encodings
-pkgver=1.0.4
+pkgver=1.0.5
 pkgrel=0
 pkgdesc="X.org font encoding files"
 url="http://xorg.freedesktop.org/"
 arch="noarch"
 license="custom"
-depends=
-makedepends="mkfontscale"
-install=
-source="http://www.x.org/releases/individual/font/encodings-$pkgver.tar.bz2"
-
-_builddir="$srcdir/$pkgname-$pkgver"
-
-prepare() {
-	cd "$_builddir"
-	update_config_sub || return 1
-}
+options="!check"  # No test suite.
+makedepends="mkfontscale util-macros"
+source="https://www.x.org/releases/individual/font/encodings-$pkgver.tar.bz2"
 
 build() {
-	cd "$_builddir"
+	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
 		--prefix=/usr \
-		--with-encodingsdir=/usr/share/fonts/encodings \
-		|| return 1
-	make || return 1
+		--with-encodingsdir=/usr/share/fonts/encodings
+	make
 }
 
 package() {
-	cd "$_builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	cd "$builddir"
+	make DESTDIR="$pkgdir" install
 }
-md5sums="0f2d6546d514c5cc4ecf78a60657a5c1  encodings-1.0.4.tar.bz2"
-sha256sums="ced6312988a45d23812c2ac708b4595f63fd7a49c4dcd9f66bdcd50d1057d539  encodings-1.0.4.tar.bz2"
-sha512sums="838d1c9489e9880bf1982dc14d34a48b624b7bc2c0fffbf28e2c24e1546b0602357ca31afef100053481d6a18e357085ef74ac7a82261daa1ac1398bc1e05d17  encodings-1.0.4.tar.bz2"
+sha512sums="920e49f0b3545f181a1574ca3280ac9adef1e68fe27566c195dd7013f728d355c0d759132789357fcf8fa7391fcbe1e17edf2bd85aa5611df5a4d99740011008  encodings-1.0.5.tar.bz2"

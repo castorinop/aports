@@ -6,14 +6,14 @@ pkgver=1.8_beta5
 pkgrel=0
 pkgdesc="A transparent SOCKS proxying library"
 url="http://tsocks.sourceforge.net/"
-arch="x86_64"
-license="GPL2"
+arch="x86_64 ppc64le aarch64"
+license="GPL-2.0"
 depends=""
 depends_dev=""
 makedepends=""
 install=""
 subpackages="$pkgname-doc"
-source="http://downloads.sourceforge.net/${pkgname}/${pkgname}-${pkgver/_beta/beta}.tar.gz
+source="https://downloads.sourceforge.net/${pkgname}/${pkgname}-${pkgver/_beta/beta}.tar.gz
 	configure.patch"
 builddir="${srcdir}/${pkgname}-${pkgver%_*}"
 

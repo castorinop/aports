@@ -3,34 +3,33 @@
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=perl-extutils-makemaker
 _pkgreal=ExtUtils-MakeMaker
-pkgver=7.24
+pkgver=7.42
 pkgrel=0
 pkgdesc="Create a module Makefile"
-url="http://search.cpan.org/dist/ExtUtils-MakeMaker/"
+url="https://metacpan.org/release/ExtUtils-MakeMaker"
 arch="noarch"
-license="GPL PerlArtistic"
-cpandepends=""
-cpanmakedepends=""
-depends="$cpandepends"
-makedepends="perl-dev $cpanmakedepends"
+license="GPL-1.0-or-later OR Artistic-1.0-Perl"
+depends="perl"
+makedepends="perl-dev"
 subpackages="$pkgname-doc"
-source="http://search.cpan.org/CPAN/authors/id/B/BI/BINGOS/$_pkgreal-$pkgver.tar.gz"
+source="https://cpan.metacpan.org/authors/id/B/BI/BINGOS/ExtUtils-MakeMaker-$pkgver.tar.gz"
 
-_builddir="$srcdir/$_pkgreal-$pkgver"
+builddir="$srcdir/$_pkgreal-$pkgver"
 
 prepare() {
-	cd "$_builddir"
-	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor || return 1
+	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
 }
 
 build() {
-	cd "$_builddir"
-	make && make test
+	make
+}
+
+check() {
+	make test
 }
 
 package() {
-	cd "$_builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 
@@ -39,6 +38,4 @@ doc() {
 	replaces="perl-doc"
 }
 
-md5sums="15c67ba2ea2c9e20a3d976b738adb113  ExtUtils-MakeMaker-7.24.tar.gz"
-sha256sums="416abc97c3bb2cc72bef28852522f2859de53e37bf3d0ae8b292067d78755e69  ExtUtils-MakeMaker-7.24.tar.gz"
-sha512sums="f57f8407aea6101af964f105fb9ddd6567262fa2bad91456573c8fc019cdf1469563945029f5078e20d2f7d1d736a63586e7cde3bb72cb9ae80ad0b8ebe818d5  ExtUtils-MakeMaker-7.24.tar.gz"
+sha512sums="e87d42bc3f5b2c15037a93f44387cb7f65bea48da0b3b30b07eac5b06d02265c05abbc8abed43a5ccb5a6028eb43c4654c0b0f0c5eb5574b6a593b56b3562b56  ExtUtils-MakeMaker-7.42.tar.gz"

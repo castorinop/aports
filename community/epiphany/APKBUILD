@@ -1,0 +1,38 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Rasmus Thomsen <oss@cogitri.dev>
+pkgname=epiphany
+pkgver=3.34.2
+pkgrel=0
+pkgdesc="A simple, clean, beautiful view of the web"
+options="!check" # Location entry test fails on builders
+url="https://wiki.gnome.org/Apps/Web"
+arch="all !s390x" # libhandy is not available on s390x
+license="GPL-3.0-or-later"
+depends="gsettings-desktop-schemas"
+makedepends="meson iso-codes-dev gtk+3.0-dev gsettings-desktop-schemas-dev
+	icu-dev json-glib-dev libdazzle-dev libhandy-dev libnotify-dev libsecret-dev
+	libsoup-dev libxml2-dev nettle-dev sqlite-dev webkit2gtk-dev gcr-dev itstool"
+checkdepends="appstream-glib desktop-file-utils xvfb-run"
+subpackages="$pkgname-lang $pkgname-doc"
+source="https://download.gnome.org/sources/epiphany/${pkgver%.*}/epiphany-$pkgver.tar.xz"
+
+build() {
+	meson \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
+		--buildtype=release \
+		. output
+	ninja -C output
+}
+
+check() {
+	xvfb-run ninja -C output test
+}
+
+package() {
+	DESTDIR="$pkgdir" ninja -C output install
+}
+
+sha512sums="2cf8c6f14e19b2a8868d8c85e633309d145f77ac1222ceb8d12bdd041aed95fd30c2b56ec5f70de676263c7e52fa021da9aef760349b6582e850705c56e40778  epiphany-3.34.2.tar.xz"

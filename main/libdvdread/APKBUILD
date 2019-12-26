@@ -1,17 +1,16 @@
 # Contributor: Timo Teräs <timo.teras@iki.fi>
 # Maintainer: Timo Teräs <timo.teras@iki.fi>
 pkgname=libdvdread
-pkgver=5.0.3
-pkgrel=1
+pkgver=6.0.2
+pkgrel=0
 pkgdesc="a simple foundation for reading DVD video disks"
 url="http://dvdnav.mplayerhq.hu/"
 arch="all"
-license="GPL"
+license="GPL-2.0-or-later"
 makedepends="libdvdcss-dev"
 subpackages="$pkgname-dev $pkgname-doc"
-source="http://download.videolan.org/pub/videolan/$pkgname/$pkgver/$pkgname-$pkgver.tar.bz2"
-options="!check"
-builddir="$srcdir"/libdvdread-$pkgver
+source="https://download.videolan.org/pub/videolan/libdvdread/$pkgver/libdvdread-$pkgver.tar.bz2"
+options="!check" # No testsuite
 
 build() {
 	cd "$builddir"
@@ -21,14 +20,13 @@ build() {
 		--prefix=/usr \
 		--disable-static \
 		--enable-shared \
-		--with-libdvdcss \
-		|| return 1
-	make || return 1
+		--with-libdvdcss
+	make
 }
 
 package() {
 	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="1ca438f0b5c406549eec62e1abef1e8745b9f932bcd30a3194ee9e37995b269ec8f1652a24cc3d2cb11ddb964e4a47a06e5405f9402e616586ff6263a1af3fc2  libdvdread-5.0.3.tar.bz2"
+sha512sums="e8831a67bbf1a144e9298b59e5462889c8b0197592a3c169523b5d84d9b9c1aaa719ccde2aa98c490e04f2a94c3fa7244b286e8faed674ae8c70400a0ece9c6c  libdvdread-6.0.2.tar.bz2"

@@ -1,35 +1,35 @@
 # Contributor: Stuart Cardall <developer@it-offshore.co.uk>
 # Maintainer: Stuart Cardall <developer@it-offshore.co.uk>
 pkgname=perl-par-packer
-pkgver=1.037
+pkgver=1.049
 _realname=PAR-Packer-$pkgver
 pkgrel=1
 pkgdesc="App::Packer::Backend interface, for generating stand-alone executables, perl scripts and PAR files"
 url="http://search.cpan.org/dist/Par-Packer/"
 arch="all"
-license="GPL PerlArtistic"
-makedepends="perl-dev perl-archive-zip perl-par perl-par-dist perl-module-scandeps perl-getopt-argvfile"
+license="Artistic-1.0-Perl GPL-1.0-or-later"
+depends="perl-archive-zip perl-par perl-module-scandeps"
+makedepends="perl-dev perl-getopt-argvfile"
+checkdepends="perl-test-pod perl-ipc-run3"
 subpackages="$pkgname-doc"
 source="http://search.cpan.org/CPAN/authors/id/R/RS/RSCHUPP/$_realname.tar.gz"
 builddir="$srcdir/$_realname"
 
 build() {
-	cd "$builddir"
 	mkdir blib
 	cp -rf lib script blib/ # fix parallel install issue on build server
-	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor || return 1
-	make || return 1
+	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
+	make
 }
 
 package() {
-	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 
 check() {
-        cd "$builddir"
-        make test
+	export PERL_TEST_POD=1
+	make test
 }
 
-sha512sums="fe82c13baf27509076435dc6dd4a22cc4e98606de54b6baa65232e4083d3716c464f423b2671d9a009378ae596084b27a31a3392dacf8e17e3d728f2ccbbaaa6  PAR-Packer-1.037.tar.gz"
+sha512sums="c573f73731d54b08f722d3153a604703a685d794f5c0623bc581cc7340f45aac13c2356d078521a2c948f99558c29640fc4ab31a72b239d5ff031359325a637a  PAR-Packer-1.049.tar.gz"

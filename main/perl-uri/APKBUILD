@@ -1,35 +1,35 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=perl-uri
-pkgver=1.71
-pkgrel=1
-pkgdesc="Perl Module: form Resource Identifiers (absolute and relative)"
-url="http://search.cpan.org/dist/URI/"
+_pkgreal=URI
+pkgver=1.76
+pkgrel=0
+pkgdesc="Uniform Resource Identifiers (absolute and relative)"
+url="https://metacpan.org/release/URI/"
 arch="noarch"
-license="PerlArtistic"
-subpackages="$pkgname-doc"
+license="GPL-1.0-or-later Artistic-1.0-Perl"
 depends="perl"
+cpancheckdepends="perl-test-needs"
 makedepends="perl-dev"
+checkdepends="$cpancheckdepends"
 replaces="perl-uri-escape"
-source="http://search.cpan.org/CPAN/authors/id/E/ET/ETHER/URI-$pkgver.tar.gz"
-
-builddir="$srcdir"/URI-$pkgver
+subpackages="$pkgname-doc"
+source="https://cpan.metacpan.org/authors/id/O/OA/OALDERS/URI-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgreal-$pkgver"
 
 build() {
-	cd "$builddir"
-	perl Makefile.PL INSTALLDIRS=vendor
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
+	PERL_MM_USE_DEFAULT=1 perl -I. Makefile.PL INSTALLDIRS=vendor
 	make
 }
 
 check() {
-	cd "$builddir"
+	export CFLAGS=$(perl -MConfig -E 'say $Config{ccflags}')
 	make test
 }
 
 package() {
-	cd "$builddir"
-	make install DESTDIR="$pkgdir"
-	find "$pkgdir" -name perllocal.pod -delete
-	find "$pkgdir" -name .packlist -delete
+	make DESTDIR="$pkgdir" install
+	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 
-sha512sums="db412b75054a4d315eb861060fa4641832c2428b9dfe56bbe35f530c9ba572d4de2061d9782454750293dd5a64f3375830988d8512f410e84a9d599c80458405  URI-1.71.tar.gz"
+sha512sums="1fcb02692bdf5f223c2878569615d153b3c4c5adc04c33aee23f3f015e08b4895b03536ef3a8c7cb7a334c2faa056e5e46c805d56d810704cba63d96136e0a83  URI-1.76.tar.gz"

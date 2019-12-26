@@ -1,45 +1,35 @@
 # Contributor: Alan Lacerda <alacerda@alpinelinux.org>
 # Maintainer: Alan Lacerda <alacerda@alpinelinux.org>
 pkgname=mate-terminal
-pkgver=1.18.1
+pkgver=1.22.1
 pkgrel=0
 pkgdesc="MATE terminal emulator"
 url="https://github.com/mate-desktop/mate-terminal"
-arch="all"
-license="GPL2"
+arch="all !s390x" # mate-desktop
+license="GPL-2.0"
 depends="mate-common yelp-tools mate-desktop"
-depends_dev=""
-makedepends="$depends_dev libtool intltool dconf-dev libsm-dev itstool vte3-dev
-	mate-desktop-dev libxml2-utils"
-install=""
+makedepends="libtool intltool dconf-dev libsm-dev itstool vte3-dev
+	mate-desktop-dev libxml2-utils gtk+3.0-dev"
 subpackages="$pkgname-doc $pkgname-lang"
-source="http://pub.mate-desktop.org/releases/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
-
-_builddir="$srcdir/$pkgname-$pkgver"
-prepare() {
-	local i
-	cd "$_builddir"
-	for i in $source; do
-		case $i in
-		*.patch) msg $i; patch -p1 -i "$srcdir"/$i || return 1;;
-		esac
-	done
-}
+source="https://pub.mate-desktop.org/releases/${pkgver%.*}/$pkgname-$pkgver.tar.xz"
+builddir="$srcdir/$pkgname-$pkgver"
 
 build() {
-	cd "$_builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
 		--sysconfdir=/etc \
-		--prefix=/usr \
-		|| return 1
-	make || return 1
+		--enable-static=no \
+		--prefix=/usr
+	make
+}
+
+check() {
+	make check
 }
 
 package() {
-	cd "$_builddir"
-	make DESTDIR="${pkgdir}" install || return 1
+	make DESTDIR="${pkgdir}" install
 }
 
-sha512sums="3b102c683137951d425c5c4f177e1498be037cabb9483bd89fea61c1c03e9a5d481a5aa9418e92f3007ac64f7ed3bf298109ba9564f741634c4b5dad94ddddf3  mate-terminal-1.18.1.tar.xz"
+sha512sums="b20102c15dc140b59c93802606ca94fd108dfd5f7ac7f079b872e957794fc2c3aab40c0e6da697e8d393a67fca7b106573a4cb8014af5d6c8ad777be3a798534  mate-terminal-1.22.1.tar.xz"

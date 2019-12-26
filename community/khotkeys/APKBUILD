@@ -1,0 +1,40 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=khotkeys
+pkgver=5.17.4
+pkgrel=0
+arch="all"
+url="https://www.kde.org/workspaces/plasmadesktop/"
+pkgdesc="Key Accelerator Application"
+license="GPL-2.0-only AND LGPL-2.0-or-later"
+makedepends="extra-cmake-modules qt5-qtbase-dev qt5-qtx11extras-dev kglobalaccel-dev ki18n-dev kio-dev kxmlgui-dev kdelibs4support-dev kdbusaddons-dev kcmutils-dev plasma-framework-dev plasma-workspace-dev kdoctools-dev"
+source="https://download.kde.org/stable/plasma/$pkgver/khotkeys-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang $pkgname-dev"
+options="!check" # No tests
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	cd "$builddir"/build
+	CTEST_OUTPUT_ON_FAILURE=TRUE ctest
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="81cde2c4d9e06954d7203fedf47a0b08599795d94446eeb954de6b62b17882313bec5f325374acd662e7e77fbe2817151bc7944b6b7c1040b78ff8e0cc69ee7b  khotkeys-5.17.4.tar.xz"

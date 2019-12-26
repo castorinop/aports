@@ -1,0 +1,29 @@
+# Maintainer: Natanael Copa <ncopa@alpinelinux.org>
+pkgname=xfburn
+pkgver=0.6.1
+pkgrel=0
+pkgdesc="a simple CD/DVD burning tool based on libburnia libraries"
+options="!check" # No testsuite
+url="https://goodies.xfce.org/projects/applications/xfburn"
+arch="all !s390x" # librsvg
+license="GPL-2.0-or-later"
+depends="desktop-file-utils hicolor-icon-theme"
+makedepends="libburn-dev libisofs-dev libxfce4ui-dev thunar-dev librsvg-dev
+	gst-plugins-base-dev exo-dev"
+subpackages="$pkgname-doc $pkgname-lang"
+source="https://archive.xfce.org/src/apps/xfburn/${pkgver%.*}/xfburn-$pkgver.tar.bz2"
+
+build() {
+	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
+		--prefix=/usr \
+		--enable-gstreamer
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install
+}
+
+sha512sums="8ea747ab248a20e835082bbb89e09c3e4746201a1da956bc87a2eef5359d1508e5461c7d8a35327aa2261fb7cac576e8521596f83011bc2240b2fbebde60b9c2  xfburn-0.6.1.tar.bz2"

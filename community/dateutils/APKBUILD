@@ -1,12 +1,12 @@
 # Contributor: Francesco Colista <fcolista@alpinelinux.org>
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=dateutils
-pkgver=0.4.2
+pkgver=0.4.6
 pkgrel=0
 pkgdesc="Utilities for fast date-time calculations and conversion"
 url="http://hroptatyr.github.com/dateutils/"
 arch="all"
-license="BSD"
+license="BSD-3-Clause"
 makedepends="m4 texinfo automake autoconf linux-headers"
 subpackages="$pkgname-doc"
 source="https://bitbucket.org/hroptatyr/$pkgname/downloads/$pkgname-${pkgver}.tar.xz
@@ -16,7 +16,12 @@ builddir="$srcdir/$pkgname-$pkgver"
 build() {
 	cd "$builddir"
 	./configure \
+		--build=$CBUILD \
+		--host=$CHOST \
 		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+		--localstatedir=/var \
 		--enable-static=no
 	make
 }
@@ -24,9 +29,7 @@ build() {
 package() {
 	cd "$builddir"
 	make DESTDIR="$pkgdir" install
-	install -dm755 "$pkgdir/usr/share/licenses/$pkgname"
-	sed -n '/* Copyright/,/ DAMAGE.$/p' src/dadd.c > "$pkgdir"/usr/share/licenses/$pkgname/LICENSE
 }
 
-sha512sums="0b6e98bd9402dc3629122c3d68ab54df547ce779806661cc01df3625ab7cedb429d943ef46e151653283c1ac6c557f4bf14b3b5adaafbcac1d0a86c6d12895fd  dateutils-0.4.2.tar.xz
+sha512sums="014e8411774250d2862943bbbdd69cc7ec2ca934349272ae7c44b136a57ef30c23f841018cc38f86d49e2348b2199848076db224e3653d6d7337a3f17709c8cb  dateutils-0.4.6.tar.xz
 a31647222867996e23fa8066d13cfe19a4aac7d9ec86b0f998665ba60883454a1843edabd9f49af4a313a582b33cb043b8dead66cbdb4b72bd4918fac435543d  remove-sysctl-include.patch"

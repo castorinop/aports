@@ -5,7 +5,7 @@ pkgrel=7
 pkgdesc="A Linux kernel Oops file troubleshooting tool"
 url="https://kernel.org/pub/linux/utils/kernel/ksymoops/v2.4"
 arch="all"
-license="GPL2"
+license="GPL-2.0"
 depends=""
 makedepends="binutils-dev"
 subpackages="$pkgname-doc"
@@ -16,7 +16,7 @@ builddir="$srcdir/$pkgname-$pkgver"
 
 build() {
 	cd "$builddir"
-	# see http://sourceware.org/bugzilla/show_bug.cgi?id=14243
+	# see https://sourceware.org/bugzilla/show_bug.cgi?id=14243
 	# we abuse DEBUG variable which is added to CFLAGS
 	make DEBUG="$CFLAGS -DPACKAGE -DPACKAGE_VERSION" || return 1
 }

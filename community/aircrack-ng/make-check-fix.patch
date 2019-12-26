@@ -1,0 +1,20 @@
+--- a/test/Makefile.am
++++ b/test/Makefile.am
+@@ -94,7 +94,7 @@
+ 		test-wpaclean-0002.sh
+ 
+ if HAVE_SQLITE3
+-TESTS += test-airolib-ng-0001.sh
++# TESTS += test-airolib-ng-0001.sh
+ endif
+ 
+ EXTRA_DIST = test-hex_string_to_array.sh \
+@@ -148,7 +148,7 @@
+ 			 test-airolib-sqlite.sh
+ 
+ if HAVE_SQLITE3
+-EXTRA_DIST += test-airolib-ng-0001.sh
++# EXTRA_DIST += test-airolib-ng-0001.sh
+ endif
+ 
+ 

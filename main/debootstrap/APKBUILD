@@ -1,23 +1,22 @@
 # Contributor: Sören Tempel <soeren+alpine@soeren-tempel.net>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=debootstrap
-pkgver=1.0.91
+pkgver=1.0.116
 pkgrel=0
 pkgdesc="Debian/Ubuntu bootstrap scripts"
-url="http://packages.qa.debian.org/d/debootstrap.html"
+url="https://packages.qa.debian.org/d/debootstrap.html"
 arch="noarch"
-license="GPL2"
+license="MIT"
+options="!check" # upstream doesn't have a test suite
 depends="debian-archive-keyring dpkg tar"
-makedepends=""
 subpackages="$pkgname-doc"
-source="ftp://ftp.debian.org/debian/pool/main/d/${pkgname}/${pkgname}_${pkgver}.tar.gz"
-builddir="$srcdir"/$pkgname-$pkgver
+source="http://ftp.debian.org/debian/pool/main/d/debootstrap/debootstrap_$pkgver.tar.gz"
 
 package() {
 	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 	install -Dm644 $pkgname.8 \
-		"$pkgdir"/usr/share/man/man8/$pkgname.8 || return 1
+		"$pkgdir"/usr/share/man/man8/$pkgname.8
 }
 
-sha512sums="5d1633c31b6a17aa3da4644a750875fd05bdfd448f90bcd453fc7bdb64df13e6bc4f2e8a6968e0c36302fa0458b9ac321e2ed3dbc68a4f4c071f7c16d950953c  debootstrap_1.0.91.tar.gz"
+sha512sums="59ba44ecfa7c6bc3d81a814fe66a87223fa4bde24bd986f75875fe9077355a5f4268d822347f99402d4146e81b270a06f21111fb977729f4326bb5b8e017583c  debootstrap_1.0.116.tar.gz"

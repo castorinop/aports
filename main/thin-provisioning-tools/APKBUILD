@@ -1,12 +1,12 @@
 # Contributor: Carlo Landmeter <clandmeter@gmail.com>
-# Maintainer: William Pitcock <nenolod@dereferenced.org>
+# Maintainer: 
 pkgname=thin-provisioning-tools
 pkgver=0.7.1
-pkgrel=0
+pkgrel=2
 pkgdesc="A suite of tools for manipulating the metadata of the dm-thin device-mapper target"
 url="https://github.com/jthornber/thin-provisioning-tools"
 arch="all"
-license="GPL3"
+license="GPL-3.0"
 depends="expat boost libaio"
 makedepends="expat-dev boost-dev libaio-dev linux-headers autoconf automake libtool"
 install=""

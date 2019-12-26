@@ -1,0 +1,36 @@
+# Maintainer: Kevin Daudt <kdaudt@alpinelinux.org>
+pkgname=direnv
+pkgver=2.20.1
+pkgrel=1
+pkgdesc="Environment variable switcher for the shell"
+url="https://direnv.net"
+arch="all"
+license="MIT"
+checkdepends="bash"
+makedepends="go"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/direnv/$pkgname/archive/v$pkgver.tar.gz"
+builddir="$srcdir/src/github.com/direnv/$pkgname"
+
+prepare() {
+	mkdir -p "${builddir%/*}"
+	ln -s "$srcdir"/$pkgname-$pkgver "$builddir"
+
+	default_prepare
+}
+
+build() {
+	make GOPATH="$srcdir"
+}
+
+check() {
+	# Also has tests for tcsh and elvish, this manual call is done instead of
+	# tests to avoid unwanted tests like 'shellcheck' and 'go-fmt'
+	GOPATH="$srcdir" make test-go test-bash
+}
+
+package() {
+	make DESTDIR="$pkgdir/usr" install
+}
+
+sha512sums="f438e0b41c3f1ef41841c08eff4fefb8684f40b23a1d54c03b8d4ab2c81143bd3314fda83dc334dcd6233cdecf50764f6d61afae0ae6c450a6b8f4f181c5a931  direnv-2.20.1.tar.gz"

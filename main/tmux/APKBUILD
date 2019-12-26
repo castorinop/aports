@@ -1,19 +1,18 @@
 # Contributor: Natanael Copa <ncopa@alpinelinux.org>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=tmux
-pkgver=2.5
+pkgver=3.0a
 pkgrel=0
 pkgdesc="Tool to control multiple terminals from a single terminal"
-url="https://tmux.github.io/"
+url="https://tmux.github.io"
 arch="all"
-license="BSD"
+license="ISC"
 depends="ncurses-terminfo"
-makedepends="ncurses-dev libevent-dev autoconf automake bsd-compat-headers"
-install=
+makedepends="autoconf automake bsd-compat-headers libevent-dev ncurses-dev"
 subpackages="$pkgname-doc"
 source="https://github.com/tmux/tmux/releases/download/$pkgver/$pkgname-$pkgver.tar.gz"
 
-builddir="$srcdir/"$pkgname-$pkgver
+builddir="$srcdir/$pkgname-$pkgver"
 
 build() {
 	cd "$builddir"
@@ -23,19 +22,24 @@ build() {
 		--prefix=/usr \
 		--sysconfdir=/etc \
 		--mandir=/usr/share/man \
-		--localstatedir=/var \
+		--localstatedir=/var
 	make
+}
+
+check() {
+	cd "$builddir"
+	make check
 }
 
 package() {
 	cd "$builddir"
 	make DESTDIR="$pkgdir" install
 
-	install -Dm644 example_tmux.conf \
+	install -D -m644 example_tmux.conf \
 		"$pkgdir"/usr/share/doc/$pkgname/examples/$pkgname.conf
-	for file in CHANGES FAQ README TODO; do
+	local file; for file in CHANGES README; do
 		install -m644 "$file" "$pkgdir"/usr/share/doc/$pkgname/
 	done
 }
 
-sha512sums="c0e8365a553d034e347f2f7a0d64f04e2be4307a75a9f72c8218fc56b72e531f3f37fe4a8f0e8d70801f5f62ee250ab7e9978abd6d101d273f76b4a1a92b08e0  tmux-2.5.tar.gz"
+sha512sums="f326ee9c0e5e9a46ce9c99c76407b8cf35feea5f898c3c937fd8c5e488ff9a809272de19226d9d10f864e11051dcf633327820b7f8d86d85962da61174bbfb0b  tmux-3.0a.tar.gz"

@@ -1,25 +1,27 @@
 # Contributor: Valery Kartel <valery.kartel@gmail.com>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=cmake
-pkgver=3.9.1
-pkgrel=1
-pkgdesc="CMake is a cross-platform open-source make system"
-url="http://www.cmake.org"
+pkgver=3.16.2
+pkgrel=0
+pkgdesc="Cross-platform, open-source make system"
+url="https://www.cmake.org/"
 arch="all"
-license="CMake"
-makedepends="ncurses-dev curl-dev expat-dev zlib-dev bzip2-dev libarchive-dev
-    libuv-dev xz-dev rhash-dev"
-subpackages="$pkgname-doc"
-
+license="BSD-3-Clause"
+makedepends="bzip2-dev curl-dev expat-dev libarchive-dev linux-headers
+	libuv-dev ncurses-dev rhash-dev xz-dev zlib-dev"
+options="!checkroot !check"
+checkdepends="file musl-utils"
+subpackages="$pkgname-doc $pkgname-bash-completion:bashcomp:noarch
+	"
 case $pkgver in
 *.*.*.*) _v=v${pkgver%.*.*};;
 *.*.*) _v=v${pkgver%.*};;
 esac
 
-source="http://www.cmake.org/files/$_v/cmake-${pkgver}.tar.gz"
-builddir="$srcdir/$pkgname-$pkgver"
+source="https://www.cmake.org/files/$_v/cmake-$pkgver.tar.gz
+	"
 
-parallel_opt() {
+_parallel_opt() {
 	local i n
 	for i in $MAKEOPTS; do
 		case "$i" in
@@ -32,16 +34,23 @@ parallel_opt() {
 build() {
 	cd "$builddir"
 	# jsoncpp needs cmake to build so to avoid recursive build
-	# dependency, we use the bundled version of jsoncpp
-	./bootstrap --prefix=/usr \
+	# dependency, we use the bundled version of jsoncpp.
+	# Do NOT remove --no-system-jsoncpp unless you consulted
+	# maintainer
+	./bootstrap \
+		--prefix=/usr \
 		--mandir=/share/man \
 		--datadir=/share/$pkgname \
 		--docdir=/share/doc/$pkgname \
 		--system-libs \
 		--no-system-jsoncpp \
-		$(parallel_opt)
-
+		$(_parallel_opt)
 	make
+}
+
+check() {
+	cd "$builddir"
+	CTEST_OUTPUT_ON_FAILURE=TRUE bin/ctest
 }
 
 package() {
@@ -49,4 +58,14 @@ package() {
 	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="3bdc0f08cac8decd37df8043cf8fb436d08d19444353164bad02feda441bbd5efa636836352227255829ae5360b4ef4c952b3a7635dd61f4e86b01dff44e1ac6  cmake-3.9.1.tar.gz"
+bashcomp() {
+	depends=""
+	pkgdesc="Bash completions for $pkgname"
+	install_if="$pkgname=$pkgver-r$pkgrel bash"
+
+	mkdir -p "$subpkgdir"/usr/share/bash-completion
+	mv "$pkgdir"/usr/share/cmake/completions \
+		"$subpkgdir"/usr/share/bash-completion/
+}
+
+sha512sums="b5e68083713462400b38424bf1dbfe73d37a5fbe211fadac30c576246024a1d40f95fab7044804b7201a1bc2e7fd5b7093257e9534cd35538c8b274dc00f4b76  cmake-3.16.2.tar.gz"

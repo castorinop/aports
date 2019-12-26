@@ -1,30 +1,29 @@
 # Contributor: Klemens Nanni <kl3@posteo.org>
 # Maintainer: Klemens Nanni <kl3@posteo.org>
 pkgname=lzlib
-pkgver=1.9
+pkgver=1.11
 pkgrel=0
-pkgdesc="Lzlib is a data compression library"
+pkgdesc="Library for the lzip compression file format"
 url="http://www.nongnu.org/lzip/lzlib.html"
 arch="all"
-license="GPL2+"
-subpackages="$pkgname-doc"
-source="http://download.savannah.gnu.org/releases/lzip/$pkgname/$pkgname-$pkgver.tar.gz"
-
-builddir="$srcdir/$pkgname-$pkgver"
+license="GPL-2.0-or-later"
+subpackages="$pkgname-doc $pkgname-dev"
+source="https://download.savannah.gnu.org/releases/lzip/$pkgname/$pkgname-$pkgver.tar.gz"
 
 build() {
-	cd "$builddir"
-	./configure --prefix=/usr
+	./configure \
+		--prefix=/usr \
+		--mandir=/usr/share/man \
+		--disable-static
 	make
 }
 
 check() {
-	cd "$builddir"
 	make check
 }
 
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir" install
 }
-sha512sums="2d36e0b27f544fdab958dbf7d966b41e44c134382ec9f792d94dacf60355eadc25a1cf2b8b7049287995fa5bfc27aec0f3e4253304e3b10813c96b0609408278  lzlib-1.9.tar.gz"
+
+sha512sums="5aa3ff084177efe906518724a98a78c32d1c0e02b967800a44388fc6af441de48fcc5899457913fca11fae3beb8bebc260ac447f0a336b1c14f3f13726114567  lzlib-1.11.tar.gz"

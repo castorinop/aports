@@ -1,0 +1,55 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Contributor: Natanael Copa <ncopa@alpinelinux.org>
+# Maintainer: Rasmus Thomsen <oss@cogitri.dev>
+pkgname=evolution
+pkgver=3.34.2
+pkgrel=1
+pkgdesc="evolution mail client"
+url="https://projects.gnome.org/evolution"
+arch="all !s390x" # Limited by gnome-autoar
+license="GPL-2.0-or-later"
+depends="highlight gsettings-desktop-schemas"
+depends_dev="itstool libxml2-dev gcr-dev enchant2-dev libcanberra-dev
+	libgweather-dev openldap-dev libnotify-dev"
+makedepends="$depends_dev gperf flex bison libxml2-utils glib-dev
+	webkit2gtk-dev gtkspell3-dev evolution-data-server-dev gnome-autoar-dev
+	gtk+3.0-dev nss-dev cmake gsettings-desktop-schemas-dev
+	gspell-dev gnome-desktop-dev glade-dev"
+options="!check" # need to be installed
+subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
+source="https://download.gnome.org/sources/evolution/${pkgver%.*}/evolution-$pkgver.tar.xz"
+
+build() {
+	mkdir -p "$builddir"/build
+	cd "$builddir"/build
+	cmake \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DSYSCONF_INSTALL_DIR=/etc \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DENABLE_GNOME_DESKTOP=ON \
+		-DENABLE_AUTOAR=ON \
+		-DENABLE_YTNEF=OFF \
+		-DENABLE_PST_IMPORT=OFF \
+		-DENABLE_SMIME=ON \
+		-DENABLE_SCHEMAS_COMPILE=OFF \
+		-DWITH_GLADE_CATALOG=ON \
+		..
+	make
+}
+
+check() {
+	make -C build check
+}
+
+package() {
+	make -C build DESTDIR="$pkgdir" install
+}
+
+dev() {
+	default_dev
+	mkdir -p "$subpkgdir"/usr/lib "$subpkgdir"/usr/share
+	mv "$pkgdir"/usr/lib/glade/modules "$subpkgdir"/usr/lib/
+	mv "$pkgdir"/usr/share/glade/catalogs "$subpkgdir"/usr/share/
+}
+
+sha512sums="196cebac1d4c26a8570b5942ebb9eec5612a3dee8ddb5fe8ea06ae4b6c570448607ba43df19ea6a2f9e982b64f271432f18506df04bef590c71c9463dc902368  evolution-3.34.2.tar.xz"

@@ -1,0 +1,42 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=kscreen
+pkgver=5.17.4
+pkgrel=0
+pkgdesc="KDE's screen management software"
+arch="all"
+url="https://www.kde.org/workspaces/plasmadesktop/"
+license="GPL-2.0-or-later AND LGPL-2.1-or-later"
+depends="hicolor-icon-theme"
+makedepends="extra-cmake-modules qt5-qtbase-dev kdbusaddons-dev kconfig-dev kconfigwidgets-dev ki18n-dev kxmlgui-dev kglobalaccel-dev kwidgetsaddons-dev kdeclarative-dev kiconthemes-dev plasma-framework-dev libkscreen-dev kcmutils-dev"
+checkdepends="xvfb-run"
+source="https://download.kde.org/stable/plasma/$pkgver/kscreen-$pkgver.tar.xz"
+subpackages="$pkgname-lang"
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	cd "$builddir"/build
+	# kscreen-kded-configtest is broken
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest -E "kscreen-kded-configtest"
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="f8927c0aca28107a8c19a230831ddf7a7e3b1bc87f7865bc74b76aabed9b8f512ed09fa24436691bca9bb833bf3515aaf734962845c1f085a32da21e00e7bad8  kscreen-5.17.4.tar.xz"

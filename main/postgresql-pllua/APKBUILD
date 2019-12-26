@@ -1,0 +1,38 @@
+# Contributor: Michael Mason <ms13sp@gmail.com>
+# Contributor: Jakub Jirutka <jakub@jirutka.cz>
+# Maintainer: Michael Mason <ms13sp@gmail.com>
+pkgname=postgresql-pllua
+_pkgname=pllua-ng
+pkgver=2.0.4
+_pkgver="REL_${pkgver//./_}"
+pkgrel=0
+pkgdesc="Procedural language for PostgreSQL using Lua"
+url="https://github.com/RhodiumToad/pllua-ng"
+arch="all"
+license="MIT"
+depends="postgresql"
+# LuaJIT does not support s390x.
+case "$CARCH" in
+	s390x) _lua=lua5.3 _makeopts="LUAC=luac5.3 LUA=lua5.3";;
+	*) _lua=luajit; _makeopts="LUAJIT=luajit";;
+esac
+makedepends="postgresql-dev $_lua-dev"
+options="!check"  # tests require running PostgreSQL
+provides="pllua=$pkgver-r$pkgrel"  # for backward compatibility
+replaces="pllua"  # for backward compatibility
+subpackages="$pkgname-dev"
+source="https://github.com/RhodiumToad/$_pkgname/archive/$_pkgver/$_pkgname-$_pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$_pkgver"
+
+build() {
+	make $_makeopts \
+		LUA_INCDIR=$(pkgconf --variable=includedir $_lua) \
+		LUALIB=$(pkgconf --libs $_lua) \
+		USE_PGXS=1
+}
+
+package() {
+	make USE_PGXS=1 DESTDIR="$pkgdir" install
+}
+
+sha512sums="64d6bc74d09d8aeb3f479a18f526599caee4217af383b49bb38f798ac42f5f3644cafc09d1e817951ed60b828a03a7bd96af4f35fad1835ce8040969a97ad99e  pllua-ng-REL_2_0_4.tar.gz"

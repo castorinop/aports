@@ -1,30 +1,17 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=alsa-lib
-pkgver=1.1.4.1
-pkgrel=2
-pkgdesc="An alternative implementation of Linux sound support"
+pkgver=1.2.1.2
+pkgrel=0
+pkgdesc="Advanced Linux Sound Architecture (ALSA) library"
 url="http://www.alsa-project.org"
 arch="all"
-license="LGPL2+"
+license="LGPL-2.1-or-later"
 subpackages="$pkgname-dev $pkgname-dbg"
 makedepends="linux-headers"
-source="ftp://ftp.alsa-project.org/pub/lib/$pkgname-$pkgver.tar.bz2
-	alsa-lib-poll.patch
-	alsa-lib-stdint.patch
-	ucm_add_limits_h.patch
-	0001-snd_user_file-avoid-use-wordexp.patch
-	"
-
-builddir="$srcdir/$pkgname-$pkgver"
-prepare() {
-	cd "$builddir"
-	update_config_sub || return 1
-	rm src/compat/hsearch_r.c && touch src/compat/hsearch_r.c
-	default_prepare
-}
+source="ftp://ftp.alsa-project.org/pub/lib/alsa-lib-$pkgver.tar.bz2
+	remove-test.patch"
 
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -40,13 +27,13 @@ build() {
 	make
 }
 
+check() {
+	make check
+}
+
 package() {
-	cd "$srcdir/$pkgname-$pkgver"
 	make -j1 DESTDIR="$pkgdir" install
 }
 
-sha512sums="7b548c4ee29c4a1230a0edcd5d19219831290f96a214180a6530628acc05278d1348376195287d188f4f44d6be1914391c63994f1b50985c3eee74352da26b0b  alsa-lib-1.1.4.1.tar.bz2
-bdf86a1b76b2e6e9b43af33989fe51e4900fa0c6f317d8d746f30c540df647dbe0f6d41ec35b36b1cf7e46cc5e910e0a62bc39c765f849356ecd6e98d1de5885  alsa-lib-poll.patch
-2351262dade9a3c1a3de1b7d1a3a53a634a438b9b8aae7cc69e2b981500051f039e6381359b81392114ec6236e3d513b577bd4bf12c3d2ce1f871cd7651b2cab  alsa-lib-stdint.patch
-3b37652d50809443b5f8e80f8d447108195b0cd66fd917805bb393fc091584b6f3dad4414f568742b61745617e7a695862058a0a0f93dcc31e4c97177a520352  ucm_add_limits_h.patch
-e6baeee549533ea4b113bacfa772c183456ce51e6c84b378b82a6735159e43a11ff30c0a4a15207110c42dbd7be5e67bc5e2f593cdc99bd8b079204df7498ceb  0001-snd_user_file-avoid-use-wordexp.patch"
+sha512sums="e8286fd55f63ee0d95513279d0885c287533de89b7af6c338413dec5d38ba4f5a15da1a4a4ce36e052614e4b730e3778782dab9979d82958283be17b48604913  alsa-lib-1.2.1.2.tar.bz2
+e15318431fe2d5bd1e42ef793f223e3e5995890d7befe6daa3d7456ccf5cb2f51eb79171539cecae13032a9b8a798ea35e04c89b27c7ef9567e2c03fb8db4512  remove-test.patch"

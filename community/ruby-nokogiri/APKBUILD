@@ -2,30 +2,28 @@
 # Maintainer: Jakub Jirutka <jakub@jirutka.cz>
 pkgname=ruby-nokogiri
 _gemname=${pkgname#ruby-}
-pkgver=1.8.0
+pkgver=1.10.7
 pkgrel=0
 pkgdesc="An HTML, XML, SAX, and Reader parser"
-url="http://nokogiri.org/"
+url="https://nokogiri.org/"
 arch="all"
 license="MIT"
 depends="ruby ruby-mini_portile2"
 makedepends="ruby-dev libxml2-dev libxslt-dev"
-checkdepends="ruby-minitest"
-source="https://rubygems.org/downloads/$_gemname-$pkgver.gem"
+checkdepends="ruby-minitest ruby-test-unit"
+source="https://github.com/sparklemotion/$_gemname/archive/v$pkgver/$_gemname-$pkgver.tar.gz
+	https://rubygems.org/downloads/$_gemname-$pkgver.gem
+	remove-simplecov.patch
+	skip-tests-broken-on-musl.patch
+	"
 builddir="$srcdir/$_gemname-$pkgver"
-options="!check"  # FIXME: some tests fails due to encoding issues
 
-unpack() {
-	default_unpack
-
-	cd "$srcdir"
-	gem unpack $_gemname-$pkgver.gem
-}
+# secfixes:
+#   1.10.4-r0:
+#     - CVE-2019-5477
 
 prepare() {
 	default_prepare
-
-	cd "$builddir"
 
 	# Generate gemspec (there's no gemspec in the source).
 	gem specification -l --ruby "$srcdir"/$_gemname-$pkgver.gem \
@@ -40,8 +38,6 @@ prepare() {
 }
 
 build() {
-	cd "$builddir"
-
 	gem build $_gemname.gemspec
 	gem install \
 		--local \
@@ -51,31 +47,33 @@ build() {
 		--verbose \
 		$_gemname-$pkgver.gem -- \
 			--use-system-libraries
+
+	# Remove unnecessary files and rubbish...
+	find dist/extensions/ -name mkmf.log -delete
+	cd dist/gems/$_gemname-$pkgver/
+	rm -rf ext/ patches/ lib/nokogiri/*.so *.md *.yml
 }
 
 check() {
-	cd "$builddir"/dist/gems/$_gemname-$pkgver
+	local extpath=$(dirname dist/extensions/*/*/$_gemname-$pkgver/gem_make.out)
 
 	# Note: This is copied from Fedora package.
 	export LANG=ja_JP.UTF-8
-	ruby -I.:lib:test:ext \
+	ruby -I.:test:dist/gems/$_gemname-$pkgver/lib:$extpath \
 		-e 'require "test/helper"' \
 		-e 'Dir.glob("test/**/test_*.rb") {|f| require f }'
 }
 
 package() {
-	local gemdir="$pkgdir/$(ruby -rubygems -e 'puts Gem.default_dir')"
+	local gemdir="$pkgdir/$(ruby -e 'puts Gem.default_dir')"
 
 	cd "$builddir"/dist
 
 	mkdir -p "$gemdir"
 	cp -r bin extensions gems specifications "$gemdir"/
-
-	cd "$gemdir"/gems/$_gemname-$pkgver
-
-	# Remove unnecessary files and rubbish...
-	rm -r ext/ patches/ suppressions/ tasks/ test/ \
-		build_all test_all Rakefile .[a-z]* *.md *.rdoc *.txt *.yml || true
 }
 
-sha512sums="958b402325e8428d7a6299356dd31cfa191fd6e8ced78e4333395d6a18718c838b810c2dc9c0864553e5e247ed92d6629b985f4076241ad45affd04cae11a75f  nokogiri-1.8.0.gem"
+sha512sums="44abcebf13b197d94012807b8b399b5537d0465e5bcce5716fcb745ad639b41d75d12ad86c2222ad25101da0b6649d51379418e578c06ca5b7d05dd02f5fb0a1  nokogiri-1.10.7.tar.gz
+2290626ebb70e47b467d04844722db8137937387dff029e2c214f49c6ee0fbf160d8534023823591f279d768c57152197ba4141a3e33c1216b53d48a4aef62b5  nokogiri-1.10.7.gem
+b3346647e55ded3c20775458f35f85c81222a7147c8e4040db0e09f1161e999d824570e29f4fc5bd34b9808ea047b9d2308ea32718b46143cceb777ffa2e63a6  remove-simplecov.patch
+5f92d4cf87751c404a33dfbdc035dd5b54163eccdc46b4f515e6d6367a9573cf3fc4ef3c12c5b9e099b20f6c563d5a573acb1c2716890e492bfb26aa91f2cb5d  skip-tests-broken-on-musl.patch"

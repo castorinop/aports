@@ -4,67 +4,114 @@
 # Contributor: Jakub Skrzypnik <j.skrzypnik@openmailbox.org>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=mpv
-pkgver=0.26.0
-pkgrel=0
+pkgver=0.30.0
+pkgrel=2
 pkgdesc="Video player based on MPlayer/mplayer2"
-url="http://mpv.io/"
+url="https://mpv.io/"
 arch="all"
-license="GPL2+ LGPL2+"
-depends=""
-makedepends="libxxf86dga-dev libxv-dev libmad-dev lame-dev libao-dev
-	libtheora-dev xvidcore-dev zlib-dev sdl-dev freetype-dev
-	x264-dev faac-dev ttf-dejavu libxvmc-dev alsa-lib-dev libva-dev
-	mesa-dev ffmpeg-dev libass-dev perl lua5.2-dev libvdpau-dev python2
-	libxext-dev libxinerama-dev libxscrnsaver-dev py-docutils rsound-dev libxrandr-dev"
+license="GPL-2.0-or-later"
+makedepends="
+	alsa-lib-dev
+	pulseaudio-dev
+	cmocka-dev
+	faac-dev
+	ffmpeg-dev
+	freetype-dev
+	lame-dev
+	libao-dev
+	libass-dev
+	libcdio-paranoia-dev
+	libdvdnav-dev
+	libmad-dev
+	libtheora-dev
+	libva-dev>=2.4.1
+	libvdpau-dev
+	libxext-dev
+	libxinerama-dev
+	libxkbcommon-dev
+	libxrandr-dev
+	libxscrnsaver-dev
+	libxv-dev
+	libxvmc-dev
+	libxxf86dga-dev
+	lua5.2-dev
+	mesa-dev
+	perl
+	py3-docutils
+	python3
+	ttf-dejavu
+	wayland-dev
+	wayland-protocols
+	x264-dev
+	xvidcore-dev
+	zlib-dev
+	vulkan-headers
+	vulkan-loader-dev
+	shaderc-dev
+	libplacebo-dev
+	uchardet-dev
+	"
 subpackages="
 	$pkgname-doc
 	$pkgname-libs
-	$pkgname-zsh-completion:zshcomp:noarch"
-source="$pkgname-$pkgver.tar.gz::https://github.com/mpv-player/$pkgname/archive/v$pkgver.tar.gz"
-builddir="$srcdir/$pkgname-$pkgver"
+	$pkgname-dev
+	$pkgname-zsh-completion:zshcomp:noarch
+	"
+options="net" # downloads a waf tarball
+source="mpv-$pkgver.tar.gz::https://github.com/mpv-player/mpv/archive/v$pkgver.tar.gz"
+
+# secfixes:
+#   0.27.0-r3:
+#     - CVE-2018-6360
 
 prepare() {
-	default_prepare || return 1
-	cd "$builddir"
-	./bootstrap.py
+	default_prepare
+	python3 bootstrap.py
 }
 
 build() {
-	cd "$builddir"
-	./waf configure --prefix=/usr \
+	RST2HTML=rst2html-3 RST2MAN=rst2man-3 \
+	python3 waf configure --prefix=/usr \
 		--mandir=/usr/share/man \
 		--confdir=/etc/mpv \
 		--enable-alsa \
+		--enable-pulse \
 		--enable-libass \
 		--enable-libmpv-shared \
-		--enable-rsound \
-		--enable-zsh-comp \
-		|| return 1
-	./waf build || return 1
+		--enable-wayland \
+		--enable-lua \
+		--enable-test \
+		--enable-vulkan \
+		--enable-uchardet \
+		--enable-cdda \
+		--enable-dvdnav
+	python3 waf build
+}
+
+check() {
+	find build/test/ -perm -111 -exec '{}' ';'
 }
 
 package() {
-	cd "$builddir"
-	./waf install --destdir="$pkgdir" || return 1
+	python3 waf install --destdir="$pkgdir"
 
 	mkdir -p "$pkgdir"/usr/share/doc/$pkgname
 	install -m644 "$builddir"/DOCS/*.rst "$builddir"/DOCS/*.md \
-			"$pkgdir"/usr/share/doc/$pkgname/ || return 1
+		"$pkgdir"/usr/share/doc/$pkgname/
 
 	# Move example configuration files to subdirectory
 	mkdir -p "$pkgdir"/usr/share/doc/mpv/examples
 	mv "$pkgdir"/usr/share/doc/mpv/*.conf \
-		"$pkgdir"/usr/share/doc/mpv/examples/ || return 1
+		"$pkgdir"/usr/share/doc/mpv/examples/
 }
 
 zshcomp() {
-	depends=""
 	pkgdesc="Zsh completions for $pkgname"
 	install_if="$pkgname=$pkgver-r$pkgrel zsh"
 
 	mkdir -p "$subpkgdir/usr/share/zsh/site-functions"
 	mv "$pkgdir/usr/share/zsh/site-functions"/* \
-		"$subpkgdir/usr/share/zsh/site-functions" || return 1
+		"$subpkgdir/usr/share/zsh/site-functions"
 }
 
-sha512sums="fd772b4765317eb1ea3b54f12b86e0ac6c4d5e9d16895eb5bebe2e074a01f6b790981b9b34a87d9b23e4291149d3a7154b09fba4a259cec1949a6aa88d6ddec7  mpv-0.26.0.tar.gz"
+sha512sums="2b3cc626575b5e56308f5f9ecf926957a36c861c85f700a4a3ede72cf7f7ea08729d20f810693117e21aeeff649f08718e73ead7d117521bf88d746708a72c66  mpv-0.30.0.tar.gz"

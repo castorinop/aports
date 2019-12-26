@@ -1,0 +1,40 @@
+# Contributor: Bart Ribbers <bribbers@disroot.org>
+# Maintainer: Bart Ribbers <bribbers@disroot.org>
+pkgname=keditbookmarks
+pkgver=19.12.0
+pkgrel=0
+arch="all"
+url="https://www.kde.org/"
+pkgdesc="Bookmark Organizer and Editor"
+license="GPL-2.0-only AND GFDL-1.2-only"
+makedepends="extra-cmake-modules qt5-qtbase-dev ki18n-dev kio-dev kbookmarks-dev kparts-dev kwindowsystem-dev kiconthemes-dev kdoctools-dev"
+checkdepends="xvfb-run"
+source="https://download.kde.org/stable/release-service/$pkgver/src/keditbookmarks-$pkgver.tar.xz"
+subpackages="$pkgname-doc $pkgname-lang"
+
+prepare() {
+	default_prepare
+
+	mkdir "$builddir"/build
+}
+
+build() {
+	cd "$builddir"/build
+	cmake "$builddir" \
+		-DCMAKE_BUILD_TYPE=RelWithDebInfo \
+		-DCMAKE_INSTALL_PREFIX=/usr \
+		-DCMAKE_INSTALL_LIBDIR=lib
+	make
+}
+
+check() {
+	cd "$builddir"/build
+	CTEST_OUTPUT_ON_FAILURE=TRUE xvfb-run ctest
+}
+
+package() {
+	cd "$builddir"/build
+	DESTDIR="$pkgdir" make install
+}
+
+sha512sums="d48791672609ebeeaeaee21814fd8392240a6215fa26a763619161ca13b874bf6154c3385a7868da939be165f635bc16c27badcf549c660b7a0f4170eb1ee4c5  keditbookmarks-19.12.0.tar.xz"

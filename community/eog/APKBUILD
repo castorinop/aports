@@ -1,39 +1,35 @@
-# Maintainer: William Pitcock <nenolod@dereferenced.org>
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Maintainer: Rasmus Thomsen <oss@cogitri.dev>
 pkgname=eog
-pkgver=3.25.1
+pkgver=3.34.1
 pkgrel=0
-pkgdesc="an image viewer for GNOME"
+pkgdesc="An image viewer for GNOME"
 url="https://wiki.gnome.org/Apps/EyeOfGnome"
-arch="all"
-license="GPL"
-depends=""
-depends_dev="gtk+3.0-dev gvfs-dev libxml2-dev jpeg-dev libexif-dev lcms2-dev libpeas-dev librsvg-dev gnome-desktop-dev"
-makedepends="$depends_dev itstool libxml2-utils"
-install=""
+arch="all !s390x"
+license="GPL-2.0-or-later"
+depends="gsettings-desktop-schemas"
+depends_dev="gvfs-dev libxml2-dev jpeg-dev libexif-dev lcms2-dev
+	libpeas-dev librsvg-dev gnome-desktop-dev exempi-dev"
+makedepends="$depends_dev itstool libxml2-utils meson"
 subpackages="$pkgname-dev $pkgname-doc $pkgname-lang"
-source="http://ftp.gnome.org/pub/GNOME/sources/eog/3.25/eog-$pkgver.tar.xz"
-builddir="$srcdir/eog-$pkgver"
+source="https://download.gnome.org/sources/eog/${pkgver%.*}/eog-$pkgver.tar.xz"
 
 build() {
-	cd "$builddir"
-	./configure \
-		--build=$CBUILD \
-		--host=$CHOST \
+	meson \
 		--prefix=/usr \
 		--sysconfdir=/etc \
-		--mandir=/usr/share/man \
-		--localstatedir=/var
-	make
-}
-
-package() {
-	cd "$builddir"
-	make DESTDIR="$pkgdir" install
+		--libdir=/usr/lib \
+		--localstatedir=/var \
+		output .
+	ninja -C output
 }
 
 check() {
-	cd "$builddir"
-	make check
+	ninja -C output test
 }
 
-sha512sums="df2fe16d77fe2c6c56752bc1534b3b2adf922bd0e03e89d86f832fa17d9ca0f1cfb82ae7edd82e7e1c6b933eae5c91ad115487f47e7ad38f01a6d80a7b94cc50  eog-3.25.1.tar.xz"
+package() {
+	DESTDIR="$pkgdir" ninja -C output install
+}
+
+sha512sums="05fe0296c09eae0a1e73c6442cd8b2974722d5096da2b6f080f686a82c850579432e7c3e327c3a1636625215e1e7f5e5a7b7262671e6e13fd58ff3244882d7e1  eog-3.34.1.tar.xz"

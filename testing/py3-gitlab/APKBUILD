@@ -1,0 +1,30 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
+# Maintainer: Leo <thinkabit.ukim@gmail.com>
+pkgname=py3-gitlab
+_pkgname=python-gitlab
+pkgver=1.15.0
+pkgrel=0
+pkgdesc="v4 GitLab API compliant library and cmdline tool"
+options="!check" # Requires unpackaged 'httmock'
+url="https://github.com/python-gitlab/python-gitlab"
+arch="noarch"
+license="LGPL-3.0-or-later"
+depends="python3 py3-requests py3-six"
+makedepends="py3-setuptools"
+checkdepends="py3-pytest py3-mock"
+source="https://files.pythonhosted.org/packages/source/p/$_pkgname/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	py.test-3
+}
+
+package() {
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
+}
+
+sha512sums="622804ee580ceef7e37f2645267e723a70b9cb4352e29bb5bd02150894df13df3facf8afb29bdfd1d8b4e1a4438f82bd93e7a9abf6861758c1151e5d2c3202c6  python-gitlab-1.15.0.tar.gz"

@@ -6,13 +6,13 @@ pkgrel=1
 pkgdesc="Off The Record Messaging, an encryption library for secure IM conversations"
 url="http://otr.cypherpunks.ca/"
 arch="all"
-license="LGPL2+"
+license="LGPL-2.0-or-later"
 depends=
 depends_dev="libgcrypt-dev"
 makedepends="$depends_dev"
 install=""
 subpackages="$pkgname-dev $pkgname-doc $pkgname-tools"
-source="http://www.cypherpunks.ca/otr/libotr-$pkgver.tar.gz"
+source="https://www.cypherpunks.ca/otr/libotr-$pkgver.tar.gz"
 
 builddir="$srcdir/libotr-$pkgver"
 

@@ -1,27 +1,57 @@
 # Contributor: Cameron Banta <cbanta@gmail.com>
 # Maintainer: Cameron Banta <cbanta@gmail.com>
 pkgname=ghostscript
-pkgver=9.21
-pkgrel=3
+pkgver=9.50
+pkgrel=0
 pkgdesc="An interpreter for the PostScript language and for PDF"
-url="http://ghostscript.com/"
+url="https://ghostscript.com/"
 arch="all"
-license="GPL3"
-makedepends="autoconf automake libjpeg-turbo-dev libpng-dev jasper-dev expat-dev
+license="AGPL-3.0-or-later"
+options="!check"
+makedepends="autoconf automake libjpeg-turbo-dev libpng-dev expat-dev
 	zlib-dev tiff-dev freetype-dev lcms2-dev gtk+3.0-dev
 	cups-dev libtool jbig2dec-dev openjpeg-dev"
 subpackages="$pkgname-dbg $pkgname-doc $pkgname-dev $pkgname-gtk"
 source="https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs${pkgver/./}/ghostscript-$pkgver.tar.gz
 	ghostscript-system-zlib.patch
 	fix-sprintf.patch
-	fix-alignment.patch
-	CVE-2017-8291.patch
-	CVE-2017-7207.patch
-	CVE-2017-5951.patch
 	"
-builddir="$srcdir/$pkgname-$pkgver"
 
 # secfixes:
+#   9.50-r0:
+#     - CVE-2019-14869
+#   9.27-r4:
+#     - CVE-2019-14817
+#   9.27-r3:
+#     - CVE-2019-14811
+#     - CVE-2019-14812
+#     - CVE-2019-14813
+#   9.27-r2:
+#     - CVE-2019-10216
+#   9.26-r2:
+#     - CVE-2019-3835
+#     - CVE-2019-3838
+#     - CVE-2019-6116
+#   9.26-r1:
+#     - CVE-2019-6116
+#   9.26-r0:
+#     - CVE-2018-19409
+#     - CVE-2018-19475
+#     - CVE-2018-19476
+#     - CVE-2018-19477
+#   9.25-r1:
+#     - CVE-2018-17961
+#     - CVE-2018-18073
+#     - CVE-2018-18284
+#   9.25-r0:
+#     - CVE-2018-16802
+#   9.24-r0:
+#     - CVE-2018-15908
+#     - CVE-2018-15909
+#     - CVE-2018-15910
+#     - CVE-2018-15911
+#   9.23-r0:
+#     - CVE-2018-10194
 #   9.21-r2:
 #     - CVE-2017-8291
 #   9.21-r3:
@@ -29,25 +59,23 @@ builddir="$srcdir/$pkgname-$pkgver"
 #     - CVE-2017-5951
 
 prepare() {
-	cd "$builddir"
-
-	default_prepare || return 1  # apply patches
+	default_prepare # apply patches
 
 	# force it to use system-libs
-	rm -r jpeg libpng zlib tiff lcms2 cups/libs jbig2dec \
-		freetype || return 1
+	rm -r jpeg libpng zlib tiff lcms2mt cups/libs jbig2dec \
+		freetype
 
 	# fix parallel builds
 	sed -i -e 's/ECHO_XE/ECHOGS_XE/g' \
 		-e 's/^\($(GLOBJ)md5.$(OBJ) :.*\)/\1 $(ECHOGS_XE)/' \
-		base/lib.mak || return 1
-	aclocal && autoconf --force || return 1
+		base/lib.mak
+	aclocal && autoconf --force
 
 	cd $builddir/ijs
 	libtoolize --force && aclocal && autoconf && automake --add-missing
 }
 
-build(){
+build() {
 	# build ijs
 	cd "$builddir"/ijs
 	./configure \
@@ -56,8 +84,7 @@ build(){
 		--prefix=/usr \
 		--enable-shared \
 		--disable-static \
-		|| return 1
-	make || return 1
+	make
 
 	cd "$builddir"
 
@@ -79,35 +106,20 @@ build(){
 		--enable-gtk \
 		--with-drivers=ALL \
 		--with-fontpath=/usr/share/fonts/Type1:/usr/share/fonts \
-		--disable-compile-inits \
-		|| return 1
-	make so all || return 1
+		--disable-compile-inits
+	make obj/arch.h # workaround parallel build issue
+	make so all
 }
 
 package() {
-	cd "$builddir"
-	make -j1 DESTDIR="$pkgdir" install soinstall || return 1
+	make -j1 DESTDIR="$pkgdir" install soinstall
 
 	cd "$builddir"/ijs
-	make -j1 DESTDIR="$pkgdir" install || return 1
+	make -j1 DESTDIR="$pkgdir" install
 	cd ..
 
 	# create empty dir for future fonts
-	mkdir -p "${pkgdir}"/usr/share/fonts/Type1
-
-	# license and copying
-	install -m644 -D "$srcdir/$pkgname-$pkgver/LICENSE" \
-		"$pkgdir/usr/share/licenses/$pkgname/LICENSE"
-	install -m644 -D "$srcdir/$pkgname-$pkgver/doc/COPYING" \
-		"$pkgdir/usr/share/licenses/$pkgname/COPYING"
-
-	# make the doc and examples more alpine like
-	#	(the --docdir above doesn't seem to work so good)
-	mkdir -p "$pkgdir/usr/share/doc/$pkgname"
-	mv "$pkgdir/usr/share/$pkgname/$pkgver/doc" \
-		"$pkgdir/usr/share/doc/$pkgname" || return 1
-	mv "$pkgdir/usr/share/$pkgname/$pkgver/examples" \
-		"$pkgdir/usr/share/doc/$pkgname" || return 1
+	mkdir -p "$pkgdir"/usr/share/fonts/Type1
 }
 
 gtk() {
@@ -117,10 +129,6 @@ gtk() {
 	mv "$pkgdir"/usr/bin/gsx "$subpkgdir"/usr/bin/
 }
 
-sha512sums="c5ff632dc9b418ebeecaae796cecbaf9ffcb84d7a1b62c1af2e6c9082f7b9f24fe9dd9f6a57bde3640f54c3036f0b99b32aac9f8ca1f489c012369ab2b72ae92  ghostscript-9.21.tar.gz
+sha512sums="acee64fae78771bffa19b0b2bfaba3c345b420f93ceb4fc9df5fb705f785c8ed720fde2aef53546fac6aca2f7366c64c68a6e373a71999a42dc71aadc9aa782f  ghostscript-9.50.tar.gz
 70721e3a335afa5e21d4e6cf919119010bd4544a03ab8f53f5325c173902221ad9b88c118b4bfeee80b3e1956bcdbaf4c53f64ae7fb81f5ba57dbc956750c482  ghostscript-system-zlib.patch
-beefcf395f7f828e1b81c088022c08a506e218f27535b9de01e0f0edf7979b435316c318fa676771630f6ad16ff1ab059cd68aa128ed97e5a9f2f3fa840200c4  fix-sprintf.patch
-7c6f40217dc687df27ee6d33351fba12a737c2ae06d1c35208dc943776d8efa66c3e882f0b1b9aec566fad69fd28ce360cc243f1c1aa20834467e769889194f2  fix-alignment.patch
-c17121e564dd26033508199f3e587bfcee5589fec6e45e822c79f648c3a3b70363f04ad33538070c4d24c96e5795b277345359b66d2f360b996fca77239102b5  CVE-2017-8291.patch
-11ece0df5d5d5ae6d654033c42531a82db57a92aed462659d177e18234cf6d61719625368eb4448a2235bca9d6b3901696b30099642c57df57966def5850da9d  CVE-2017-7207.patch
-252d826bdf1e22c372312589e9b19067332c432eae748f2eb644bf32384925e8095ea7c218ca7bbf04bf384db42cca6b418cb6622a74d411da446776490516d8  CVE-2017-5951.patch"
+beefcf395f7f828e1b81c088022c08a506e218f27535b9de01e0f0edf7979b435316c318fa676771630f6ad16ff1ab059cd68aa128ed97e5a9f2f3fa840200c4  fix-sprintf.patch"

@@ -1,0 +1,31 @@
+# Maintainer: Andy Postnikov <apostnikov@gmail.com>
+pkgname=py3-pytest-mock
+_pkgname=pytest-mock
+pkgver=1.12.1
+pkgrel=0
+pkgdesc="Thin-wrapper around the mock package for easier use with py.test"
+options="!check" # Fails
+url="https://github.com/pytest-dev/pytest-mock"
+arch="noarch"
+license="MIT"
+depends="py3-pytest"
+makedepends="py3-setuptools"
+source="https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+replaces="pytest-mock" # Backwards compatibility
+provides="pytest-mock=$pkgver-r$pkgrel" # Backwards compatibility
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	py.test-3
+}
+
+package() {
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
+}
+
+sha512sums="a323f2c4958d9c04adae0309a28286a161f5799b458c0a56c48f216aee27ae3a8fbab7512ac7094f86c17a6938964e7f3bb5b328e1dbcc660e440852ed0b1580  pytest-mock-1.12.1.tar.gz"

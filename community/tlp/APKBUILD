@@ -1,0 +1,50 @@
+# Contributor: Ivan Tham <pickfire@riseup.net>
+# Maintainer: Ivan Tham <pickfire@riseup.net>
+pkgname=tlp
+_pkgname=TLP
+pkgver=1.2.2
+pkgrel=0
+pkgdesc="Linux Advanced Power Management"
+url="http://linrunner.de/en/tlp/tlp.html"
+arch="noarch"
+license="GPL-2.0-or-later"
+options="!check"  # no test suite
+makedepends="coreutils"
+subpackages="$pkgname-doc $pkgname-rdw:rdw $pkgname-bash-completion:bashcomp $pkgname-openrc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/linrunner/$_pkgname/archive/$pkgver.tar.gz
+	$pkgname.initd"
+builddir="$srcdir/$_pkgname-$pkgver"
+
+build() {
+	make
+}
+
+package() {
+	make DESTDIR="$pkgdir" install-tlp
+
+	install -dm755 "$pkgdir"/usr/share/man/man1
+	install -m644 man/*.1 "$pkgdir"/usr/share/man/man1
+	install -dm755 "$pkgdir"/usr/share/man/man8
+	install -m644 man/*.8 "$pkgdir"/usr/share/man/man8
+	install -m755 "$srcdir"/tlp.initd "$pkgdir"/etc/init.d/$pkgname
+}
+
+rdw() {
+	pkgdesc="Linux Advanced Power Management - Radio Device Wizard"
+	depends="tlp"
+
+	cd "$builddir"
+	make DESTDIR="$subpkgdir" install-rdw
+}
+
+bashcomp() {
+	pkgdesc="Bash completions for $pkgname"
+	depends=""
+	install_if="$pkgname=$pkgver-r$pkgrel bash-completion"
+
+	mkdir -p "$subpkgdir"/usr/share
+	mv "$pkgdir"/usr/share/bash-completion "$subpkgdir"/usr/share
+}
+
+sha512sums="b01fc2063bf8a87f2b93749c08a5cab53a0a4030b74c7fe62964009fb9d54ca5dc10800971f27cfe6dcdf024ba6d3e21a06caed07e8dc12b09d9d359585a480e  tlp-1.2.2.tar.gz
+e6de216b2540413812711b3304cdc29c8729d527080cfd747ba382db50166dd21c6c27ff467f9f2a967e92007c7a311b00e88262952c34a22f417578c66cf4e7  tlp.initd"

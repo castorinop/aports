@@ -1,38 +1,28 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=xtables-addons
-pkgver=2.11
-pkgrel=1
+pkgver=3.6
+pkgrel=0
 pkgdesc="Netfilter userspace extensions for iptables"
 url="http://xtables-addons.sourceforge.net/"
 arch="all"
-license="GPL"
-depends=
+license="GPL-2.0-only"
 makedepends="iptables-dev bash coreutils"
-install=
 subpackages="$pkgname-doc"
-source="http://downloads.sourceforge.net/$pkgname/$pkgver/$pkgname-$pkgver.tar.xz"
-
-builddir="$srcdir/$pkgname-$pkgver"
+source="https://downloads.sourceforge.net/xtables-addons/$pkgver/xtables-addons-$pkgver.tar.xz"
+options="!check" # Package has no test suite
 
 build() {
-	cd "$builddir"
-
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
 		--prefix=/usr \
 		--mandir=/usr/share/man \
-		--without-kbuild \
-		|| return 1
-
+		--without-kbuild
 	make CC="${CC-gcc}" kbuilddir=
 }
 
 package() {
-	cd "$builddir"
-	make builddir= DESTDIR="$pkgdir" install || return 1
+	make builddir= DESTDIR="$pkgdir" install
 }
 
-md5sums="9f3123295db81a9d1bc08dabf075d0d6  xtables-addons-2.11.tar.xz"
-sha256sums="f14f8953a9d3a70157a82883886ff6ec866c61dbea1585edb421478107279921  xtables-addons-2.11.tar.xz"
-sha512sums="28a2b7335dc478b8efc5fa25357d2e2789303232ce31a7a6da3a3742fdaa84c7d222ebb0d6f1f900652d39b9caf9b13196309429a8aecd5e0cb936b6bd9de1bb  xtables-addons-2.11.tar.xz"
+sha512sums="f2d9e1dc1b23696132fa845f5767cabc6b39494d46587cfee77f7099bfba67f137712163f120496d33a9a38bbb1aeb418faac51125494952e69733006e563c67  xtables-addons-3.6.tar.xz"

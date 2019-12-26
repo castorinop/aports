@@ -1,37 +1,44 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=gc
-pkgver=7.6.0
-pkgrel=1
+pkgver=8.0.4
+pkgrel=0
 pkgdesc="A garbage collector for C and C++"
 url="http://hboehm.info/gc/"
 arch="all"
 license="GPL"
-depends=
-makedepends='libatomic_ops-dev linux-headers'
+makedepends="libatomic_ops-dev linux-headers"
 subpackages="$pkgname-dev $pkgname-doc libgc++:libgccpp"
 source="http://hboehm.info/gc/gc_source/gc-$pkgver.tar.gz
-	fix-boehm-gc.patch
+	0001-Fix-gctest-with-musl-libc-on-s390x.patch
 	"
-
-builddir="$srcdir"/gc-${pkgver%[a-z]}
+builddir="$srcdir/gc-${pkgver%[a-z]}"
 
 build() {
 	cd "$builddir"
-	[ "$CLIBC" = "musl" ] && export CFLAGS="$CFLAGS -D_GNU_SOURCE -DNO_GETCONTEXT -DUSE_MMAP -DHAVE_DL_ITERATE_PHDR"
+
+	if [ "$CLIBC" = "musl" ]; then
+		export CFLAGS="$CFLAGS -D_GNU_SOURCE -DNO_GETCONTEXT -DUSE_MMAP -DHAVE_DL_ITERATE_PHDR"
+	fi
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
 		--prefix=/usr \
 		--datadir=/usr/share/doc/gc \
-		--enable-cplusplus \
-		--disable-static \
-		|| return 1
-	make || return 1
+		--enable-static \
+		--enable-cplusplus
+	make
+}
+
+check() {
+	cd "$builddir"
+
+	# two FAILs due to grsecurity
+	make check
 }
 
 package() {
 	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 }
 
 libgccpp() {
@@ -39,12 +46,5 @@ libgccpp() {
 	mv "$pkgdir"/usr/lib/libgccpp.* "$subpkgdir"/usr/lib/
 }
 
-check() {
-	cd "$builddir"
-
-	# two FAILs due to grsecurity
-	make check || return 0
-}
-
-sha512sums="511e8c01287b1ee9dbec87f0573377de77038b7af053a3f33afed9b3ffa30e2402d6a9bb0ca4f4b81cd808209b47b5718d498cff3de6632a057fe03fad51fc43  gc-7.6.0.tar.gz
-6439505931f0d023bf27d6ce0af90d09dc23bb9dd49b561566ec54b2cddc20642be9bd7b41203f643cb6efed3db2f54aef410b436f3acc2351fe4bb0a8791ea4  fix-boehm-gc.patch"
+sha512sums="57ccca15c6e50048d306a30de06c1a844f36103a84c2d1c17cbccbbc0001e17915488baec79737449982da99ce5d14ce527176afae9ae153cbbb5a19d986366e  gc-8.0.4.tar.gz
+0441dfe85b36e9e80b9135d62d56e5e9b67c6db1f927480dd3cf5048765f3a2ab51a45eaa0068066af97ce0398333890fff2f84cd01fec476655f34e0325bc13  0001-Fix-gctest-with-musl-libc-on-s390x.patch"

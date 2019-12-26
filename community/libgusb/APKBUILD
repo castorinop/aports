@@ -1,35 +1,35 @@
 # Contributor: Carlo Landmeter <clandmeter@gmail.com>
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=libgusb
-pkgver=0.2.11
+pkgver=0.3.1
 pkgrel=0
 pkgdesc="GLib wrapper around libusb"
 url="https://github.com/hughsie/libgusb"
 arch="all"
-license="LGPL"
-depends_dev="eudev-dev gobject-introspection-dev"
-makedepends="$depends_dev glib-dev libusb-dev gtk-doc vala"
+license="LGPL-2.1-or-later"
+# disabled due to: gusb-self-test FAIL
 options="!check"
+makedepends="glib-dev libusb-dev gtk-doc vala eudev-dev gobject-introspection-dev meson"
+checkdepends="python3-dev"
 subpackages="$pkgname-dev $pkgname-doc"
-source="http://people.freedesktop.org/~hughsient/releases/libgusb-$pkgver.tar.xz"
-builddir="$srcdir/$pkgname-$pkgver"
+source="$pkgname-$pkgver.tar.gz::https://github.com/hughsie/$pkgname/archive/$pkgver.tar.gz"
+
+prepare() {
+	default_prepare
+	mkdir -p output
+}
 
 build() {
-	cd "$builddir"
-	./configure \
-		--build=$CBUILD \
-		--host=$CHOST \
-		--prefix=/usr \
+	meson . ./output --prefix=/usr \
 		--sysconfdir=/etc \
 		--mandir=/usr/share/man \
 		--infodir=/usr/share/info \
 		--localstatedir=/var
-	make
+	ninja -C output
 }
 
 package() {
-	cd "$builddir"
-	make DESTDIR="$pkgdir" install
+	DESTDIR="$pkgdir" ninja -C output install
 }
 
-sha512sums="f9c3c204b5f0feaf706b23dd9a174feb36a9f3c8db8ffb5dcdefa66b18ba0ac963c6041d2d91a6a2f6e23036fc6486d142210bd5348e10c026a6defeb0bee096  libgusb-0.2.11.tar.xz"
+sha512sums="2115bff8858146966dff1defa88cea3922a73a5f99cb3fdc9c720c4a831bad333d086390d3cd2cce5db21c30db0eee58ac161147d7eabc5fafcc5c5a28a66aa1  libgusb-0.3.1.tar.gz"

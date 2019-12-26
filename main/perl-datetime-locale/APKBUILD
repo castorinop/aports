@@ -1,43 +1,36 @@
 # Contributor: Natanael Copa <ncopa@alpinelinux.org>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=perl-datetime-locale
-pkgver=1.10
+pkgver=1.25
 pkgrel=0
 pkgdesc="DateTime::Locale perl module"
-url="http://search.cpan.org/dist/DateTime-Locale/"
+url="https://search.cpan.org/dist/DateTime-Locale"
 arch="noarch"
-license="GPLv2 or Artistic"
-depends="perl perl-list-moreutils perl-params-validate perl-dist-checkconflicts
-	perl-cpan-meta-check perl-test-fatal perl-test-requires perl-test-warnings
-	perl-scalar-list-utils perl-params-validationcompiler"
+license="Artistic-1.0-Perl GPL-1.0-or-later"
+depends="perl perl-cpan-meta-check perl-dist-checkconflicts perl-file-sharedir perl-file-sharedir-install
+	perl-list-moreutils perl-namespace-autoclean perl-params-validate perl-params-validationcompiler
+	perl-scalar-list-utils perl-test-fatal perl-test-requires perl-test-warnings"
+checkdepends="perl-test-file-sharedir perl-ipc-system-simple"
 makedepends="perl-dev"
-install=""
 subpackages="$pkgname-doc"
-source="http://search.cpan.org/CPAN/authors/id/D/DR/DROLSKY/DateTime-Locale-$pkgver.tar.gz"
+source="https://search.cpan.org/CPAN/authors/id/D/DR/DROLSKY/DateTime-Locale-$pkgver.tar.gz"
 
-_builddir="$srcdir"/DateTime-Locale-$pkgver
-prepare() {
-	local i
-	cd "$_builddir"
-	for i in $source; do
-		case $i in
-		*.patch) msg $i; patch -p1 -i "$srcdir"/$i || return 1;;
-		esac
-	done
+builddir="$srcdir"/DateTime-Locale-$pkgver
+build() {
+	cd "$builddir"
+	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
+	make
 }
 
-build() {
-	cd "$_builddir"
-	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor || return 1
-	make && make test || return 1
+check() {
+	cd "$builddir"
+	make test
 }
 
 package() {
-	cd "$_builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	cd "$builddir"
+	make DESTDIR="$pkgdir" install
 	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 
-md5sums="e8203878991aa67bdef14de7e4823d03  DateTime-Locale-1.10.tar.gz"
-sha256sums="4bf71372475385b4c7e500641fd02b80749d1ab9ccc572bc37937ee00b0bef13  DateTime-Locale-1.10.tar.gz"
-sha512sums="37172a9ed79ea16501e9d38184a58a27af9b96fdb38e1a3235658bd7a0de02d3511aa39651e1f8ea234f49b7d780599591ee02aa56b658d4ea4c187676be4172  DateTime-Locale-1.10.tar.gz"
+sha512sums="31fb6c2a4d38350dea0160dc816c21ed2b97f11510fe9f545fe52530d00260b7bb64b1cab3a7e30531a1337aac2dd2983d0b3af09d24da0c4451498729d8777a  DateTime-Locale-1.25.tar.gz"

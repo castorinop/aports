@@ -2,41 +2,47 @@
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=perl-dancer
 _pkgreal=Dancer
-pkgver=1.3202
-pkgrel=0
+pkgver=1.3512
+pkgrel=1
 pkgdesc="Perl module for Dancer"
 url="http://search.cpan.org/dist/Dancer/"
 arch="noarch"
 license="GPL PerlArtistic"
-cpanmakedepends=""
 cpandepends="perl-module-runtime perl-try-tiny perl-hash-merge-simple
 	perl-mime-types perl-http-server-simple-psgi perl-http-body
-	perl-devel-hide perl-plack perl-libwww perl-test-nowarnings"
+	perl-devel-hide perl-plack perl-libwww perl-test-nowarnings
+	perl-data-dump"
+cpancheckdepends="perl-yaml perl-http-cookies perl-json perl-http-cookiejar 
+	perl-test-pod-coverage perl-test-output"
 depends="$cpandepends"
+checkdepends="$cpancheckdepends"
 makedepends="perl-dev $cpanmakedepends"
 subpackages="$pkgname-doc"
 source="http://search.cpan.org/CPAN/authors/id/B/BI/BIGPRESH/$_pkgreal-$pkgver.tar.gz"
 
-_builddir="$srcdir/$_pkgreal-$pkgver"
+builddir="$srcdir/$_pkgreal-$pkgver"
 
 prepare() {
-	cd "$_builddir"
+	cd "$builddir"
 	export CFLAGS=`perl -MConfig -E 'say $Config{ccflags}'`
 	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
 }
 
 build() {
-	cd "$_builddir"
+	cd "$builddir"
 	export CFLAGS=`perl -MConfig -E 'say $Config{ccflags}'`
-	make && make test
+	make
+}
+
+check() {
+	cd "$builddir"
+	make test
 }
 
 package() {
-	cd "$_builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	cd "$builddir"
+	make DESTDIR="$pkgdir" install
 	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 
-md5sums="63767e3afc4ee268d78da01345cf79c1  Dancer-1.3202.tar.gz"
-sha256sums="a933e4f8203c7d6c7e0b2bcdd8e54c65095029616b8d07802db4db2fc2657faa  Dancer-1.3202.tar.gz"
-sha512sums="d2865b694a36375ce3266bca5a1223b1e62365176b750e91fe428e7f8315a061c30b930285ee76c894881e40f4cefa539e3f806b81ae6b6897631ba34dd53676  Dancer-1.3202.tar.gz"
+sha512sums="e35ba7b6cbb2da4d61b054ac13483ea457011fad06a4a9abc596a2878d841f3eba0f5c08dfee0e5887fffba4b57c9b0862721959d1d1de57e2b53046093e8d3c  Dancer-1.3512.tar.gz"

@@ -1,30 +1,28 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=abuild
-pkgver=3.0.0_rc4
+pkgver=3.5.0
 _ver=${pkgver%_git*}
-pkgrel=3
+pkgrel=0
 pkgdesc="Script to build Alpine Packages"
-url="http://git.alpinelinux.org/cgit/abuild/"
+url="https://git.alpinelinux.org/cgit/abuild/"
 arch="all"
-license="GPL2"
-depends="fakeroot sudo pax-utils libressl apk-tools>=2.0.7-r1 libc-utils
+license="GPL-2.0"
+depends="fakeroot sudo pax-utils openssl apk-tools>=2.0.7-r1 libc-utils
 	attr tar pkgconf patch lzip"
 if [ "$CBUILD" = "$CHOST" ]; then
 	depends="$depends curl"
 fi
 makedepends_build="pkgconfig"
-makedepends_host="libressl-dev zlib-dev"
+makedepends_host="openssl-dev zlib-dev"
 makedepends="$makedepends_host $makedepends_build"
 install="$pkgname.pre-install $pkgname.pre-upgrade"
 subpackages="apkbuild-cpan:cpan:noarch apkbuild-gem-resolver:gems:noarch
-             abuild-rootbld:_rootbld:noarch"
+             abuild-rootbld:_rootbld:noarch $pkgname-doc"
 options="suid !check"
 pkggroups="abuild"
-source="http://dev.alpinelinux.org/archive/abuild/abuild-$_ver.tar.xz
-	0001-abuild-add-sanitycheck-for-secfixes-comment.patch
-	0001-abuild-sudo-prevent-forging-of-user-name.patch
-	0001-abuild-exit-with-success-if-arch-is-disabled.patch
+source="https://dev.alpinelinux.org/archive/abuild/abuild-$_ver.tar.xz
 	"
+
 builddir="$srcdir/$pkgname-$_ver"
 
 prepare() {
@@ -36,13 +34,13 @@ prepare() {
 
 build() {
 	cd "$builddir"
-	make
+	make VERSION="$pkgver-r$pkgrel"
 }
 
 package() {
 	cd "$builddir"
 
-	make install DESTDIR="$pkgdir"
+	make install VERSION="$pkgver-r$pkgrel" DESTDIR="$pkgdir"
 
 	install -m 644 abuild.conf "$pkgdir"/etc/abuild.conf
 	install -d -m 775 -g abuild "$pkgdir"/var/cache/distfiles
@@ -50,7 +48,7 @@ package() {
 
 cpan() {
 	pkgdesc="Script to generate perl APKBUILD from CPAN"
-	depends="perl perl-libwww perl-json perl-module-build-tiny"
+	depends="perl perl-libwww perl-json perl-module-build-tiny perl-lwp-protocol-https"
 
 	mkdir -p "$subpkgdir"/usr/bin
 	mv "$pkgdir"/usr/bin/apkbuild-cpan "$subpkgdir"/usr/bin/
@@ -70,7 +68,4 @@ _rootbld() {
 	mkdir -p "$subpkgdir"
 }
 
-sha512sums="e3b3827b7c3ebdc5d8ab39b1fc514a3cc0ed75a6d5ebc86c9d986441a7a16c1a3aa11f9840c35aa7f000a593421fdc9804b3608d7247f0b4686ba48cc898846a  abuild-3.0.0_rc4.tar.xz
-94cdfba2c185e96d3a631b36f5b438fd95f90a73b06cbb4afa7864454e05b7c91f6e7a905d7ec73e39fdcf2ab050a7ca59129621dabb39bdc0e2bf2ba38871a0  0001-abuild-add-sanitycheck-for-secfixes-comment.patch
-3b69a3ee4b07d2e7567408d24f41af4076a2a2948ccf2cacf7b6f1f964edf425c8cf49536e2e42c0eac16681d92daea96c10c41a797459a9aba9845d20a841fb  0001-abuild-sudo-prevent-forging-of-user-name.patch
-d805b9883e2b52344981d016c3333add401b167076f8b932d3b4c2b46d3e003d260b203270879808f4429d763c65e2b03ea6a0439037de7f3746255dde988154  0001-abuild-exit-with-success-if-arch-is-disabled.patch"
+sha512sums="30577da610c0677cdd60264d43ed6704e51bd652ed1d98a7bda90d836416c5c3d7ce02e27db9b2425c18a20177e9e6591315e4ab4ae21247288c3ac0eee12d38  abuild-3.5.0.tar.xz"

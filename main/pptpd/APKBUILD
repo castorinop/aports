@@ -2,16 +2,16 @@
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=pptpd
 pkgver=1.4.0
-pkgrel=1
+pkgrel=2
 pkgdesc="PoPToP - PPTP Daemon, Linux as Microsoft VPN Server"
 url="http://www.poptop.org/"
 arch="all"
-license="GPL v2 or later"
-depends=""
+license="GPL-2.0-or-later"
+depends="ppp-daemon"
 makedepends="ppp-dev"
 install=""
 subpackages="$pkgname-doc"
-source="$pkgname-$pkgver.tar.gz::http://sourceforge.net/projects/poptop/files/$pkgname/$pkgname-$pkgver/$pkgname-$pkgver.tar.gz/download
+source="$pkgname-$pkgver.tar.gz::https://sourceforge.net/projects/poptop/files/$pkgname/$pkgname-$pkgver/$pkgname-$pkgver.tar.gz/download
 	fix_MSG_TRYHARD.patch
 	pptpd.patch
 	pptpd.confd

@@ -1,8 +1,25 @@
---- a/src/systemd/src/basic/stdio-util.h
-+++ b/src/systemd/src/basic/stdio-util.h
-@@ -19,7 +19,9 @@
-   along with systemd; If not, see <http://www.gnu.org/licenses/>.
- ***/
+diff --git a/libnm-core/nm-json.c b/libnm-core/nm-json.c
+index aa181a4..98c39fc 100644
+--- a/libnm-core/nm-json.c
++++ b/libnm-core/nm-json.c
+@@ -23,6 +23,10 @@
+ 
+ #include <dlfcn.h>
+ 
++#ifndef RTLD_DEEPBIND
++#define RTLD_DEEPBIND 0
++#endif
++
+ void *_nm_jansson_json_object_iter_value;
+ void *_nm_jansson_json_object_key_to_iter;
+ void *_nm_jansson_json_integer;
+diff --git a/shared/systemd/src/basic/stdio-util.h b/shared/systemd/src/basic/stdio-util.h
+index c3b9448..e80a938 100644
+--- a/shared/systemd/src/basic/stdio-util.h
++++ b/shared/systemd/src/basic/stdio-util.h
+@@ -1,7 +1,9 @@
+ /* SPDX-License-Identifier: LGPL-2.1+ */
+ #pragma once
  
 +#if defined(__GLIBC__)
  #include <printf.h>
@@ -10,56 +27,20 @@
  #include <stdarg.h>
  #include <stdio.h>
  #include <sys/types.h>
---- a/src/systemd/src/basic/util.h
-+++ b/src/systemd/src/basic/util.h
-@@ -46,6 +46,11 @@
- #include "missing.h"
- #include "time-util.h"
+diff --git a/shared/systemd/src/basic/util.h b/shared/systemd/src/basic/util.h
+index 25e6ab8..7967e8a 100644
+--- a/shared/systemd/src/basic/util.h
++++ b/shared/systemd/src/basic/util.h
+@@ -46,6 +46,12 @@ static inline unsigned u64log2(uint64_t n) {
+ #endif
+ }
  
 +#if !defined(__GLIBC__)
 +typedef int (*__compar_fn_t) (const void*, const void*);
 +typedef __compar_fn_t comparison_fn_t;
++typedef int (*__compar_d_fn_t) (const void *, const void *, void *);
 +#endif
 +
- size_t page_size(void) _pure_;
- #define PAGE_ALIGN(l) ALIGN_TO((l), page_size())
- 
---- a/src/systemd/src/basic/parse-util.c
-+++ b/src/systemd/src/basic/parse-util.c
-@@ -25,7 +25,11 @@
- #include <stdio.h>
- #include <stdlib.h>
- #include <string.h>
-+#if defined(__GLIBC__)
- #include <xlocale.h>
-+#else
-+#include <locale.h>
-+#endif
- 
- #include "alloc-util.h"
- #include "extract-word.h"
---- a/src/systemd/sd-adapt/nm-sd-adapt.h
-+++ b/src/systemd/sd-adapt/nm-sd-adapt.h
-@@ -119,7 +119,7 @@
- #  ifdef HAVE___SECURE_GETENV
- #    define secure_getenv __secure_getenv
- #  else
--#    error neither secure_getenv nor __secure_getenv is available
-+#    define secure_getenv getenv
- #  endif
- #endif
- 
---- a/src/systemd/src/systemd/sd-event.h
-+++ b/src/systemd/src/systemd/sd-event.h
-@@ -69,11 +69,7 @@
- typedef int (*sd_event_io_handler_t)(sd_event_source *s, int fd, uint32_t revents, void *userdata);
- typedef int (*sd_event_time_handler_t)(sd_event_source *s, uint64_t usec, void *userdata);
- typedef int (*sd_event_signal_handler_t)(sd_event_source *s, const struct signalfd_siginfo *si, void *userdata);
--#if defined __USE_POSIX199309 || defined __USE_XOPEN_EXTENDED
- typedef int (*sd_event_child_handler_t)(sd_event_source *s, const siginfo_t *si, void *userdata);
--#else
--typedef void* sd_event_child_handler_t;
--#endif
- 
- int sd_event_default(sd_event **e);
- 
+ static inline unsigned u32ctz(uint32_t n) {
+ #if __SIZEOF_INT__ == 4
+         return n != 0 ? __builtin_ctz(n) : 32;

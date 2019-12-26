@@ -1,0 +1,57 @@
+# Contributor: Konstantin Kulikov <k.kulikov2@gmail.com>
+# Maintainer: Konstantin Kulikov <k.kulikov2@gmail.com>
+pkgname=grafana
+pkgver=6.5.2
+pkgrel=0
+_commit=742d165968 # git rev-parse --short HEAD
+_stamp=1576068086 # git --no-pager show -s --format=%ct
+pkgdesc="Open source, feature rich metrics dashboard and graph editor"
+url="https://grafana.com"
+arch="x86_64" # Builds are slow on arm archs, x86 requires python2.
+license="Apache-2.0"
+makedepends="go nodejs yarn"
+install="$pkgname.pre-install"
+subpackages="$pkgname-openrc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/grafana/grafana/archive/v$pkgver.tar.gz
+	$pkgname.initd $pkgname.confd"
+
+export GOPATH=${GOPATH:-$srcdir/go}
+export GOCACHE=${GOCACHE:-$srcdir/go-build}
+export GOTMPDIR=${GOTMPDIR:-$srcdir}
+
+# secfixes:
+#   6.3.4-r0:
+#   - CVE-2019-15043
+
+build() {
+	local ldflags="-X main.version=$pkgver -X main.commit=$_commit -X main.buildstamp=$_stamp"
+	go build -ldflags "$ldflags" -mod=vendor -v github.com/grafana/grafana/pkg/cmd/grafana-server
+	go build -ldflags "$ldflags" -mod=vendor -v github.com/grafana/grafana/pkg/cmd/grafana-cli
+
+	# Don't pollute our git repo with grafanas commit hooks.
+	# Also don't try to install phantomjs since it depends on glibc.
+	# This command also acts as "yarn install".
+	# ignore-engines is needed because grafana specifies max node version 11
+	# but alpine ships 12, quick test shows that it works fine.
+	yarn remove --pure-lockfile -W --ignore-engines husky phantomjs-prebuilt
+
+	yarn --ignore-engines build --force
+}
+
+check() {
+	go test -mod=vendor ./...
+}
+
+package() {
+	install -Dm755 "$srcdir/$pkgname.initd" "$pkgdir/etc/init.d/$pkgname"
+	install -Dm644 "$srcdir/$pkgname.confd" "$pkgdir/etc/conf.d/$pkgname"
+	install -Dm755 "$builddir/$pkgname-server" "$pkgdir/usr/sbin/$pkgname-server"
+	install -Dm755 "$builddir/$pkgname-cli" "$pkgdir/usr/bin/$pkgname-cli"
+	install -Dm644 "$builddir/conf/sample.ini" "$pkgdir/etc/grafana.ini"
+	install -dm755 "$pkgdir/usr/share/grafana"
+	cp -r "$builddir/conf" "$builddir/public" "$pkgdir/usr/share/$pkgname/"
+}
+
+sha512sums="adfda7bdb1ce3befcb2bcf340af60edcf7e77e67ae8d81860d773b47592e3446adf951b7df06b2ab1ef51a963ffb1067fea8796f18b9bb0a04d660028740f020  grafana-6.5.2.tar.gz
+b0a781e1b1e33741a97e231c761b1200239c6f1235ffbe82311fe883387eb23bef262ad68256ebd6cf87d74298041b53b947ea7a493cfa5aa814b2a1c5181e13  grafana.initd
+c2afa7f6baf8f468fbd781b0522cbff173bb0c3964eb08fc4a0951d034e8a1f3f9c14798e2ac487b3c20db834110883db8162039b18195e97bb9f4bc5baffc33  grafana.confd"

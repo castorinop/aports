@@ -1,20 +1,19 @@
 # Contributor: Łukasz Jendrysik <scadu@yandex.com>
 # Contributor: Bartłomiej Piotrowski <nospam@bpiotrowski.pl>
-# Maintainer:
+# Maintainer: Roberto Oliveira <robertoguimaraes8@gmail.com>
 pkgname=calcurse
-pkgver=4.2.2
+pkgver=4.5.1
 pkgrel=0
 pkgdesc="A text-based personal organizer"
-url="http://calcurse.org/"
-license="BSD"
+url="https://calcurse.org/"
+license="BSD-2-Clause"
 arch="all"
 makedepends="ncurses-dev"
+checkdepends="tzdata"
 subpackages="$pkgname-doc"
-source="http://calcurse.org/files/${pkgname}-${pkgver}.tar.gz"
+source="https://calcurse.org/files/calcurse-$pkgver.tar.gz"
 
-builddir="$srcdir"/$pkgname-$pkgver
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -22,15 +21,18 @@ build() {
 		--sysconfdir=/etc \
 		--mandir=/usr/share/man \
 		--localstatedir=/var \
+		--disable-nls \
 		--enable-docs \
-		--without-asciidoc \
-		|| return 1
-	make || return 1
+		--without-asciidoc
+	make
+}
+
+check() {
+	make -j1 -C "$builddir" check
 }
 
 package() {
-	cd "$builddir"
-	make DESTDIR="$pkgdir" install || return 1
+	make DESTDIR="$pkgdir" install
 }
 
-sha512sums="d54d5a1ca457499ff82fe0b6a945f5f54c0f93f84b34d5a69579dd42d4d44edda0b81a165d29b4f3d77ef7219b2e815b5858eaa744eb418e9549abf58eb2f958  calcurse-4.2.2.tar.gz"
+sha512sums="dfac702b2e6352bfaf8eb916c7873918c29f884fdaf583bb6de984d5ee9d86f29df31e2b0a93c34af43c55260cc32d285578bc069b396793a72dafed11deaff3  calcurse-4.5.1.tar.gz"

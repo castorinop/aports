@@ -1,10 +1,10 @@
 --- ./buildtools/wafsamba/samba_conftests.py.orig
 +++ ./buildtools/wafsamba/samba_conftests.py
-@@ -186,6 +186,7 @@
+@@ -272,6 +272,7 @@
              msg = "rpath library support"
          else:
              msg = "building library support"
-+	    return True
++            return True
  
      dir = find_config_dir(conf)
  

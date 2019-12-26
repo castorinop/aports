@@ -2,25 +2,28 @@
 # Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
 pkgname=py3-yarl
 _pkgname=yarl
-pkgver=0.12.0
+pkgver=1.4.2
 pkgrel=0
-pkgdesc="An URL library"
-url="http://yarl.readthedocs.io/"
+pkgdesc="Yet another URL library"
+url="http://yarl.readthedocs.io"
 arch="all"
-license="ASL 2.0"
-depends="py3-multidict"
-makedepends="python3-dev"
+license="Apache-2.0"
+depends="py3-multidict py3-idna"
+makedepends="py3-setuptools python3-dev"
+checkdepends="py3-pytest py3-pytest-cov"
 source="https://files.pythonhosted.org/packages/source/${_pkgname:0:1}/$_pkgname/$_pkgname-$pkgver.tar.gz"
 builddir="$srcdir/$_pkgname-$pkgver"
 
 build() {
-	cd "$builddir"
 	python3 setup.py build
 }
 
+check() {
+	python3 -m pytest
+}
+
 package() {
-	cd "$builddir"
 	python3 setup.py install --root="$pkgdir"
 }
 
-sha512sums="3f171141e0aae3daad13b7b650ccee048ec890068ee06322d248ed0a59f1d6302e6f1f6c50f164fc91b87d8a4d470e65c03150b0eda234fbb1c3e977df6bdd4e  yarl-0.12.0.tar.gz"
+sha512sums="036562b645d7b9b3ed4a749decb189587b41ab13b5dda5ff461b00eebadf1ecdbd8d5ae06932cc7d8b7ff551cd630f8671eb0f6c854b20996cda4a6897994fa0  yarl-1.4.2.tar.gz"

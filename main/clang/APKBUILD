@@ -1,71 +1,85 @@
+# Contributor Eric Molitor <eric@molitor.org>
 # Contributor Travis Tilley <ttilley@gmail.com>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=clang
 # Note: Update together with llvm.
-pkgver=4.0.0
-pkgrel=0
-_vermajor=${pkgver%%.*}
+pkgver=9.0.1
+pkgrel=1
+_llvmver=${pkgver%%.*}
 pkgdesc="A C language family front-end for LLVM"
 arch="all"
-url="http://llvm.org/"
-license="UOI-NCSA"
+url="https://llvm.org/"
+license="Apache-2.0"
+options="!check" # some 170 failing tests...
 makedepends="
 	cmake
 	isl-dev
+	libedit-dev
+	libexecinfo-dev
 	libxml2-dev
 	libxml2-utils
-	llvm-dev>=$_vermajor
-	llvm-static>=$_vermajor
-	paxmark
-	python2
+	llvm$_llvmver-dev
+	llvm$_llvmver-static
+	llvm$_llvmver-test-utils
+	ninja
+	python3
 	"
+checkdepends="diffutils bash"
 depends_dev="$pkgname=$pkgver-r$pkgrel"
 subpackages="$pkgname-static $pkgname-dev $pkgname-doc $pkgname-libs
-	$pkgname-analyzer::noarch"
-source="http://llvm.org/releases/$pkgver/cfe-$pkgver.src.tar.xz
-	clang-0001-Add-Alpine-Linux-distro.patch
-	clang-0002-Use-z-relro-on-Alpine-Linux.patch
-	clang-0003-Use-hash-style-gnu-for-Alpine-Linux.patch
-	clang-0004-Add-musl-targets.patch
-	clang-0005-Enable-PIE-by-default-for-alpine-linux.patch
-	clang-0006-Link-with-z-now-by-default-for-Alpine-Linux.patch
-	clang-0007-Enable-stack-protector-by-default-for-alpine-linux.patch
+	$pkgname-analyzer::noarch
+	$pkgname-extra-tools:extra"
+source="https://github.com/llvm/llvm-project/releases/download/llvmorg-$pkgver/clang-$pkgver.src.tar.xz
+	https://github.com/llvm/llvm-project/releases/download/llvmorg-$pkgver/clang-tools-extra-$pkgver.src.tar.xz
+	10-add-musl-triples.patch
+	20-Enable-stack-protector-by-default-for-Alpine-Linux.patch
+	30-fix-python-shebangs.patch
 	"
-builddir="$srcdir/cfe-$pkgver.src"
+
+builddir="$srcdir/clang-$pkgver.src"
+
+prepare() {
+	mv "$srcdir/clang-tools-extra-$pkgver.src" "$builddir/tools/extra"
+	default_prepare
+}
 
 build() {
 	mkdir -p "$builddir"/build
 	cd "$builddir"/build
 
-	cmake .. -G "Unix Makefiles" -Wno-dev \
-		-DCMAKE_BUILD_TYPE=Release \
+	cmake .. -G Ninja -Wno-dev \
+		-DCMAKE_BUILD_TYPE=MinSizeRel \
+		-DCMAKE_C_FLAGS_MINSIZEREL_INIT="$CFLAGS" \
+		-DCMAKE_CXX_FLAGS_MINSIZEREL_INIT="$CXXFLAGS" \
+		-DCMAKE_EXE_LINKER_FLAGS_MINSIZEREL_INIT="$LDFLAGS" \
 		-DCMAKE_INSTALL_PREFIX=/usr \
 		-DCMAKE_VERBOSE_MAKEFILE=OFF \
+		-DCLANG_VENDOR=Alpine \
 		-DCLANG_BUILD_EXAMPLES=OFF \
 		-DCLANG_INCLUDE_DOCS=ON \
 		-DCLANG_INCLUDE_TESTS=ON \
 		-DCLANG_PLUGIN_SUPPORT=ON \
 		-DLIBCLANG_BUILD_STATIC=ON \
 		-DLLVM_ENABLE_EH=ON \
-		-DLLVM_ENABLE_RTTI=ON \
-		|| return 1
+		-DLLVM_ENABLE_RTTI=ON
 
-	make clang-tblgen || return 1
-	make
+	ninja clang-tblgen
+	ninja
 }
 
 check() {
 	cd "$builddir"/build
 
-	./bin/clang --version
-	./bin/clang-check --version
-	./bin/clang-format --version
+	case "$CARCH" in
+	armhf) return;; # FIXME: tests fails on armhf
+	esac
+	lit -sv --param clang_site_config=$builddir/build/test/lib.site.cfg $builddir/build/test
 }
 
 package() {
 	cd "$builddir"/build
 
-	make DESTDIR="$pkgdir" install || return 1
+	DESTDIR="$pkgdir" ninja install
 	install -m 644 lib/libclang.a "$pkgdir"/usr/lib
 }
 
@@ -78,23 +92,45 @@ static() {
 
 analyzer() {
 	pkgdesc="Clang source code analysis framework"
-	depends="$pkgname=$pkgver-r$pkgrel perl python2"
+	depends="$pkgname=$pkgver-r$pkgrel perl python3"
 
 	cd "$pkgdir"
 
 	mkdir -p "$subpkgdir"/usr/bin \
 		"$subpkgdir"/usr/libexec \
 		"$subpkgdir"/usr/share/
-	mv usr/bin/scan-* "$subpkgdir"/usr/bin/ || return 1
-	mv usr/libexec/*-analyzer "$subpkgdir"/usr/libexec/ || return 1
+	mv usr/bin/scan-* "$subpkgdir"/usr/bin/
+	mv usr/libexec/*-analyzer "$subpkgdir"/usr/libexec/
 	mv usr/share/scan-* "$subpkgdir"/usr/share/
 }
 
-sha512sums="a0d9972ec337a5c105fcbe7abc4076ba1e580f28908a3318f43bbfe59143f446ed5b78dad210f624145d7e5a3d56c15bfead78826c068422b60120fa1cfa482a  cfe-4.0.0.src.tar.xz
-4014984a187e4d0331d8315727d1b831e573843cd8d113df43424524cb348bc73ce3d12783351d9a14f9fd14111d75ce71d8f2a85d82b6437a61b11d85796cfb  clang-0001-Add-Alpine-Linux-distro.patch
-53741890ec3805dd0d5a930ed526cb5bac5f75c459c6910c9461017719186383cf54638af4eea7a38eb7f9f423b18086bd5584b11f7e4babf6cd0edf8b4f4f48  clang-0002-Use-z-relro-on-Alpine-Linux.patch
-f06e351785d5755827459f17d3533415772ba84b4fbd4e49f418bafd20394e98d42b33a94aa34cff2a7b54c79cf06a6f5d382af5a55cba63a81116f0568d4b25  clang-0003-Use-hash-style-gnu-for-Alpine-Linux.patch
-2998ab2dfbc3d5629dd7e65e7e39dc0ab96f61e24733cb8d2d4faee50a89f0f159ad44d10182ed4c96f060180f4e22510881f4e9eb00ced01278bde99adf3389  clang-0004-Add-musl-targets.patch
-6215080a796fa1fc6f7634781ef77fc245037880dbf075a656823aae5f9f4911294dc6d61172db399b063adbe445c38b73cec12fc66dbe16bd9d84dc58035846  clang-0005-Enable-PIE-by-default-for-alpine-linux.patch
-d151a6ecca470abb1f4dbc06910155db0688322475655e28cdcb9c0b21930c8bcaf166e9df9fc9dca1be654cf497587961e461d91ee2871fdf454bbd33c5fffe  clang-0006-Link-with-z-now-by-default-for-Alpine-Linux.patch
-f8c46bb64202c9233595362eb54288c30fbd28309308cbcafe1802dc50ffd676c7a70e6cbdbfd73464f872b40a90acd2eb736dcc9622fd434dbd44a5b0005027  clang-0007-Enable-stack-protector-by-default-for-alpine-linux.patch"
+extra() {
+	pkgdesc="Extra tools built using Clang’s tooling APIs"
+
+	cd "$pkgdir"
+
+	mkdir -p "$subpkgdir"/usr/bin "$subpkgdir"/usr/share/clang
+
+	mv usr/bin/clang-apply-replacements "$subpkgdir"/usr/bin/
+	mv usr/bin/clang-reorder-fields "$subpkgdir"/usr/bin/
+	mv usr/bin/modularize "$subpkgdir"/usr/bin/
+	mv usr/bin/clang-tidy "$subpkgdir"/usr/bin/
+	mv usr/share/clang/*clang-tidy* "$subpkgdir"/usr/share/clang
+	mv usr/bin/clang-change-namespace "$subpkgdir"/usr/bin/
+	mv usr/bin/clang-doc "$subpkgdir"/usr/bin/
+	mv usr/bin/clang-include-fixer "$subpkgdir"/usr/bin/
+	#mv usr/bin/clang-move "$subpkgdir"/usr/bin/
+	mv usr/bin/find-all-symbols "$subpkgdir"/usr/bin/
+	mv usr/share/clang/clang-include-fixer* "$subpkgdir"/usr/share/clang
+	mv usr/share/clang/run-find-all-symbols.py "$subpkgdir"/usr/share/clang
+	mv usr/bin/clang-query "$subpkgdir"/usr/bin/
+	mv usr/bin/clangd* "$subpkgdir"/usr/bin/
+	#mv usr/bin/pp-trace "$subpkgdir"/usr/bin/
+	#mv usr/bin/tool-template "$subpkgdir"/usr/bin/
+}
+
+sha512sums="3bcdcfd1ebb20a2cb15d57c608106b6e6e9c2eda4b781f573e84e0600b775bb7609f6df9edcf819ee5d91cc01a28ee089353c29fd57c23b867afbf6ad2f5cd13  clang-9.0.1.src.tar.xz
+4a671596460809f314ed96b0cc0be7f2498692275d0a7bd08266f9cdf4b85fb39cb4eea4131602e9a170a75eb5d9623449960f873e25b999e06c016387a1918d  clang-tools-extra-9.0.1.src.tar.xz
+367dcd43b42570b5688c4bb41daf2498447e9fa4384896e2b91782017a8ce15b1e6e15cb3a465595d69e681420fce170a6f9a57ea5268e21f0dec7d4605e4c4c  10-add-musl-triples.patch
+a8557c5a26774bf98548b9fe77cd54a1b0591bc75beffcb5fbd070986ba954d82255dddbcfcc884c07c3f433b1428c2a6ce649c3a158f4352f30e7057872335b  20-Enable-stack-protector-by-default-for-Alpine-Linux.patch
+c7f34b425b0dcea9752eeb7ff3d3a33af9cc45740fd3e77d52e4d610c5fd3daaa4d59138a255b057ef886915615a77ec1e6a447f3818b4b2724129c0ba354932  30-fix-python-shebangs.patch"

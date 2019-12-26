@@ -1,30 +1,29 @@
 # Contributor: Francesco Colista <fcolista@alpinelinux.org>
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=dockerpy-creds
-pkgver=0.2.1
-pkgrel=0
+pkgver=0.4.0
+pkgrel=2
 pkgdesc="Python bindings for the docker credentials store API"
 url="https://github.com/shin-/dockerpy-creds"
 arch="noarch"
-license="APACHE"
-depends="python2 py2-six"
-makedepends="python2-dev py-setuptools"
+license="Apache-2.0"
+depends="py3-six"
+makedepends="py3-setuptools python3-dev"
 source="$pkgname-$pkgver.tar.gz::https://github.com/shin-/dockerpy-creds/archive/$pkgver.tar.gz"
-builddir="$srcdir/$pkgname-$pkgver"
 
 check() {
     cd "$builddir"
-    python2 setup.py check
+    python3 setup.py check
 }
 
 build() {
     cd "$builddir"
-    python2 setup.py build
+    python3 setup.py build
 }
 
 package() {
     cd "$builddir"
-    python2 setup.py install --prefix=/usr --root="$pkgdir"
+    python3 setup.py install --prefix=/usr --root="$pkgdir"
 }
 
-sha512sums="456c3fc8d0ed2fda7ec7cf9f455e7a6511e8bac84f9deb16ede0a907a3ed6538777174f8367ece656f9cf4f947d9f2cdbd971e5d7867049c3b1f4c09e2314d50  dockerpy-creds-0.2.1.tar.gz"
+sha512sums="5c7c75a654693c6439592201bba6082af2962fab8d25af980ebb3ad2aede42973c31dbc2693eea1212f911980725bab257f973c7498b3555f68fae1630cfc62c  dockerpy-creds-0.4.0.tar.gz"

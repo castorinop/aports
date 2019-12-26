@@ -1,25 +1,31 @@
 # Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
 # Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
+# Contributor: Daniel Isaksen <d@duniel.no>
 pkgname=httpie
-pkgver=0.9.9
-pkgrel=0
+pkgver=1.0.3
+pkgrel=1
 pkgdesc="A CLI, cURL-like tool"
-url="https://github.com/jkbr/httpie"
+url="https://httpie.org/"
 arch="noarch"
-license="BSD"
+license="BSD-3-Clause"
 depends="python3 py3-requests py3-pygments"
-makedepends="python3-dev"
-source="https://files.pythonhosted.org/packages/source/${pkgname:0:1}/$pkgname/$pkgname-$pkgver.tar.gz"
-builddir="$srcdir/$pkgname-$pkgver"
+makedepends="py3-setuptools"
+source="https://files.pythonhosted.org/packages/source/h/httpie/httpie-$pkgver.tar.gz"
+
+# secfixes:
+#   1.0.3-r0:
+#     - CVE-2019-10751
+
+check() {
+	python3 setup.py check
+}
 
 build() {
-	cd "$builddir"
-	python3 setup.py build || return 1
+	python3 setup.py build
 }
 
 package() {
-	cd "$builddir"
-	python3 setup.py install --prefix=/usr --root="$pkgdir" || return 1
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
 }
 
-sha512sums="e9adb1ecf9a25b57c634f35199bf1f8fbe4136179c0ba0d6032a41ae786da9344f54436f91d89e624c154bdca325f94c637364a934fc2d5742b83056434f7e4c  httpie-0.9.9.tar.gz"
+sha512sums="b51779e0ec8f24108ee3f4bf690dc9dfddafff42509d1aa3d13ac12d65a93e02aad9644dc10134ebdbebf949b250cb288650a4dad3d382143e9ad3b9b0ac8c16  httpie-1.0.3.tar.gz"

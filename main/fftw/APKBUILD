@@ -1,11 +1,12 @@
-# Contributor: William Pitcock <nenolod@dereferenced.org>
-# Maintainer: William Pitcock <nenolod@dereferenced.org>
+# Contributor: 
+# Maintainer: 
 pkgname=fftw
-pkgver=3.3.6p2
+pkgver=3.3.8
 pkgrel=0
-pkgdesc="fastest fourier transform in the west"
-url="http://www.fftw.org/"
-license="GPL"
+pkgdesc="Discrete Fourier transform (DFT) library"
+url="http://www.fftw.org"
+arch="all"
+license="GPL-2.0-or-later"
 makedepends="texinfo"
 # order of the libs split functions are important because of lib naming
 subpackages="$pkgname-dev $pkgname-doc $pkgname-single-libs:single
@@ -13,32 +14,38 @@ subpackages="$pkgname-dev $pkgname-doc $pkgname-single-libs:single
 srcpkgver=${pkgver//p/-pl}
 source="http://www.fftw.org/$pkgname-$srcpkgver.tar.gz
 	cycle.h.patch"
-arch="all"
-_precision="single double long-double"
-
 builddir="$srcdir/$pkgname-$srcpkgver"
 
+_precision="single double long-double"
+
+case "$CARCH" in
+	armv7) options="$options !check" ;;
+esac
+
 prepare() {
-	cd "$builddir"
 	default_prepare
-	for i in $_precision; do
+
+	cd "$builddir"
+	local i; for i in $_precision; do
 		cp -r "$builddir" $srcdir/$i
 	done
 }
 
 build() {
-	for i in $_precision; do
+	local _openmp=
+
+	local i; for i in $_precision; do
 		case "$i" in
-			single)_cf="--enable-single";;
-			double)_cf="";;
-			long-double)_cf="--enable-long-double";;
+			single) _cf="--enable-single";;
+			double) _cf="";;
+			long-double) _cf="--enable-long-double";;
 		esac
 
 		case "$i--$CARCH" in
-		single--x86_64 | double--x86_64)
-			_cf="$_cf --enable-sse2 --enable-avx";;
-		single--arm* | single--aarch64)
-			_cf="$_cf --enable-neon";;
+			single--x86_64 | double--x86_64)
+				_cf="$_cf --enable-sse2 --enable-avx";;
+			single--arm* | single--aarch64)
+				_cf="$_cf --enable-neon";;
 		esac
 
 		msg "Building for $i precision ($_cf)"
@@ -52,13 +59,21 @@ build() {
 			--infodir=/usr/share/info \
 			--enable-shared \
 			--enable-threads \
+			$_openmp \
 			$_cf
 		make
 	done
 }
 
+check() {
+	local i; for i in $_precision; do
+		cd "$srcdir"/$i
+		make check
+	done
+}
+
 package() {
-	for i in $_precision; do
+	local i; for i in $_precision; do
 		cd "$srcdir"/$i
 		make DESTDIR="$pkgdir" install
 	done
@@ -82,5 +97,5 @@ long_double() {
 		"$subpkgdir"/usr/lib/
 }
 
-sha512sums="e130309856752a1555b6d151c4d0ce9eb4b2c208fff7e3e89282ca8ef6104718f865cbb5e9c4af4367b3615b69b0d50fd001a26d74fd5324ff2faabe14fe3472  fftw-3.3.6-pl2.tar.gz
-d71ffb0aa658f7b22239491698426f4a97e657abc953020745f7581d2937a062a279eaa5980cd7f7fe2e8425a032eafc3d4c0cffdc79a83a3aef382c988d739a  cycle.h.patch"
+sha512sums="ab918b742a7c7dcb56390a0a0014f517a6dff9a2e4b4591060deeb2c652bf3c6868aa74559a422a276b853289b4b701bdcbd3d4d8c08943acf29167a7be81a38  fftw-3.3.8.tar.gz
+7da269fc43dabd02ae6fad2ebad92b07e06825b6b7c6f8987fc6444f02e0d55080db4ba6e401760e071f5c33015faf8c710f643636cab7a79bdf1af5d434dbb4  cycle.h.patch"

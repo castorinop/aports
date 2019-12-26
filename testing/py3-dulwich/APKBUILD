@@ -1,0 +1,33 @@
+# Contributor: Fabian Affolter <fabian@affolter-engineering.ch>
+# Maintainer: Fabian Affolter <fabian@affolter-engineering.ch>
+pkgname=py3-dulwich
+_pkgname=dulwich
+pkgver=0.19.14
+pkgrel=0
+pkgdesc="A python implementation of the Git file formats and protocols"
+url="https://www.dulwich.io"
+arch="all"
+license="GPL-2.0-or-later OR Apache-2.0"
+options="!check" # Tests are failing (http-backend)
+depends="py3-certifi py3-urllib3"
+makedepends="py3-setuptools python3-dev"
+checkdepends="py3-mock"
+source="https://github.com/dulwich/dulwich/archive/$_pkgname-$pkgver.tar.gz"
+builddir="$srcdir"/$_pkgname-dulwich-$pkgver
+
+replaces="py-dulwich" # Backwards compatibility
+provides="py-dulwich=$pkgver-r$pkgrel" # Backwards compatibility
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	python3 -m unittest dulwich.tests.test_suite
+}
+
+package() {
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
+}
+
+sha512sums="4b16a3d37b780697dd63d5ff0922988b9ea16dc9098b07c2cecf56b57714711c3c7d99f14e4846cd1be10a75ebf6aa6cc15fa877c9e5a0569a3eda9d27e655a2  dulwich-0.19.14.tar.gz"

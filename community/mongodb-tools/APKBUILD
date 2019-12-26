@@ -1,38 +1,37 @@
-# Contributor: Marc Vertes <marc.vertes@ugrid.net>
-# Maintainer: Marc Vertes <marc.vertes@ugrid.net>
+# Contributor: Marc Vertes <mvertes@free.fr>
+# Maintainer: Marc Vertes <mvertes@free.fr>
 pkgname=mongodb-tools
-pkgver=3.4.7
+pkgver=4.2.1
 pkgrel=0
 pkgdesc="The MongoDB tools provide import, export, and diagnostic capabilities."
 url="https://github.com/mongodb/mongo-tools"
-arch="all !s390x !aarch64"
-license="apache"
-makedepends="$depends_dev go cyrus-sasl-dev libressl-dev libpcap-dev"
+arch="all !s390x"
+license="Apache-2.0"
+makedepends="$depends_dev go cyrus-sasl-dev openssl-dev libpcap-dev bash perl"
 options="!check"
 source="$pkgname-$pkgver.tar.gz::https://github.com/mongodb/mongo-tools/archive/r$pkgver.tar.gz
 	fix-build.patch
-	libressl.patch
 	"
-
-builddir="$srcdir"/mongo-tools-r$pkgver
+builddir="$srcdir/src/github.com/mongodb/mongo-tools"
 
 prepare() {
-	cd "$builddir"
+	mkdir -p "${builddir%/*}"
+	mv "$srcdir"/mongo-tools-r$pkgver "$builddir"
 	default_prepare
 }
 
 build() {
-	cd "$builddir"
-	./build.sh sasl ssl
+	GOROOT=/usr/lib/go GOPATH="$srcdir" ./build.sh sasl ssl
 }
 
 package() {
 	cd "$builddir/bin"
 	local bindir="$pkgdir/usr/bin"
-	mkdir -p "$bindir" || return 1
-	cp bsondump mongostat mongofiles mongoexport mongoimport mongorestore mongodump mongotop mongooplog mongoreplay "$bindir" || return 1
+	mkdir -p "$bindir"
+	cp bsondump mongostat mongofiles mongoexport mongoimport \
+		mongorestore mongodump mongotop mongoreplay \
+		"$bindir"
 }
 
-sha512sums="4ccc77c858f88f57f6b29bfc56361efc3362782fe82e8d73474202ca02c0cad49134f622dcc36cba669b37ac19e869cc76e07254a9eb26e9c175f8bad104a07d  mongodb-tools-3.4.7.tar.gz
-74e432b354fd75209b87461e54f79a173ba0d647a2e45a48d520ee9342236b6a50ef1c634312f4804402578b8534d59ebf10973ce90cae2bbe76407102f2b404  fix-build.patch
-ddc4a5a93717dbaa6b6b816bdaaecaa6990c6b8fdf390f37e98d358cdffb9561a8ffb34a2af2c170fee7d181d343f2090b3b1a36ac4989bcc67ca493faeb946e  libressl.patch"
+sha512sums="bba754acd9e21f8f832fc2e434720347c2222897b2af08d66f9491110d5491f5475ae2118ff25b263606677da10b0c96b76cc507a01287180096c25c1eab5ced  mongodb-tools-4.2.1.tar.gz
+74e432b354fd75209b87461e54f79a173ba0d647a2e45a48d520ee9342236b6a50ef1c634312f4804402578b8534d59ebf10973ce90cae2bbe76407102f2b404  fix-build.patch"

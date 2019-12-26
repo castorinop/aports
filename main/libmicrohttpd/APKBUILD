@@ -1,18 +1,18 @@
+# Contributor: Leo <thinkabit.ukim@gmail.com>
 # Contributor: Łukasz Jendrysik <scadu@yandex.com>
 # Contributor: Carlo Landmeter <clandmeter@gmail.com>
 # Maintainer: Natanael Copa <ncopa@alpinelinux.org>
 pkgname=libmicrohttpd
-pkgver=0.9.55
+pkgver=0.9.69
 pkgrel=0
-pkgdesc="a small C library that is supposed to make it easy to run an HTTP server as part of another application."
-url="http://www.gnu.org/software/libmicrohttpd/"
+pkgdesc="A small C library that is supposed to make it easy to run an HTTP server as part of another application."
+url="https://www.gnu.org/software/libmicrohttpd/"
 arch="all"
-license="GPL"
-makedepends="curl-dev libgcrypt-dev gnutls-dev"
-options="!check"
-subpackages="$pkgname-dev $pkgname-doc"
-source="ftp://ftp.gnu.org/gnu/libmicrohttpd/$pkgname-$pkgver.tar.gz"
-builddir="$srcdir"/$pkgname-$pkgver
+license="LGPL-2.1-or-later"
+makedepends="curl-dev libgcrypt-dev gnutls-dev automake autoconf libtool"
+subpackages="$pkgname-static $pkgname-dev $pkgname-doc"
+source="https://ftp.gnu.org/gnu/libmicrohttpd/libmicrohttpd-$pkgver.tar.gz
+	disable-test_options.patch"
 
 build() {
 	cd "$builddir"
@@ -30,6 +30,11 @@ build() {
 	make
 }
 
+check() {
+	cd "$builddir"
+	make check
+}
+
 package() {
 	cd "$builddir"
 	make DESTDIR="$pkgdir" install
@@ -37,4 +42,5 @@ package() {
 		"$pkgdir"/usr/include/platform.h
 }
 
-sha512sums="b410e7253d7c98c40b5e8b8dcd1f93bcbb05c88717190e8dae73073d36465e8e5cfa53c6c5098de60051a5ec64dc423fd94f4b06537d8146b744aa99f5a0b173  libmicrohttpd-0.9.55.tar.gz"
+sha512sums="1633d2e606f476489e8af549fff88735e3b5641c85d59071edc8b2e1177fe1b6302578b69b8ff6669d3e1954c20cf0fa1ee52b42378362edd26197d8992e469b  libmicrohttpd-0.9.69.tar.gz
+7bbd8d2571f2bf7d06c956cc5e5decf154139baa1a716b43501b822b18a396b2cc97efd72118bc3dd5e20439611eb333730c436fe9f0a1ce2cf928066520e619  disable-test_options.patch"

@@ -1,0 +1,50 @@
+# Contributor: Kevin Daudt <kdaudt@alpinelinux.org>
+# Maintainer: Kevin Daudt <kdaudt@alpinelinux.org>
+pkgname=ipython
+pkgver=7.10.2
+pkgrel=0
+pkgdesc="A rich toolkit to help you make the most of using Python interactively"
+options="!check" # Too many tests fail
+url="https://ipython.org/"
+arch="noarch"
+license="BSD-3-Clause"
+depends="
+	py3-traitlets
+	py3-pexpect
+	py3-prompt_toolkit<2.1.0
+	py3-pygments
+	py3-pickleshare
+	py3-decorator
+	py3-backcall
+	py3-simplegeneric
+	py3-setuptools
+	"
+checkdepends="py3-pathlib2"
+checkdepends="py3-pytest py3-nose py3-matplotlib"
+subpackages="$pkgname-doc"
+source="$pkgname-$pkgver.tar.gz::https://github.com/ipython/ipython/archive/$pkgver.tar.gz"
+builddir="$srcdir/$pkgname-$pkgver/"
+
+build() {
+	python3 setup.py build
+}
+
+check() {
+	# Requires unpackaged 'testpath'
+	rm -f IPython/core/tests/test_paths.py
+
+	rm -f IPython/core/tests/test_completer.py
+
+	# Requires unpackaged 'nbformat'
+	rm -f IPython/core/tests/test_run.py
+
+	py.test-3 \
+		--deselect=IPython/terminal/tests/test_help.py::test_trust_help \
+		--deselect=IPython/core/tests/test_display.py::test_set_matplotlib_formats_kwargs
+}
+
+package() {
+	python3 setup.py install --prefix=/usr --root="$pkgdir"
+}
+
+sha512sums="96ff8dad8656fcf8c1bb8a107b291155aa9dc519be9db746ceae24fcc886cd822d1aebcfd0293d9d2121be7ffa75dcefff258e7440c719f642a5f12f6107732f  ipython-7.10.2.tar.gz"

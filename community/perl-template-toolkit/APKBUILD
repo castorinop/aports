@@ -3,8 +3,8 @@
 # Maintainer: Francesco Colista <fcolista@alpinelinux.org>
 pkgname=perl-template-toolkit
 _pkgreal=Template-Toolkit
-pkgver=2.27
-pkgrel=1
+pkgver=2.29
+pkgrel=2
 pkgdesc="comprehensive template processing system"
 url="http://search.cpan.org/dist/Template-Toolkit/"
 arch="all"
@@ -14,31 +14,32 @@ cpanmakedepends="   "
 depends="$cpandepends"
 makedepends="perl-dev $cpanmakedepends"
 subpackages="$pkgname-doc"
-source="http://search.cpan.org/CPAN/authors/id/A/AB/ABW/$_pkgreal-$pkgver.tar.gz"
-
-_builddir="$srcdir/$_pkgreal-$pkgver"
+source="https://cpan.metacpan.org/authors/id/A/AT/ATOOMIC/$_pkgreal-$pkgver.tar.gz"
+builddir="$srcdir/$_pkgreal-$pkgver"
 
 prepare() {
-	cd "$_builddir"
-	for i in $source; do
-		case $i in
-		*.patch) msg $i; patch -p1 -i "$srcdir"/$i || return 1;;
-		esac
-	done
+	default_prepare
+
+	cd "$builddir"
 	export CFLAGS=`perl -MConfig -E 'say $Config{ccflags}'`
 	PERL_MM_USE_DEFAULT=1 perl Makefile.PL INSTALLDIRS=vendor
 }
 
 build() {
-	cd "$_builddir"
+	cd "$builddir"
 	export CFLAGS=`perl -MConfig -E 'say $Config{ccflags}'`
-	make && make test
+	make
+}
+
+check() {
+        cd "$builddir"
+        make test
 }
 
 package() {
-	cd "$_builddir"
+	cd "$builddir"
 	make DESTDIR="$pkgdir" install || return 1
 	find "$pkgdir" \( -name perllocal.pod -o -name .packlist \) -delete
 }
 
-sha512sums="17f03a01a3d6ab0ef2247c77da15c46d9bbce3e0158172162da6abe47f53c5e7ca041a7c31506bb3a37f31c476ba747f5111c5b1b1d69614a4ce3352927fd4e6  Template-Toolkit-2.27.tar.gz"
+sha512sums="5b1bfeaf600a5628b6441e54de5c4af1cf4e01296792a79290d4bf2a698be47112e94a05fe3f47bf9ac64c4d8b9340aa6ef8738560fb1f96510d7d1c9f647a65  Template-Toolkit-2.29.tar.gz"

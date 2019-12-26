@@ -1,0 +1,34 @@
+# Contributor: Rasmus Thomsen <oss@cogitri.dev>
+# Contributor: Natanael Copa <ncopa@alpinelinux.org>
+# Maintainer: Rasmus Thomsen <oss@cogitri.dev>
+pkgname=glib-networking
+pkgver=2.62.2
+pkgrel=0
+pkgdesc="Networking support for GLib"
+url="https://gitlab.gnome.org/GNOME/glib-networking"
+arch="all"
+license="LGPL-2.0-or-later"
+depends="ca-certificates gsettings-desktop-schemas"
+makedepends="glib-dev gnutls-dev libproxy-dev intltool libgcrypt-dev bash
+	p11-kit-dev meson gsettings-desktop-schemas-dev"
+subpackages="$pkgname-lang"
+source="https://download.gnome.org/sources/glib-networking/${pkgver%.*}/glib-networking-$pkgver.tar.xz"
+
+build() {
+	meson \
+		--buildtype=release \
+		--prefix=/usr \
+		--default-library=shared \
+		. build
+	ninja -C build
+}
+
+check() {
+	ninja -C build test
+}
+
+package() {
+	DESTDIR="$pkgdir" ninja -C build install
+}
+
+sha512sums="116dc88d36d0e42439d63ac3cc5320c832e4e4b75259dcf630420b0f2551f36836d64edb89ec89e757e7d703ef7a655844d0dad4d0ecae7c9639c10067f7034f  glib-networking-2.62.2.tar.xz"

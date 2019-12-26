@@ -1,23 +1,17 @@
 # Contributor: Timo Teräs <timo.teras@iki.fi>
 # Maintainer: Timo Teräs <timo.teras@iki.fi>
 pkgname=libmwaw
-pkgver=0.3.12
+pkgver=0.3.15
 pkgrel=0
 pkgdesc="Import filter and tools for old Mac documents"
-url="http://sourceforge.net/projects/libmwaw/"
+url="https://sourceforge.net/projects/libmwaw/"
 arch="all"
-license="MPL2"
-depends=""
-depends_dev="boost-dev attr-dev zlib-dev"
-makedepends="$depends_dev librevenge-dev doxygen"
-install=""
+license="MPL-2.0"
+makedepends="librevenge-dev zlib-dev doxygen"
 subpackages="$pkgname-dev $pkgname-doc $pkgname-tools"
-source="http://downloads.sourceforge.net/project/libmwaw/libmwaw/libmwaw-$pkgver/libmwaw-$pkgver.tar.bz2"
-
-builddir="$srcdir"/libmwaw-$pkgver
+source="https://downloads.sourceforge.net/project/$pkgname/$pkgname/$pkgname-$pkgver/$pkgname-$pkgver.tar.bz2"
 
 build() {
-	cd "$builddir"
 	./configure \
 		--build=$CBUILD \
 		--host=$CHOST \
@@ -30,7 +24,6 @@ build() {
 }
 
 package() {
-	cd "$builddir"
 	make DESTDIR="$pkgdir" install
 }
 
@@ -39,4 +32,4 @@ tools() {
 	mv "$pkgdir"/usr/bin "$subpkgdir"/usr
 }
 
-sha512sums="0a475121ff6944e8fe7be0766e1fbbd7e63a761b2687b4fb311c03d67680fcf4a04b64158e4c98a6526054ede14cc60a4982e68a081631bbc8464104893c75b0  libmwaw-0.3.12.tar.bz2"
+sha512sums="e1799b4cad4f67f525d55183a96bec21d082532371a8ec2f0ab78f9623e5dd8e019e036882da956a9858378096dda3fdebff5e5b76f03b54533f632e0ca8822b  libmwaw-0.3.15.tar.bz2"

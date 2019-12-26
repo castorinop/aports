@@ -2,35 +2,41 @@
 # Contributor: Bartłomiej Piotrowski <bpiotrowski@alpinelinux.org>
 
 pkgname=eventlog
-pkgver=0.2.12
-pkgrel=2
-pkgdesc='API to format and send structured log messages'
-arch='all'
-url='http://www.balabit.com/support/community/products/'
-license='BSD'
-depends=
+pkgver=0.2.13
+pkgrel=1
+pkgdesc="API to format and send structured log messages"
+arch="all"
+url="https://www.balabit.com/support/community/products/"
+license="BSD-3-Clause"
 makedepends="automake autoconf libtool"
 subpackages="$pkgname-dev"
-source="https://my.balabit.com/downloads/eventlog/${pkgver%.*}/eventlog_$pkgver.tar.gz"
+source="https://src.fedoraproject.org/lookaside/extras/$pkgname/${pkgname}_${pkgver}.tar.gz/68ec8d1ea3b98fa35002bb756227c315/${pkgname}_${pkgver}.tar.gz"
 
-builddir="$srcdir/$pkgname-$pkgver"
+prepare() {
+	cd "$builddir"
+	autoreconf -vif
+}
 
 build() {
 	cd "$builddir"
-	autoreconf -vif || return 1
-	./configure --prefix=/usr \
+	./configure \
+		--prefix=/usr \
 		--sysconfdir=/etc \
-		--localstatedir=/var || return 1
-	make || return 1
+		--localstatedir=/var \
+		--disable-static
+	make
+}
+
+check() {
+	cd "$builddir"
+	make check
 }
 
 package() {
 	cd "$builddir"
-	make DESTDIR="${pkgdir}" install || return 1
+	make DESTDIR="${pkgdir}" install
 	install -Dm644 COPYING \
-		"${pkgdir}"/usr/share/licenses/${pkgname}/LICENSE || return 1
+		"${pkgdir}"/usr/share/licenses/${pkgname}/LICENSE
 }
 
-md5sums="3d6ebda8a161d36cb40d09328f78786b  eventlog_0.2.12.tar.gz"
-sha256sums="494dac8e01dc5ce323df2ad554d94874938dab51aa025987677b2bc6906a9c66  eventlog_0.2.12.tar.gz"
-sha512sums="a681ab2961f5bf38e106a5b0b4492e74098808e2bf1a100f545736902649c705db124c0847796a47485faa8b0befe691a789d752f313c5b65ad50ed2763d2cce  eventlog_0.2.12.tar.gz"
+sha512sums="0c76199479f1d5191e6f591909878dcb747fc211ea97345c5c5575dd50482ee6e2e34aa0e8255ae366c5d563a79a55b178ed3289965cc9013f001909a2cb9732  eventlog_0.2.13.tar.gz"
