@@ -17,7 +17,6 @@ subpackages="$pkgname-doc $pkgname-master $pkgname-metalogger
 	$pkgname-chunkserver $pkgname-client $pkgname-cgi $pkgname-cgiserv
 	$pkgname-adm"
 source="lizardfs-$pkgver.tar.gz::https://github.com/lizardfs/lizardfs/archive/v$pkgver.tar.gz
-	fix-headers.patch
 	0001-common-Add-multi-platform-endian-conversion-function.patch
 
 	lizardfs-cgiserv.initd
