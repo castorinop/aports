@@ -1,11 +1,11 @@
 # Contributor:
 # Maintainer:
 pkgname=lizardfs
-pkgver=2.6.0
+pkgver=1.3.12
 pkgrel=2
 pkgdesc="a highly reliable, scalable and efficient distributed file system"
 url="https://github.com/lizardfs/lizardfs/"
-arch=""
+arch="all"
 license="GPL-3.0"
 depends=""
 depends_dev=""
