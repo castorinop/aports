@@ -38,6 +38,7 @@ prepare() {
 }
 
 build() {
+  mkdir "$_builddir"/build
 	cd "$_builddir"/build
 	cmake .. \
 		-DCMAKE_BUILD_TYPE=Release \
